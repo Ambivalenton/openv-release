@@ -1,0 +1,94 @@
+{
+  "trips": {
+    "trip": {
+      "distance": "240",
+      "duration": "00:03",
+      "individualDuration": "00:03",
+      "interchange": "0",
+      "desc": "-1",
+      "legs": [
+        {
+          "timeMinute": "3",
+          "points": [
+            {
+              "name": "Baukau-Ost (Herne), Konrad-Adenauer-Platz 3",
+              "platformName": "",
+              "nameWithPlace": "Baukau-Ost (Herne), Konrad-Adenauer-Platz 3",
+              "dateTime": {
+                "date": "26.10.2026",
+                "time": "14:00",
+                "timeSec": "14:00:00",
+                "rtDate": "26.10.2026",
+                "rtTime": "14:00",
+                "rtTimeSec": "14:00:00"
+              },
+              "ref": {
+                "id": "99999997",
+                "area": "",
+                "platform": "",
+                "NaPTANID": "",
+                "attrs": [],
+                "coords": "7.218718,51.543866"
+              }
+            },
+            {
+              "name": "Herne-Mitte (Herne), Bahnhofstraße 106",
+              "platformName": "",
+              "nameWithPlace": "Herne-Mitte (Herne), Bahnhofstraße 106",
+              "dateTime": {
+                "date": "26.10.2026",
+                "time": "14:03",
+                "timeSec": "14:03:46",
+                "rtDate": "26.10.2026",
+                "rtTime": "14:03",
+                "rtTimeSec": "14:03:46"
+              },
+              "ref": {
+                "id": "99999998",
+                "area": "",
+                "platform": "",
+                "NaPTANID": "",
+                "attrs": [],
+                "coords": "7.219131,51.544569"
+              }
+            }
+          ],
+          "mode": {
+            "name": "",
+            "number": "",
+            "symbol": "",
+            "product": "Fussweg",
+            "type": "100",
+            "code": "-1",
+            "destination": "",
+            "destID": "-1",
+            "desc": "",
+            "timetablePeriod": "",
+            "realtime": "0",
+            "diva": {
+              "branch": "",
+              "line": "",
+              "supplement": " ",
+              "dir": " ",
+              "project": "",
+              "network": "",
+              "stateless": ":: : :",
+              "tripCode": "0",
+              "operator": "",
+              "opCode": "",
+              "lineDisplay": "line",
+              "attrs": []
+            }
+          }
+        }
+      ],
+      "itdFare": {
+        "fares": null,
+        "tickets": null,
+        "tariffZones": null,
+        "specialTickets": null
+      },
+      "attrs": []
+    }
+  }
+}

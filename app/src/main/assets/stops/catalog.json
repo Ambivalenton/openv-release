@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "application_id": 1331057492,
+  "export_date": "2026-11-02",
+  "database_sha256": "1c8a012b23279f78f6db8846ef34e41e07170bffd5d134610c0320fb9fd5a517",
+  "database_bytes": 65388544,
+  "asset_sha256": "ff1b7c8c2e3341f625e84d7f69aeba5c243d49c2b43d6b37f824f56714b1438d",
+  "asset_bytes": 24072098,
+  "counts": {
+    "zhv_A": 136095,
+    "zhv_Q": 544069,
+    "zhv_S": 288924,
+    "searchable_roots": 246633,
+    "historical_roots": 42291,
+    "unmapped_gtfs_stops": 132,
+    "gtfs_stop_aliases": 33700,
+    "gtfs_stops": 33832,
+    "gtfs_routes": 1829,
+    "gtfs_shape_points": 0,
+    "line_rows": 15776,
+    "line_current_at_export": 0
+  },
+  "gtfs_feed": {
+    "feed_publisher_name": "VRR",
+    "feed_publisher_url": "http://efa.vrr.de",
+    "feed_lang": "DE",
+    "feed_start_date": "20260901",
+    "feed_end_date": "20270228",
+    "feed_version": "20261013"
+  },
+  "line_valid_from": [
+    "20250329"
+  ],
+  "line_valid_to": [
+    "20250614",
+    "20250826",
+    "20250904"
+  ],
+  "sources": [
+    {
+      "file": "20261102_zHV_gesamt.zip",
+      "sha256": "14ece76af3736bc60d76a061cd4709a51e33bdb98fade8f07656d02ab30b60fa",
+      "publisher": "DELFI e.V.",
+      "license": "CC-BY (as linked by publisher)",
+      "license_url": "https://opendefinition.org/licenses/cc-by/",
+      "url": "https://www.opendata-oepnv.de/ht/de/organisation/delfi/startseite"
+    },
+    {
+      "file": "google_transit.zip",
+      "sha256": "4bfa923555d78eff2302acab3d2772c27174d649ac1ea7f830233ad5f1b3f9c7",
+      "publisher": "Verkehrsverbund Rhein-Ruhr AöR",
+      "license": "CC-BY (as linked by publisher)",
+      "license_url": "https://opendefinition.org/licenses/cc-by/",
+      "url": "https://www.opendata-oepnv.de/ht/de/organisation/verkehrsverbuende/vrr/openvrr/datensaetze"
+    },
+    {
+      "file": "line.csv",
+      "sha256": "ebccc67c7fd4150425cb8b3db5299f22befb245bf724effa88e98b6750a16470",
+      "use": "audited only; expired, not imported"
+    }
+  ],
+  "modifications": "Root stops indexed and historical entries excluded from search at export date; names normalized for search; VRR stop aliases joined through explicit zHV Parent, GTFS parent_station and DHID extension. No timetable or real-time data imported. Unused last_service and replacement export columns removed in Build 62; retired flags and all runtime search data retained.",
+  "limits": [
+    "Not a national journey planner",
+    "No real-time information",
+    "Snapshot, no automatic download",
+    "LastOperationDate is last service day, not last update",
+    "GTFS shapes file has no points"
+  ],
+  "asset_file": "stops.catalog"
+}

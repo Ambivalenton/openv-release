@@ -1,0 +1,426 @@
+[
+  {
+    "id": "overview",
+    "de": "Übersicht",
+    "en": "Overview",
+    "category": "Erste Schritte",
+    "description_de": "Dein nächster Weg, als lesbarer Satz oder kompakte Infokarte. Die Übersicht zeigt Verbindungen zu sichtbaren Favoriten und berücksichtigt ihre Linien und Zeitregeln.",
+    "description_en": "Your next journey as a readable sentence or compact card. Overview shows connections to visible favourites and respects their lines and time rules."
+  },
+  {
+    "id": "search",
+    "de": "Suchen",
+    "en": "Search",
+    "category": "Erste Schritte",
+    "description_de": "Hier planst du einen Weg mit Start, Ziel, Zeit und Verkehrsmitteln. Auch dein Favoriten-Netzplan, Vormerkungen und frühere Suchen sind hier zu Hause.",
+    "description_en": "Plan a journey with a start, destination, time and transport types. Your favourite network plan, saved connections and previous searches live here too."
+  },
+  {
+    "id": "origin",
+    "de": "Startpunkt",
+    "en": "Starting point",
+    "category": "Erste Schritte",
+    "description_de": "Der Ort, an dem die Suche beginnt. Das kann deine Geräteposition, ein manuell gewählter Ort oder ein bewusst als Start gesetzter Favorit sein.",
+    "description_en": "The place where your search begins: your device location, a manually selected place or a favourite deliberately set as your start."
+  },
+  {
+    "id": "destination",
+    "de": "Ziel",
+    "en": "Destination",
+    "category": "Erste Schritte",
+    "description_de": "Dorthin möchtest du. Ein Ziel kann eine Haltestelle, eine Adresse oder ein gespeicherter Favorit sein. Ein gefundener Ort garantiert noch keine Verbindung.",
+    "description_en": "Where you want to go: a stop, an address or a saved favourite. Finding a place does not guarantee a connection."
+  },
+  {
+    "id": "stop",
+    "de": "Haltestelle",
+    "en": "Stop",
+    "category": "Erste Schritte",
+    "description_de": "Ein Ort zum Ein-, Aus- oder Umsteigen. Dazu zählen auch Bahnhöfe. Ein Eintrag im lokalen Verzeichnis enthält keinen aktuellen Fahrplan.",
+    "description_en": "A place to board, leave or change vehicles, including railway stations. An entry in the local directory does not contain a current timetable."
+  },
+  {
+    "id": "journey",
+    "de": "Verbindung",
+    "en": "Connection",
+    "category": "Erste Schritte",
+    "description_de": "Der gesamte vorgeschlagene Weg zum Ziel. Er kann mehrere Fahrten, Fußwege und Umstiege enthalten. Eine Fahrt ist dagegen ein einzelner Fahrzeugabschnitt.",
+    "description_en": "The complete suggested route to your destination. It may include several vehicle journeys, walks and transfers. A vehicle journey is just one section of a connection."
+  },
+  {
+    "id": "favourite",
+    "de": "Favorit",
+    "en": "Favourite",
+    "category": "Dein Netz",
+    "description_de": "Ein Ort mit deinem Namen, Symbol und deiner Farbe. Du kannst ihn in den Netzplan setzen und mit Zeitregeln und Verkehrsfiltern versehen.",
+    "description_en": "A place with your own name, icon and colour. Put it in the network plan and add time rules and transport filters."
+  },
+  {
+    "id": "network",
+    "de": "Netzplan",
+    "en": "Network plan",
+    "category": "Dein Netz",
+    "description_de": "Deine Favoriten werden zu Stationen, deine Verknüpfungen zu Linien. Das ist dein persönliches Wegenetz, kein offizieller Linienplan. Bei einer passenden angepinnten Verbindung zeigt ein Verkehrsmittel den Fortschritt des Assistenten. Sonst sind die kleinen Fahrzeuge dekorativ.",
+    "description_en": "Your favourites become stations and your connections become lines. This is your personal network, not an official route map. A matching pinned journey shows one vehicle at the progress reported by the assistant. Otherwise, the small vehicles are decorative."
+  },
+  {
+    "id": "network_line",
+    "de": "Linie im Netzplan",
+    "en": "Network line",
+    "category": "Dein Netz",
+    "description_de": "Verbindet zwei Favoriten. Beim Antippen wird zwischen ihnen gesucht. Im Bearbeiten-Modus legst du eine oder beide Suchrichtungen fest. Gemeint ist keine tatsächliche Bus- oder Bahnlinie.",
+    "description_en": "Links two favourites. Tap it to search between them. In Edit, allow one or both search directions. It does not represent an actual bus or rail service."
+  },
+  {
+    "id": "transfer_point",
+    "de": "Umstiegspunkt",
+    "en": "Transfer point",
+    "category": "Dein Netz",
+    "description_de": "Ein Favorit, der im Netzplan auf dem Weg zu einem anderen Ziel liegt, etwa dein Bahnhof. Die Übersicht kann über ihn weiterplanen, statt ihn als Endziel zu behandeln.",
+    "description_en": "A favourite on the way to another destination, such as your station. Overview can plan through it instead of treating it as the final destination."
+  },
+  {
+    "id": "tray",
+    "de": "Ablage",
+    "en": "Tray",
+    "category": "Dein Netz",
+    "description_de": "Hier warten Favoriten, die noch keinen Platz im Raster haben. Unter Bearbeiten wählst du einen aus und tippst auf ein freies Rasterfeld.",
+    "description_en": "Favourites without a grid position wait here. In Edit, select one and tap an empty grid position."
+  },
+  {
+    "id": "virtual_start",
+    "de": "Favorit als Start",
+    "en": "Favourite as start",
+    "category": "Dein Netz",
+    "description_de": "Wähle unter Favoriten-Einstellungen → Raster des Netzplans die Halte-Aktion Als aktuellen Standort festlegen. Halte danach einen Favoriten, um ab dort zu planen; erneutes Halten hebt die Auswahl auf. Dein tatsächlicher Gerätestandort wird dadurch nicht verändert.",
+    "description_en": "Under Favourite settings → Network map grid, choose Set as current location as the hold action. Then hold a favourite to plan from it; hold again to undo. This does not change your actual device location."
+  },
+  {
+    "id": "favourite_radius",
+    "de": "Favoriten-Umkreis",
+    "en": "Favourite radius",
+    "category": "Dein Netz",
+    "description_de": "Legt fest, wie nah du einem Favoriten sein musst, damit die App ab dort plant. Möglich sind auch Aus oder immer der nächstgelegene Favorit. Entfernung allein bestätigt keinen Bahnsteig.",
+    "description_en": "How close you must be to a favourite before the app plans from there. You can also choose Off or always use the nearest favourite. Distance alone cannot confirm a platform."
+  },
+  {
+    "id": "rule",
+    "de": "Zeitregel",
+    "en": "Time rule",
+    "category": "Dein Netz",
+    "description_de": "Hebt Favoriten oder Linien zu passenden Zeiten hervor; Linien lassen sich zeitweise ausblenden. Ein zeitabhängiger Standort hilft ohne GPS und ohne manuellen Start. Hervorgehobene Wege haben in der Übersicht Vorrang.",
+    "description_en": "Highlights favourites or lines at suitable times; lines can be temporarily hidden. A time-based location helps without GPS or a manual start. Highlighted journeys take priority in Overview."
+  },
+  {
+    "id": "chart",
+    "de": "Balkendiagramm",
+    "en": "Bar chart",
+    "category": "Unterwegs",
+    "description_de": "Verbindungen nebeneinander vergleichen, ohne Zeiten zusammenzurechnen: Jede Zeile ist ein Weg, die Abschnitte stehen für Verkehrsmittel und Gehwege. Antippen öffnet die Details.",
+    "description_en": "Compare connections without adding up times: each row is a route, with sections for transport types and walking. Tap to open the details."
+  },
+  {
+    "id": "timeline",
+    "de": "Zeitstrahl",
+    "en": "Timeline",
+    "category": "Unterwegs",
+    "description_de": "Die Reihenfolge einer einzelnen Verbindung: losgehen, einsteigen, umsteigen, ankommen. Hier findest du verfügbare Halte, Zeiten, Gleise und Gehhinweise.",
+    "description_en": "The sequence of one connection: walk, board, change, arrive. Find available stops, times, platforms and walking directions here."
+  },
+  {
+    "id": "intermediate_stop",
+    "de": "Zwischenhalt",
+    "en": "Intermediate stop",
+    "category": "Unterwegs",
+    "description_de": "Ein Halt, den dein Fahrzeug auf seiner Fahrt anfährt. Du bleibst dabei normalerweise sitzen. Nicht zu verwechseln mit einem selbst gewählten Zwischenstopp.",
+    "description_en": "A stop served by your vehicle along the way. You normally stay on board. Different from a waypoint that you choose yourself."
+  },
+  {
+    "id": "waypoint",
+    "de": "Zwischenstopp",
+    "en": "Waypoint",
+    "category": "Unterwegs",
+    "description_de": "Ein zusätzlicher Ort, den du selbst in deine Reise aufnimmst, etwa die Bäckerei vor der Arbeit. Eine Aufenthaltsdauer lässt sich mitplanen.",
+    "description_en": "An extra place you choose to visit, such as a bakery before work. You can include time for a stay."
+  },
+  {
+    "id": "transfer",
+    "de": "Umstieg",
+    "en": "Transfer",
+    "category": "Unterwegs",
+    "description_de": "Du wechselst das Fahrzeug. Dafür können Wartezeit, ein Fußweg und ein anderer Bahnsteig nötig sein. Prognosen und dein Gehtempo beeinflussen, ob der Anschluss erreichbar erscheint.",
+    "description_en": "You change vehicles. This may involve waiting, walking and a different platform. Forecasts and your walking pace affect whether the connection appears reachable."
+  },
+  {
+    "id": "companion",
+    "de": "Reisebegleiter",
+    "en": "Journey companion",
+    "category": "Unterwegs",
+    "description_de": "Begleitet deine angepinnte Verbindung mit nächstem Halt, Umstieg, Ankunft und Alternativen. Er startet durch Anpinnen und bleibt bei minimierter Ansicht aktiv, soweit Android es zulässt.",
+    "description_en": "Follows your pinned connection with the next stop, transfer, arrival and alternatives. Pinning starts it; it stays active when minimised, subject to Android restrictions."
+  },
+  {
+    "id": "pin",
+    "de": "Anpinnen",
+    "en": "Pin",
+    "category": "Unterwegs",
+    "description_de": "Startet die aktive Begleitung einer Verbindung. Es ist mehr als eine Vormerkung und legt keinen Favoriten an. Bestätigtes Entfernen auf der Reisekarte beendet die Begleitung.",
+    "description_en": "Starts active guidance for a connection. It goes beyond saving for later and does not create a favourite. Confirmed removal on the journey card ends the companion."
+  },
+  {
+    "id": "saved_journey",
+    "de": "Vormerkung",
+    "en": "Saved connection",
+    "category": "Unterwegs",
+    "description_de": "Ein Weg auf deiner Merkliste unter Suchen, ohne laufende Begleitung. Halte den Pin gedrückt, um ihn zu speichern. Die Vormerkung endet mit der bekannten Abfahrt oder deiner Löschung.",
+    "description_en": "A connection kept under Search without active guidance. Hold its pin to save it. It stays until the known departure or until you delete it."
+  },
+  {
+    "id": "bubble",
+    "de": "Schwebende Reisekarte",
+    "en": "Floating journey card",
+    "category": "Unterwegs",
+    "description_de": "Zeigt deine nächste Abfahrt, auch wenn du eine andere App geöffnet hast. Sie zeigt die bereits angepinnte Reise und braucht Androids Erlaubnis zum Einblenden. Schließen blendet nur die Karte aus; die Reise bleibt angepinnt.",
+    "description_en": "Shows your next departure even while another app is open. It shows the journey that is already pinned and needs Android’s permission to appear over other apps. Closing it only hides the card; the journey stays pinned."
+  },
+  {
+    "id": "alternative_suggestions",
+    "de": "Alternative Fahrten vorschlagen",
+    "en": "Suggest alternative journeys",
+    "category": "Unterwegs",
+    "description_de": "Zeigt bessere erreichbare Verbindungen kurz vor dem Start und unterwegs als Vergleich. Der Schalter steuert automatische Pop-ups; die Alternativen im angepinnten Zeitstrahl bleiben erreichbar.",
+    "description_en": "Compares better reachable connections shortly before departure and during travel. The switch controls automatic pop-ups; alternatives remain accessible in the pinned timeline."
+  },
+  {
+    "id": "walking_pace",
+    "de": "Dein Gehtempo",
+    "en": "Your walking pace",
+    "category": "Unterwegs",
+    "description_de": "Damit passt Öpen-V die Gehzeitprüfung bei Suche und Umstiegen an dich an. Optional schlägt lokales Lernen ein Tempo vor. Erst dein Antippen übernimmt den Vorschlag.",
+    "description_en": "Adjusts walking-time checks in searches and transfers to your pace. Optional local learning suggests a pace, applied only when you tap to accept it."
+  },
+  {
+    "id": "ignore_walking",
+    "de": "Gehzeiten ignorieren",
+    "en": "Ignore walking times",
+    "category": "Unterwegs",
+    "description_de": "Blendet Fußwege aus Balken und Zeitstrahlen aus und lockert die Gehzeitprüfung. Dadurch können praktisch nicht erreichbare Umstiege erscheinen. Der tatsächliche Weg bleibt bestehen.",
+    "description_en": "Hides walks from bars and timelines and relaxes walking-time checks. This can show transfers that cannot be reached in practice. The real walk still exists."
+  },
+  {
+    "id": "departures",
+    "de": "Abfahrten",
+    "en": "Departures",
+    "category": "Unterwegs",
+    "description_de": "Die nächsten Fahrten ab einer Haltestelle, mit Linie, Richtung und Zeit. Abfahrten sind keine vollständige Verbindung bis zu einem Ziel.",
+    "description_en": "The next services from a stop, with line, direction and time. Departures do not describe a complete connection to your destination."
+  },
+  {
+    "id": "board",
+    "de": "Anzeigetafel",
+    "en": "Departure board",
+    "category": "Unterwegs",
+    "description_de": "Deine Abfahrtsanzeige im gewählten Design. Die Haltestellen-Liste enthält Favoritenorte und eigene Einträge. Entfernen aus der Tafel löscht keinen Favoriten. Nächstgelegene nutzt den verfügbaren Standort.",
+    "description_en": "Your departures in a chosen design. The stop list contains favourite places and added entries. Removing a place from the board does not delete its favourite. Nearest uses the available location."
+  },
+  {
+    "id": "forecast",
+    "de": "Fahrplanprognose",
+    "en": "Timetable forecast",
+    "category": "Daten & Standort",
+    "description_de": "Eine Einschätzung anhand der Zeiten des Fahrplandienstes. Sie ist kein gemessener Standort und bestätigt weder Einstieg noch Ausstieg.",
+    "description_en": "An estimate based on transit-provider times. It is not a measured location and confirms neither boarding nor leaving a vehicle."
+  },
+  {
+    "id": "realtime",
+    "de": "Echtzeit",
+    "en": "Real time",
+    "category": "Daten & Standort",
+    "description_de": "Aktualisierte Angaben eines Anbieters, etwa eine erwartete Abfahrt oder ein Ausfall. Auch Echtzeit kann fehlen oder veraltet sein. Keine Meldung bedeutet nicht automatisch pünktlich.",
+    "description_en": "Updated provider information, such as an expected departure or cancellation. Real-time data may be missing or stale. No update does not automatically mean on time."
+  },
+  {
+    "id": "scheduled",
+    "de": "Sollzeit",
+    "en": "Scheduled time",
+    "category": "Daten & Standort",
+    "description_de": "Die im Fahrplan vorgesehene Zeit. Sie bleibt von einer aktuellen Prognose oder einer lokalen Schätzung zu unterscheiden.",
+    "description_en": "The time in the published timetable. It differs from a current forecast or a local estimate."
+  },
+  {
+    "id": "gps",
+    "de": "GPS-Standort",
+    "en": "GPS location",
+    "category": "Daten & Standort",
+    "description_de": "Eine vom Gerät gemessene Position. Sie kann ungenau sein oder ausbleiben. Der Reisebegleiter nutzt brauchbare Messungen für den Fortschritt, aber nicht als Beweis für den richtigen Bahnsteig.",
+    "description_en": "A position measured by your device. It can be inaccurate or unavailable. The companion uses usable readings for progress, not as proof of the correct platform."
+  },
+  {
+    "id": "stop_directory",
+    "de": "Lokales Haltestellenverzeichnis",
+    "en": "Local stop directory",
+    "category": "Daten & Standort",
+    "description_de": "Mitgelieferte öffentliche Haltestellendaten für schnelle Vorschläge, auch offline. Das Verzeichnis enthält keinen vollständigen Fahrplan und öffnet keinen DELFI-Navi-Zugang.",
+    "description_en": "Bundled public stop data for fast suggestions, including offline. It is not a complete timetable and does not activate DELFI-Navi access."
+  },
+  {
+    "id": "provider",
+    "de": "Fahrplandienst",
+    "en": "Transit provider",
+    "category": "Daten & Standort",
+    "description_de": "Der Server, der Verbindungen und Abfahrten liefert. Öpen-V verwendet VRR OpenService mit Schwerpunkt Rhein-Ruhr. Abdeckung und Echtzeit hängen vom Datenbestand ab.",
+    "description_en": "The server supplying journeys and departures. Öpen-V uses VRR OpenService, focused on Rhine-Ruhr. Coverage and realtime depend on its dataset."
+  },
+  {
+    "id": "search_history",
+    "de": "Suchverlauf",
+    "en": "Search history",
+    "category": "Daten & Standort",
+    "description_de": "Frühere Suchwege und kurzzeitig gespeicherte Ergebnisse auf deinem Gerät. Unter Info & Hilfe → Dienste & Daten kannst du den Verlauf löschen; dabei werden auch zugehörige Reise-Zwischenspeicher geleert.",
+    "description_en": "Previous searches and briefly cached results on your device. Delete the history under Info & help → Services & data to clear related journey caches too."
+  },
+  {
+    "id": "backup",
+    "de": "Export / Import",
+    "en": "Export / Import",
+    "category": "Daten & Standort",
+    "description_de": "Sichert deinen gespeicherten Bestand als lesbare JSON-Datei oder stellt ihn wieder her. Die Datei ist unverschlüsselt und kann persönliche Orte enthalten. Import ersetzt nach Bestätigung die bisherigen Daten.",
+    "description_en": "Saves stored data as readable JSON or restores it. The file is not encrypted and may contain personal places. Import replaces existing data after confirmation."
+  },
+  {
+    "id": "open_source",
+    "de": "Open Source",
+    "en": "Open source",
+    "category": "Daten & Standort",
+    "description_de": "Der App-Code steht unter GPL-3.0-or-later: ansehen, verändern und unter den Lizenzbedingungen weitergeben. Fremde Daten, Schriften und Server haben eigene Lizenzen oder Nutzungsbedingungen.",
+    "description_en": "The app code uses GPL-3.0-or-later: inspect, modify and share it under the licence terms. Third-party data, fonts and servers have their own licences or terms."
+  },
+  {
+    "id": "design",
+    "de": "App-Design",
+    "en": "App design",
+    "category": "Deine Ansicht",
+    "description_de": "Bestimmt Farben, Flächen, Formen und Motive. Anzeigetafel, Balkendiagramm und Netzplan haben eigene Optionen. App-Theme lässt unterstützte Bereiche dem aktuellen App-Design folgen.",
+    "description_en": "Sets colours, surfaces, shapes and motifs. The board, bar chart and network plan have separate options. App theme makes supported areas follow the current app design."
+  },
+  {
+    "id": "personal_theme",
+    "de": "Persönliches Theme",
+    "en": "Personal theme",
+    "category": "Deine Ansicht",
+    "description_de": "Dein gespeichertes Gesamtbild mit Designeinstellungen und App-Logo. Mit der Diskette speichern, später aus der eigenen Liste anwenden oder löschen.",
+    "description_en": "Your saved overall look, including design settings and app icon. Save with the disk icon, then apply or delete it from your own list."
+  },
+  {
+    "id": "font",
+    "de": "Schriftart",
+    "en": "Font",
+    "category": "Deine Ansicht",
+    "description_de": "Die Schrift für die App und ihre Übersicht. Die mitgelieferten Schriften funktionieren ohne Download. Größe und Lesbarkeit passt du separat an.",
+    "description_en": "The typeface used in the app and Overview. Bundled fonts need no download. Adjust size and readability separately."
+  },
+  {
+    "id": "overview_cards",
+    "de": "Kartenansicht",
+    "en": "Card view",
+    "category": "Deine Ansicht",
+    "description_de": "Zeigt dieselben gewählten Angaben der Übersicht als Infokarten. Hier sind Karten mit Text gemeint, keine Straßenkarte.",
+    "description_en": "Shows the same selected Overview information as cards. These are text cards, rather than a street map."
+  },
+  {
+    "id": "quote_design",
+    "de": "Infotext-Design",
+    "en": "Info text design",
+    "category": "Deine Ansicht",
+    "description_de": "Rahmen und Hintergrund für Sprüche und Fakten. Ein anderer Rahmen ändert die Gestaltung, während Textwechsel und Chronik erhalten bleiben.",
+    "description_en": "The frame and background for quotes and facts. Changing the frame changes the look while preserving text switching and history."
+  },
+  {
+    "id": "bar_chart_design",
+    "de": "Balkendiagramm-Design",
+    "en": "Bar chart design",
+    "category": "Deine Ansicht",
+    "description_de": "Gestaltet Balken, Linien, Beschriftungen und Fußabdrücke. App-Theme folgt deinem App-Design; eigenständige Designs behalten ihre eigene Gestaltung.",
+    "description_en": "Styles bars, lines, labels and footprints. App theme follows your app design; standalone designs keep their own look."
+  },
+  {
+    "id": "prints",
+    "de": "Fußabdrücke",
+    "en": "Footprints",
+    "category": "Deine Ansicht",
+    "description_de": "Bewegte Abdrücke für Gehabschnitte. Stil, Tempo und Größe lassen sich einstellen. Fußabdruck-Größe gilt für Balkendiagramm und Zeitstrahl sowie die Ersatzpunkte. Im Zeitstrahl verlaufen die Abdrücke immer gerade.",
+    "description_en": "Animated prints for walking sections. Style, pace and size are adjustable. Footprint size applies to the bar chart, route timeline and replacement dots. Prints always follow a straight path in the route timeline."
+  },
+  {
+    "id": "text_history",
+    "de": "Textchronik",
+    "en": "Text history",
+    "category": "Deine Ansicht",
+    "description_de": "Dein Lesetagebuch mit bereits gezeigten Fakten, Gedanken, Haikus, Satiren und Bedienungstipps. Halte den Infotext gedrückt, um es zu öffnen. Alles bleibt auf dem Gerät.",
+    "description_en": "Your reading log of previously shown facts, thoughts, haiku, satire and usage tips. Hold the info text to open it. Everything stays on your device."
+  },
+  {
+    "id": "widget",
+    "de": "Widget",
+    "en": "Widget",
+    "category": "Deine Ansicht",
+    "description_de": "Ein kleines Stück Öpen-V auf deinem Android-Startbildschirm: Favoriten oder Abfahrten. Der Launcher bestimmt mögliche Größen; Android kann Aktualisierungen verzögern.",
+    "description_en": "A small piece of Öpen-V on your Android home screen: favourites or departures. Your launcher determines sizes; Android may delay updates."
+  },
+  {
+    "id": "modes_extras",
+    "de": "Modi & Verhalten",
+    "en": "Modes & behaviour",
+    "category": "Deine Ansicht",
+    "description_de": "Schwarz/Weiß, Ruhemodus, Stromsparmodus und Minimalismus, Tag & Nacht, die schwebende Reisekarte der angepinnten Fahrt, die Langdruck-Aktion im Balkendiagramm sowie Sichern & Übertragen – jede Einstellung in einem eigenen Rahmen.",
+    "description_en": "Black and white, quiet mode, power saving and minimalism, day & night, the floating journey card of the pinned journey, the long-press action in the bar chart and back up & transfer – each setting in its own frame."
+  },
+  {
+    "id": "quiet",
+    "de": "Ruhemodus",
+    "en": "Quiet mode",
+    "category": "Deine Ansicht",
+    "description_de": "Weniger Bewegung, ein eigenes gespeichertes Design. Ideal, wenn du die App ruhiger lesen möchtest.",
+    "description_en": "Less motion and a separately saved design, for a calmer reading experience."
+  },
+  {
+    "id": "monochrome",
+    "de": "Schwarz/Weiß",
+    "en": "Monochrome",
+    "category": "Deine Ansicht",
+    "description_de": "Zeigt App-Farben in Graustufen. Deine gespeicherten Farben und Themes bleiben erhalten.",
+    "description_en": "Shows app colours in greyscale. Your saved colours and themes remain intact."
+  },
+  {
+    "id": "power_saving",
+    "de": "Stromsparmodus",
+    "en": "Power-saving mode",
+    "category": "Deine Ansicht",
+    "description_de": "Reduziert Effekte und Abfragen. Der Reisebegleiter folgt Anbieterzeiten; gelegentliche Standortprüfungen suchen nur nach Abweichungen. GPS-bestätigte Ein- und Ausstiegsaussagen sind dabei ausgesetzt.",
+    "description_en": "Reduces effects and requests. The companion follows provider times; occasional location checks only look for deviations. GPS-confirmed boarding and exit conclusions are suspended."
+  },
+  {
+    "id": "minimalism",
+    "de": "Minimalismus-Modus",
+    "en": "Minimalism mode",
+    "category": "Deine Ansicht",
+    "description_de": "Blendet Infotext und zusätzliche Suchbereiche aus und gibt der Anzeigetafel den verfügbaren Platz. Die gespeicherten Inhalte bleiben erhalten.",
+    "description_en": "Hides the info text and extra search areas and gives the board the available space. Stored content remains intact."
+  },
+  {
+    "id": "chart_long_press",
+    "de": "Balken gedrückt halten",
+    "en": "Hold a bar",
+    "category": "Deine Ansicht",
+    "description_de": "Du wählst die Aktion selbst: nichts tun, Kompaktansicht öffnen, vormerken, anpinnen oder Zwischenstopp hinzufügen. Ein kurzer Tipp öffnet weiterhin den Zeitstrahl.",
+    "description_en": "Choose the action: none, open the compact view, save, pin or add a waypoint. A short tap still opens the timeline."
+  },
+  {
+    "id": "compact_view",
+    "de": "Kompaktansicht",
+    "en": "Compact view",
+    "category": "Deine Ansicht",
+    "description_de": "Zeigt eine Verbindung oder die Live-Verbindung als kompakte Karte im Vollbild, mit Datenquelle und Stand. Öpen-V erstellt dabei kein Bild und teilt nichts; ein Bildschirmfoto machst nur du, wenn du möchtest.",
+    "description_en": "Shows a connection or the live journey as a compact full-screen card with data source and time. Öpen-V creates no image and shares nothing; only you decide whether to take a screenshot."
+  }
+]

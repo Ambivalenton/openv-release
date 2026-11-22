@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Sicherheitslücke vertraulich melden
+    url: https://github.com/Ambivalenton/openv-release/blob/main/SECURITY.md
+    about: Bitte nicht als öffentliches Issue.
+  - name: Datenschutz und Kontakt
+    url: https://ambivalenton.github.io/openv-release/privacy/
+    about: Datenschutzerklärung und E-Mail-Kontakt (oepenvapp@gmail.com).

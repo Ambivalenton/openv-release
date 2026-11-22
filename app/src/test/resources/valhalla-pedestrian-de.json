@@ -1,0 +1,143 @@
+{
+  "trip": {
+    "locations": [
+      {
+        "type": "break",
+        "lat": 52.5163,
+        "lon": 13.3777,
+        "original_index": 0
+      },
+      {
+        "type": "break",
+        "lat": 52.518,
+        "lon": 13.3793,
+        "original_index": 1
+      }
+    ],
+    "legs": [
+      {
+        "maneuvers": [
+          {
+            "type": 1,
+            "instruction": "Auf Fußweg Richtung Westen laufen.",
+            "verbal_succinct_transition_instruction": "Richtung Westen laufen. Dann Weiter auf Platz des 18. März.",
+            "verbal_pre_transition_instruction": "Auf Fußweg Richtung Westen laufen. Dann Weiter auf Platz des 18. März.",
+            "verbal_post_transition_instruction": "10 Meter weiter der Route folgen.",
+            "bearing_after": 265,
+            "time": 7.36,
+            "length": 0.01,
+            "cost": 7.36,
+            "begin_shape_index": 0,
+            "end_shape_index": 1,
+            "verbal_multi_cue": true,
+            "travel_mode": "pedestrian",
+            "travel_type": "foot"
+          },
+          {
+            "type": 8,
+            "instruction": "Weiter auf Platz des 18. März.",
+            "verbal_transition_alert_instruction": "Weiter auf Platz des 18. März.",
+            "verbal_pre_transition_instruction": "Weiter auf Platz des 18. März. Dann Rechts auf Fußweg abbiegen.",
+            "verbal_post_transition_instruction": "weniger als 10 Meter weiter der Route folgen.",
+            "street_names": [
+              "Platz des 18. März"
+            ],
+            "bearing_before": 265,
+            "bearing_after": 264,
+            "time": 6.4,
+            "length": 0.008,
+            "cost": 11.4,
+            "begin_shape_index": 1,
+            "end_shape_index": 2,
+            "verbal_multi_cue": true,
+            "travel_mode": "pedestrian",
+            "travel_type": "foot"
+          },
+          {
+            "type": 10,
+            "instruction": "Rechts auf Fußweg abbiegen.",
+            "verbal_transition_alert_instruction": "Rechts auf Fußweg abbiegen.",
+            "verbal_succinct_transition_instruction": "Rechts abbiegen.",
+            "verbal_pre_transition_instruction": "Rechts auf Fußweg abbiegen.",
+            "verbal_post_transition_instruction": "200 Meter weiter der Route folgen.",
+            "bearing_before": 264,
+            "bearing_after": 353,
+            "time": 168.647,
+            "length": 0.177,
+            "cost": 185.139,
+            "begin_shape_index": 2,
+            "end_shape_index": 13,
+            "travel_mode": "pedestrian",
+            "travel_type": "foot"
+          },
+          {
+            "type": 10,
+            "instruction": "Rechts auf Dorotheenstraße/B 2 abbiegen.",
+            "verbal_transition_alert_instruction": "Rechts auf Dorotheenstraße abbiegen.",
+            "verbal_succinct_transition_instruction": "Rechts abbiegen.",
+            "verbal_pre_transition_instruction": "Rechts auf Dorotheenstraße, B 2 abbiegen.",
+            "verbal_post_transition_instruction": "200 Meter weiter der Route folgen.",
+            "street_names": [
+              "Dorotheenstraße",
+              "B 2"
+            ],
+            "bearing_before": 342,
+            "bearing_after": 71,
+            "time": 137.101,
+            "length": 0.15,
+            "cost": 156.287,
+            "begin_shape_index": 13,
+            "end_shape_index": 18,
+            "travel_mode": "pedestrian",
+            "travel_type": "foot"
+          },
+          {
+            "type": 4,
+            "instruction": "Ziel erreicht.",
+            "verbal_transition_alert_instruction": "Das Ziel wird erreicht.",
+            "verbal_pre_transition_instruction": "Ziel erreicht.",
+            "bearing_before": 84,
+            "time": 0.0,
+            "length": 0.0,
+            "cost": 0.0,
+            "begin_shape_index": 18,
+            "end_shape_index": 18,
+            "travel_mode": "pedestrian",
+            "travel_type": "foot"
+          }
+        ],
+        "summary": {
+          "has_time_restrictions": false,
+          "has_toll": false,
+          "has_highway": false,
+          "has_ferry": false,
+          "min_lat": 52.516258,
+          "min_lon": 13.377108,
+          "max_lat": 52.517999,
+          "max_lon": 13.3793,
+          "time": 319.509,
+          "length": 0.345,
+          "cost": 360.186
+        },
+        "shape": "azidcBolooXN|GLbF}Eh@aKfA}OsCyIn@S@kAb@qf@tQm@Am@C_B`Bw@\\q@yDeAqKGwAuBiu@eCo|@"
+      }
+    ],
+    "summary": {
+      "has_time_restrictions": false,
+      "has_toll": false,
+      "has_highway": false,
+      "has_ferry": false,
+      "min_lat": 52.516258,
+      "min_lon": 13.377108,
+      "max_lat": 52.517999,
+      "max_lon": 13.3793,
+      "time": 319.509,
+      "length": 0.345,
+      "cost": 360.186
+    },
+    "status_message": "Found route between points",
+    "status": 0,
+    "units": "kilometers",
+    "language": "de-DE"
+  }
+}

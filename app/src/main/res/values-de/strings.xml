@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Öpen-V</string>
+    <string name="quick_widget_name">Öpen-V · Favoriten</string>
+    <string name="board_widget_name">Öpen-V · Anzeigetafel</string>
+    <string name="widget_description">Deine Ziele. Direkt zu den Verbindungen.</string>
+    <string name="board_widget_description">Live-Abfahrten deiner nächsten gespeicherten Haltestelle.</string>
+    <string name="widget_tagline">Deine Orte. Deine Wege.</string>
+    <string name="board_preview_station">Deine nächste Haltestelle</string>
+    <string name="board_preview_columns">Linie · Ziel · Abfahrt · Gleis</string>
+    <string name="board_widget_error_title">Öpen-V · Anzeigetafel</string>
+    <string name="board_widget_error_message">Bitte die App öffnen und die Anzeigetafel aktualisieren.</string>
+</resources>

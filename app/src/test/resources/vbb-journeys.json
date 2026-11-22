@@ -1,0 +1,5240 @@
+{
+	"earlierRef": "3|OB|MT#14#13260#13260#13283#13283#0#0#165#13258#1#0#10#0#0#-2147483648#1#2|PDH#b1725f5dc33d340f81aae0fa62d9ae82|RD#25102026|RT#45800|US#1|RS#INIT",
+	"laterRef": "3|OF|MT#14#13269#13269#13289#13291#0#0#165#13261#5#0#2#0#0#-2147483648#1#2|PDH#b1725f5dc33d340f81aae0fa62d9ae82|RD#25102026|RT#45800|US#1|RS#INIT",
+	"journeys": [
+		{
+			"type": "journey",
+			"legs": [
+				{
+					"origin": {
+						"type": "stop",
+						"id": "900100003",
+						"name": "S+U Alexanderplatz Bhf (Berlin)",
+						"location": {
+							"type": "location",
+							"id": "900100003",
+							"latitude": 52.521508,
+							"longitude": 13.411267
+						},
+						"products": {
+							"suburban": true,
+							"subway": true,
+							"tram": false,
+							"bus": false,
+							"ferry": false,
+							"express": false,
+							"regional": false
+						},
+						"ids": {
+							"ifopt": "de:11000:900100003"
+						},
+						"stationDHID": "de:11000:900100003"
+					},
+					"destination": {
+						"type": "stop",
+						"id": "900003201",
+						"name": "S+U Berlin Hauptbahnhof",
+						"location": {
+							"type": "location",
+							"id": "900003201",
+							"latitude": 52.525607,
+							"longitude": 13.369072
+						},
+						"products": {
+							"suburban": true,
+							"subway": true,
+							"tram": true,
+							"bus": true,
+							"ferry": false,
+							"express": false,
+							"regional": false
+						},
+						"ids": {
+							"ifopt": "de:11000:900003201"
+						},
+						"stationDHID": "de:11000:900003201"
+					},
+					"departure": "2026-10-25T05:00:00+01:00",
+					"plannedDeparture": "2026-10-25T05:00:00+01:00",
+					"departureDelay": 0,
+					"arrival": "2026-10-25T05:06:00+01:00",
+					"plannedArrival": "2026-10-25T05:06:00+01:00",
+					"arrivalDelay": 0,
+					"reachable": true,
+					"tripId": "1|2691|0|86|25102026",
+					"line": {
+						"type": "line",
+						"id": "de-vbb-11000000-s-bahn-s7-s7-o",
+						"fahrtNr": "53",
+						"name": "S7",
+						"public": true,
+						"adminCode": "DBS---",
+						"productName": "S",
+						"mode": "train",
+						"product": "suburban",
+						"operator": {
+							"type": "operator",
+							"id": "s-bahn-berlin-gmbh",
+							"name": "S-Bahn Berlin GmbH"
+						},
+						"color": {
+							"fg": "#fff",
+							"bg": "#6d61f2"
+						}
+					},
+					"direction": "S Potsdam Hauptbahnhof",
+					"currentLocation": {
+						"type": "location",
+						"latitude": 52.521589,
+						"longitude": 13.411357
+					},
+					"arrivalPlatform": "16",
+					"plannedArrivalPlatform": "16",
+					"arrivalPrognosisType": "prognosed",
+					"departurePlatform": "4",
+					"plannedDeparturePlatform": "4",
+					"departurePrognosisType": "prognosed",
+					"stopovers": [
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900100003",
+								"name": "S+U Alexanderplatz Bhf (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900100003",
+									"latitude": 52.521508,
+									"longitude": 13.411267
+								},
+								"products": {
+									"suburban": true,
+									"subway": true,
+									"tram": false,
+									"bus": false,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900100003"
+								},
+								"stationDHID": "de:11000:900100003"
+							},
+							"arrival": null,
+							"plannedArrival": null,
+							"arrivalDelay": null,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": null,
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:00:00+01:00",
+							"plannedDeparture": "2026-10-25T05:00:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								},
+								{
+									"type": "hint",
+									"code": "FK",
+									"text": "Bicycle conveyance (S+U Alexanderplatz Bhf (Berlin))"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900100002",
+								"name": "S Hackescher Markt (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900100002",
+									"latitude": 52.522605,
+									"longitude": 13.402359
+								},
+								"products": {
+									"suburban": true,
+									"subway": false,
+									"tram": true,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900100002"
+								},
+								"stationDHID": "de:11000:900100002"
+							},
+							"arrival": "2026-10-25T05:01:00+01:00",
+							"plannedArrival": "2026-10-25T05:01:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:01:00+01:00",
+							"plannedDeparture": "2026-10-25T05:01:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900100001",
+								"name": "S+U Friedrichstr. Bhf (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900100001",
+									"latitude": 52.520304,
+									"longitude": 13.387257
+								},
+								"products": {
+									"suburban": true,
+									"subway": true,
+									"tram": true,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900100001"
+								},
+								"stationDHID": "de:11000:900100001"
+							},
+							"arrival": "2026-10-25T05:03:00+01:00",
+							"plannedArrival": "2026-10-25T05:03:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:04:00+01:00",
+							"plannedDeparture": "2026-10-25T05:04:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900003201",
+								"name": "S+U Berlin Hauptbahnhof",
+								"location": {
+									"type": "location",
+									"id": "900003201",
+									"latitude": 52.525607,
+									"longitude": 13.369072
+								},
+								"products": {
+									"suburban": true,
+									"subway": true,
+									"tram": true,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900003201"
+								},
+								"stationDHID": "de:11000:900003201"
+							},
+							"arrival": "2026-10-25T05:06:00+01:00",
+							"plannedArrival": "2026-10-25T05:06:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": null,
+							"plannedDeparture": null,
+							"departureDelay": null,
+							"departurePlatform": null,
+							"departurePrognosisType": null,
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "FK",
+									"text": "Bicycle conveyance (S+U Berlin Hauptbahnhof)"
+								}
+							]
+						}
+					],
+					"remarks": [
+						{
+							"type": "hint",
+							"code": "OPERATOR",
+							"text": "DBS"
+						},
+						{
+							"type": "hint",
+							"code": "text.occup.jny.max.11",
+							"text": "low occupancy expected"
+						}
+					],
+					"cycle": {
+						"min": 180,
+						"max": 900,
+						"nr": 9
+					},
+					"alternatives": [
+						{
+							"tripId": "1|3834|0|86|25102026",
+							"line": {
+								"type": "line",
+								"id": "de-vbb-11000000-s-bahn-s9-s9-c",
+								"fahrtNr": "29621",
+								"name": "S9",
+								"public": true,
+								"adminCode": "DBS---",
+								"productName": "S",
+								"mode": "train",
+								"product": "suburban",
+								"operator": {
+									"type": "operator",
+									"id": "s-bahn-berlin-gmbh",
+									"name": "S-Bahn Berlin GmbH"
+								},
+								"color": {
+									"fg": "#fff",
+									"bg": "#992746"
+								}
+							},
+							"direction": "S Spandau Bhf (Berlin)",
+							"when": "2026-10-25T05:15:00+01:00",
+							"plannedWhen": "2026-10-25T05:15:00+01:00",
+							"delay": 0
+						},
+						{
+							"tripId": "1|2691|1|86|25102026",
+							"line": {
+								"type": "line",
+								"id": "de-vbb-11000000-s-bahn-s7-s7-o",
+								"fahrtNr": "75",
+								"name": "S7",
+								"public": true,
+								"adminCode": "DBS---",
+								"productName": "S",
+								"mode": "train",
+								"product": "suburban",
+								"operator": {
+									"type": "operator",
+									"id": "s-bahn-berlin-gmbh",
+									"name": "S-Bahn Berlin GmbH"
+								},
+								"color": {
+									"fg": "#fff",
+									"bg": "#6d61f2"
+								}
+							},
+							"direction": "S Potsdam Hauptbahnhof",
+							"when": "2026-10-25T05:30:00+01:00",
+							"plannedWhen": "2026-10-25T05:30:00+01:00",
+							"delay": 0
+						},
+						{
+							"tripId": "1|3834|1|86|25102026",
+							"line": {
+								"type": "line",
+								"id": "de-vbb-11000000-s-bahn-s9-s9-c",
+								"fahrtNr": "29626",
+								"name": "S9",
+								"public": true,
+								"adminCode": "DBS---",
+								"productName": "S",
+								"mode": "train",
+								"product": "suburban",
+								"operator": {
+									"type": "operator",
+									"id": "s-bahn-berlin-gmbh",
+									"name": "S-Bahn Berlin GmbH"
+								},
+								"color": {
+									"fg": "#fff",
+									"bg": "#992746"
+								}
+							},
+							"direction": "S Spandau Bhf (Berlin)",
+							"when": "2026-10-25T05:45:00+01:00",
+							"plannedWhen": "2026-10-25T05:45:00+01:00",
+							"delay": 0
+						},
+						{
+							"tripId": "1|2691|2|86|25102026",
+							"line": {
+								"type": "line",
+								"id": "de-vbb-11000000-s-bahn-s7-s7-o",
+								"fahrtNr": "92",
+								"name": "S7",
+								"public": true,
+								"adminCode": "DBS---",
+								"productName": "S",
+								"mode": "train",
+								"product": "suburban",
+								"operator": {
+									"type": "operator",
+									"id": "s-bahn-berlin-gmbh",
+									"name": "S-Bahn Berlin GmbH"
+								},
+								"color": {
+									"fg": "#fff",
+									"bg": "#6d61f2"
+								}
+							},
+							"direction": "S Potsdam Hauptbahnhof",
+							"when": "2026-10-25T06:00:00+01:00",
+							"plannedWhen": "2026-10-25T06:00:00+01:00",
+							"delay": 0
+						},
+						{
+							"tripId": "1|3834|2|86|25102026",
+							"line": {
+								"type": "line",
+								"id": "de-vbb-11000000-s-bahn-s9-s9-c",
+								"fahrtNr": "29620",
+								"name": "S9",
+								"public": true,
+								"adminCode": "DBS---",
+								"productName": "S",
+								"mode": "train",
+								"product": "suburban",
+								"operator": {
+									"type": "operator",
+									"id": "s-bahn-berlin-gmbh",
+									"name": "S-Bahn Berlin GmbH"
+								},
+								"color": {
+									"fg": "#fff",
+									"bg": "#992746"
+								}
+							},
+							"direction": "S Spandau Bhf (Berlin)",
+							"when": "2026-10-25T06:15:00+01:00",
+							"plannedWhen": "2026-10-25T06:15:00+01:00",
+							"delay": 0
+						}
+					]
+				},
+				{
+					"origin": {
+						"type": "stop",
+						"id": "900003201",
+						"name": "S+U Berlin Hauptbahnhof",
+						"location": {
+							"type": "location",
+							"id": "900003201",
+							"latitude": 52.525607,
+							"longitude": 13.369072
+						},
+						"products": {
+							"suburban": true,
+							"subway": true,
+							"tram": true,
+							"bus": true,
+							"ferry": false,
+							"express": false,
+							"regional": false
+						},
+						"ids": {
+							"ifopt": "de:11000:900003201"
+						},
+						"stationDHID": "de:11000:900003201"
+					},
+					"destination": {
+						"type": "stop",
+						"id": "900003200",
+						"name": "S+U Berlin Hauptbahnhof [Gleis 1-8]",
+						"location": {
+							"type": "location",
+							"id": "900003200",
+							"latitude": 52.525041,
+							"longitude": 13.369387
+						},
+						"products": {
+							"suburban": false,
+							"subway": false,
+							"tram": false,
+							"bus": false,
+							"ferry": false,
+							"express": true,
+							"regional": true
+						},
+						"ids": {
+							"ifopt": "de:11000:900003200"
+						},
+						"stationDHID": "de:11000:900003200"
+					},
+					"departure": "2026-10-25T05:06:00+01:00",
+					"plannedDeparture": "2026-10-25T05:06:00+01:00",
+					"departureDelay": 0,
+					"arrival": "2026-10-25T05:12:00+01:00",
+					"plannedArrival": "2026-10-25T05:12:00+01:00",
+					"arrivalDelay": 0,
+					"public": true,
+					"walking": true,
+					"distance": 67
+				},
+				{
+					"origin": {
+						"type": "stop",
+						"id": "900003200",
+						"name": "S+U Berlin Hauptbahnhof [Gleis 1-8]",
+						"location": {
+							"type": "location",
+							"id": "900003200",
+							"latitude": 52.525041,
+							"longitude": 13.369387
+						},
+						"products": {
+							"suburban": false,
+							"subway": false,
+							"tram": false,
+							"bus": false,
+							"ferry": false,
+							"express": true,
+							"regional": true
+						},
+						"ids": {
+							"ifopt": "de:11000:900003200"
+						},
+						"stationDHID": "de:11000:900003200"
+					},
+					"destination": {
+						"type": "stop",
+						"id": "900058101",
+						"name": "S Südkreuz Bhf (Berlin)",
+						"location": {
+							"type": "location",
+							"id": "900058101",
+							"latitude": 52.475501,
+							"longitude": 13.365548
+						},
+						"products": {
+							"suburban": true,
+							"subway": false,
+							"tram": false,
+							"bus": true,
+							"ferry": false,
+							"express": true,
+							"regional": true
+						},
+						"ids": {
+							"ifopt": "de:11000:900058101"
+						},
+						"stationDHID": "de:11000:900058101"
+					},
+					"departure": "2026-10-25T05:14:00+01:00",
+					"plannedDeparture": "2026-10-25T05:14:00+01:00",
+					"departureDelay": 0,
+					"arrival": "2026-10-25T05:23:00+01:00",
+					"plannedArrival": "2026-10-25T05:23:00+01:00",
+					"arrivalDelay": 0,
+					"reachable": true,
+					"tripId": "1|57202|0|86|25102026",
+					"line": {
+						"type": "line",
+						"id": "de-vbb-11000000-r-bahn-re5",
+						"fahrtNr": "648",
+						"name": "RE5",
+						"public": true,
+						"adminCode": "800158",
+						"productName": "RE",
+						"mode": "train",
+						"product": "regional",
+						"operator": {
+							"type": "operator",
+							"id": "db-regio-ag",
+							"name": "DB Regio AG"
+						},
+						"color": {
+							"fg": "#fff",
+							"bg": "#0080ff"
+						}
+					},
+					"direction": "S Südkreuz Bhf (Berlin)",
+					"arrivalPlatform": "4",
+					"plannedArrivalPlatform": "4",
+					"arrivalPrognosisType": "prognosed",
+					"departurePlatform": "4",
+					"plannedDeparturePlatform": "4",
+					"departurePrognosisType": "prognosed",
+					"stopovers": [
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900003200",
+								"name": "S+U Berlin Hauptbahnhof [Gleis 1-8]",
+								"location": {
+									"type": "location",
+									"id": "900003200",
+									"latitude": 52.525041,
+									"longitude": 13.369387
+								},
+								"products": {
+									"suburban": false,
+									"subway": false,
+									"tram": false,
+									"bus": false,
+									"ferry": false,
+									"express": true,
+									"regional": true
+								},
+								"ids": {
+									"ifopt": "de:11000:900003200"
+								},
+								"stationDHID": "de:11000:900003200"
+							},
+							"arrival": null,
+							"plannedArrival": null,
+							"arrivalDelay": null,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": null,
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:14:00+01:00",
+							"plannedDeparture": "2026-10-25T05:14:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								},
+								{
+									"type": "hint",
+									"code": "FK",
+									"text": "Bicycle conveyance (S+U Berlin Hauptbahnhof [Gleis 1-8])"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900100020",
+								"name": "S+U Potsdamer Platz Bhf (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900100020",
+									"latitude": 52.509355,
+									"longitude": 13.376551
+								},
+								"products": {
+									"suburban": true,
+									"subway": true,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": true
+								},
+								"ids": {
+									"ifopt": "de:11000:900100020"
+								},
+								"stationDHID": "de:11000:900100020"
+							},
+							"arrival": "2026-10-25T05:16:00+01:00",
+							"plannedArrival": "2026-10-25T05:16:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:17:00+01:00",
+							"plannedDeparture": "2026-10-25T05:17:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900058101",
+								"name": "S Südkreuz Bhf (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900058101",
+									"latitude": 52.475501,
+									"longitude": 13.365548
+								},
+								"products": {
+									"suburban": true,
+									"subway": false,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": true,
+									"regional": true
+								},
+								"ids": {
+									"ifopt": "de:11000:900058101"
+								},
+								"stationDHID": "de:11000:900058101"
+							},
+							"arrival": "2026-10-25T05:23:00+01:00",
+							"plannedArrival": "2026-10-25T05:23:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": null,
+							"plannedDeparture": null,
+							"departureDelay": null,
+							"departurePlatform": null,
+							"departurePrognosisType": null,
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "FK",
+									"text": "Bicycle conveyance (S Südkreuz Bhf (Berlin))"
+								}
+							]
+						}
+					],
+					"remarks": [
+						{
+							"type": "hint",
+							"code": "OPERATOR",
+							"text": "DB Regio"
+						},
+						{
+							"type": "hint",
+							"code": "ha",
+							"text": "Fahrradmitnahme leicht gemacht: <a href=\"http://www.vbb.de/radimregio\" target=\"_blank\">www.vbb.de/radimregio</a>"
+						},
+						{
+							"type": "hint",
+							"code": "gn",
+							"text": "vehicle-mounted access aid"
+						},
+						{
+							"id": "367562",
+							"type": "warning",
+							"summary": "Information.",
+							"text": "Die Züge der Linie RE5 fallen vom 16.10. bis 12.12.26 zwischen Waren und Neustrelitz aus und werden durch Busse ersetzt. Zusätzlich fallen die Züge vom 30.10. bis 06.11. zwischen Löwenberg und Berlin Südkreuz aus und werden zwischen Löwenberg und Oranienburg mit Bussen ersetzt. Ab Oranienburg steht Ihnen die S-Bahnlinie S1 zur Verfügung. Die Fahrpläne werden zum 16.10. aktualisiert.",
+							"icon": {
+								"type": "HIM0",
+								"title": null
+							},
+							"priority": 50,
+							"products": {
+								"suburban": false,
+								"subway": false,
+								"tram": false,
+								"bus": false,
+								"ferry": false,
+								"express": false,
+								"regional": true
+							},
+							"company": "VBB",
+							"categories": [
+								0
+							],
+							"validFrom": "2026-10-12T08:17:00+02:00",
+							"validUntil": "2026-11-15T23:59:00+01:00",
+							"modified": "2026-10-14T08:40:03+02:00"
+						},
+						{
+							"type": "hint",
+							"code": "text.occup.jny.max.11",
+							"text": "low occupancy expected"
+						}
+					],
+					"cycle": {
+						"min": 60,
+						"max": 900,
+						"nr": 17
+					},
+					"alternatives": [
+						{
+							"tripId": "1|69585|0|86|25102026",
+							"line": {
+								"type": "line",
+								"id": "de-vbb-11000000-r-bahn-fex",
+								"fahrtNr": "356",
+								"name": "FEX",
+								"public": true,
+								"adminCode": "800165",
+								"productName": "RE",
+								"mode": "train",
+								"product": "regional",
+								"operator": {
+									"type": "operator",
+									"id": "db-regio-ag",
+									"name": "DB Regio AG"
+								},
+								"color": {
+									"fg": "#fff",
+									"bg": "#730050"
+								}
+							},
+							"direction": "Flughafen BER",
+							"when": "2026-10-25T05:22:00+01:00",
+							"plannedWhen": "2026-10-25T05:22:00+01:00",
+							"delay": 0
+						},
+						{
+							"tripId": "1|57081|0|86|25102026",
+							"line": {
+								"type": "line",
+								"id": "de-vbb-11000000-r-bahn-re3",
+								"fahrtNr": "444",
+								"name": "RE3",
+								"public": true,
+								"adminCode": "800158",
+								"productName": "RE",
+								"mode": "train",
+								"product": "regional",
+								"operator": {
+									"type": "operator",
+									"id": "db-regio-ag",
+									"name": "DB Regio AG"
+								},
+								"color": {
+									"fg": "#fff",
+									"bg": "#eb7405"
+								}
+							},
+							"direction": "Lutherstadt Wittenberg, Hauptbahnhof",
+							"when": "2026-10-25T05:35:00+01:00",
+							"plannedWhen": "2026-10-25T05:32:00+01:00",
+							"delay": 180
+						},
+						{
+							"tripId": "1|69587|0|86|25102026",
+							"line": {
+								"type": "line",
+								"id": "de-vbb-11000000-r-bahn-fex",
+								"fahrtNr": "355",
+								"name": "FEX",
+								"public": true,
+								"adminCode": "800165",
+								"productName": "RE",
+								"mode": "train",
+								"product": "regional",
+								"operator": {
+									"type": "operator",
+									"id": "db-regio-ag",
+									"name": "DB Regio AG"
+								},
+								"color": {
+									"fg": "#fff",
+									"bg": "#730050"
+								}
+							},
+							"direction": "Flughafen BER",
+							"when": "2026-10-25T05:37:00+01:00",
+							"plannedWhen": "2026-10-25T05:37:00+01:00",
+							"delay": 0
+						},
+						{
+							"tripId": "1|69193|0|86|25102026",
+							"line": {
+								"type": "line",
+								"id": "de-vbb-11000000-r-bahn-re8",
+								"fahrtNr": "866",
+								"name": "RE8",
+								"public": true,
+								"adminCode": "ODRE8_",
+								"productName": "RE",
+								"mode": "train",
+								"product": "regional",
+								"operator": {
+									"type": "operator",
+									"id": "odeg-ostdeutsche-eisenbahn-gmbh",
+									"name": "ODEG Ostdeutsche Eisenbahn GmbH"
+								}
+							},
+							"direction": "Baruth, Bahnhof",
+							"when": "2026-10-25T05:43:00+01:00",
+							"plannedWhen": "2026-10-25T05:43:00+01:00",
+							"delay": 0
+						},
+						{
+							"tripId": "1|69577|0|86|25102026",
+							"line": {
+								"type": "line",
+								"id": "de-vbb-11000000-r-bahn-fex",
+								"fahrtNr": "377",
+								"name": "FEX",
+								"public": true,
+								"adminCode": "800165",
+								"productName": "RE",
+								"mode": "train",
+								"product": "regional",
+								"operator": {
+									"type": "operator",
+									"id": "db-regio-ag",
+									"name": "DB Regio AG"
+								},
+								"color": {
+									"fg": "#fff",
+									"bg": "#730050"
+								}
+							},
+							"direction": "Flughafen BER",
+							"when": "2026-10-25T05:52:00+01:00",
+							"plannedWhen": "2026-10-25T05:52:00+01:00",
+							"delay": 0
+						}
+					]
+				}
+			],
+			"refreshToken": "¶HKI¶T$A=1@O=S+U Alexanderplatz Bhf (Berlin)@L=900100003@a=128@$A=1@O=S+U Berlin Hauptbahnhof@L=900003201@a=128@$202610250500$202610250506$      S7$$1$$$$$$§W$A=1@O=S+U Berlin Hauptbahnhof@L=900003201@a=128@$A=1@O=S+U Berlin Hauptbahnhof [Gleis 1-8]@L=900003200@a=128@$202610250506$202610250512$$$1$$$$$$§T$A=1@O=S+U Berlin Hauptbahnhof [Gleis 1-8]@L=900003200@a=128@$A=1@O=S Südkreuz Bhf (Berlin)@L=900058101@a=128@$202610250514$202610250523$     RE5$$1$$$$$$¶KC¶#VE#2#CF#100#CA#0#CM#0#SICT#0#AM#16417#AM2#0#RT#15#¶KCC¶I1ZFIzEjRVJHIzMjSElOIzAjRUNLIzEzMjYwfDEzMjYwfDEzMjgzfDEzMjgzfDB8MHwxNjV8MTMyNTh8MXwwfDEwfDB8MHwtMjE0NzQ4MzY0OCNHQU0jMjUxMDI2MDUwMCMKWiNWTiMxI1NUIzE3OTI3MTU0MzcjUEkjMCNaSSMyNjkxI1RBIzAjREEjMjUxMDI2IzFTIzkwMDE3MDAwNCMxVCM0MjAjTFMjOTAwMjMwOTk5I0xUIzU1MiNQVSM4NiNSVCMxI0NBI1MtNyNaRSNTNyNaQiMgICAgICBTNyNQQyMwI0ZSIzkwMDEwMDAwMyNGVCM1MDAjVE8jOTAwMDAzMjAxI1RUIzUwNiMKRiNWTiMwI1NUIzE3OTI3MTU0MzcjUEkjMCNQVSM4NiNaSSMyNDE1OTE5MTIwI0RBIzI1MTAyNiNGUiM5MDAwMDMyMDEjVE8jOTAwMDAzMjAwI0ZUIzUwNiNUVCM1MTIjVFMjMCNGRiMjRlYjMCMKWiNWTiMxI1NUIzE3OTI3MTU0MzcjUEkjMCNaSSM1NzIwMiNUQSMwI0RBIzI1MTAyNiMxUyM5MDAwMDMyMDAjMVQjNTE0I0xTIzkwMDA1ODEwMSNMVCM1MjMjUFUjODYjUlQjMSNDQSNOUkUjWkUjUkU1I1pCIyAgICAgUkU1I1BDIzYjRlIjOTAwMDAzMjAwI0ZUIzUxNCNUTyM5MDAwNTgxMDEjVFQjNTIzIw==¶KRCC¶#VE#1#",
+			"cycle": {
+				"min": 180
+			}
+		},
+		{
+			"type": "journey",
+			"legs": [
+				{
+					"origin": {
+						"type": "stop",
+						"id": "900100031",
+						"name": "S+U Alexanderplatz Bhf/Memhardstr. (Berlin)",
+						"location": {
+							"type": "location",
+							"id": "900100031",
+							"latitude": 52.522937,
+							"longitude": 13.410755
+						},
+						"products": {
+							"suburban": false,
+							"subway": false,
+							"tram": false,
+							"bus": true,
+							"ferry": false,
+							"express": false,
+							"regional": false
+						},
+						"ids": {
+							"ifopt": "de:11000:900100031"
+						},
+						"stationDHID": "de:11000:900100031"
+					},
+					"destination": {
+						"type": "stop",
+						"id": "900058101",
+						"name": "S Südkreuz Bhf (Berlin)",
+						"location": {
+							"type": "location",
+							"id": "900058101",
+							"latitude": 52.475501,
+							"longitude": 13.365548
+						},
+						"products": {
+							"suburban": true,
+							"subway": false,
+							"tram": false,
+							"bus": true,
+							"ferry": false,
+							"express": true,
+							"regional": true
+						},
+						"ids": {
+							"ifopt": "de:11000:900058101"
+						},
+						"stationDHID": "de:11000:900058101"
+					},
+					"departure": "2026-10-25T05:04:00+01:00",
+					"plannedDeparture": "2026-10-25T05:04:00+01:00",
+					"departureDelay": 0,
+					"arrival": "2026-10-25T05:38:00+01:00",
+					"plannedArrival": "2026-10-25T05:38:00+01:00",
+					"arrivalDelay": 0,
+					"reachable": true,
+					"tripId": "1|42940|0|86|25102026",
+					"line": {
+						"type": "line",
+						"id": "de-vbb-11000000-bus-n42",
+						"fahrtNr": "103565",
+						"name": "N42",
+						"public": true,
+						"adminCode": "BVB---",
+						"productName": "Bus",
+						"mode": "bus",
+						"product": "bus",
+						"operator": {
+							"type": "operator",
+							"id": "berliner-verkehrsbetriebe",
+							"name": "Berliner Verkehrsbetriebe"
+						}
+					},
+					"direction": "S Südkreuz",
+					"arrivalPlatform": "Pos. 2",
+					"plannedArrivalPlatform": "Pos. 2",
+					"arrivalPrognosisType": "prognosed",
+					"departurePlatform": "Pos. 3",
+					"plannedDeparturePlatform": "Pos. 3",
+					"departurePrognosisType": "prognosed",
+					"stopovers": [
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900100031",
+								"name": "S+U Alexanderplatz Bhf/Memhardstr. (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900100031",
+									"latitude": 52.522937,
+									"longitude": 13.410755
+								},
+								"products": {
+									"suburban": false,
+									"subway": false,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900100031"
+								},
+								"stationDHID": "de:11000:900100031"
+							},
+							"arrival": null,
+							"plannedArrival": null,
+							"arrivalDelay": null,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": null,
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:04:00+01:00",
+							"plannedDeparture": "2026-10-25T05:04:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900100002",
+								"name": "S Hackescher Markt (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900100002",
+									"latitude": 52.522605,
+									"longitude": 13.402359
+								},
+								"products": {
+									"suburban": true,
+									"subway": false,
+									"tram": true,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900100002"
+								},
+								"stationDHID": "de:11000:900100002"
+							},
+							"arrival": "2026-10-25T05:08:00+01:00",
+							"plannedArrival": "2026-10-25T05:08:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:08:00+01:00",
+							"plannedDeparture": "2026-10-25T05:08:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900100515",
+								"name": "Spandauer Str./Marienkirche (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900100515",
+									"latitude": 52.520025,
+									"longitude": 13.404822
+								},
+								"products": {
+									"suburban": false,
+									"subway": false,
+									"tram": true,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900100515"
+								},
+								"stationDHID": "de:11000:900100515"
+							},
+							"arrival": "2026-10-25T05:09:00+01:00",
+							"plannedArrival": "2026-10-25T05:09:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:09:00+01:00",
+							"plannedDeparture": "2026-10-25T05:09:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900100045",
+								"name": "U Rotes Rathaus (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900100045",
+									"latitude": 52.518461,
+									"longitude": 13.407061
+								},
+								"products": {
+									"suburban": false,
+									"subway": true,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900100045"
+								},
+								"stationDHID": "de:11000:900100045"
+							},
+							"arrival": "2026-10-25T05:11:00+01:00",
+							"plannedArrival": "2026-10-25T05:11:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:11:00+01:00",
+							"plannedDeparture": "2026-10-25T05:11:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900100539",
+								"name": "Nikolaiviertel (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900100539",
+									"latitude": 52.516205,
+									"longitude": 13.408283
+								},
+								"products": {
+									"suburban": false,
+									"subway": false,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900100539"
+								},
+								"stationDHID": "de:11000:900100539"
+							},
+							"arrival": "2026-10-25T05:12:00+01:00",
+							"plannedArrival": "2026-10-25T05:12:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:12:00+01:00",
+							"plannedDeparture": "2026-10-25T05:12:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900100526",
+								"name": "Fischerinsel (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900100526",
+									"latitude": 52.514056,
+									"longitude": 13.405856
+								},
+								"products": {
+									"suburban": false,
+									"subway": false,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900100526"
+								},
+								"stationDHID": "de:11000:900100526"
+							},
+							"arrival": "2026-10-25T05:13:00+01:00",
+							"plannedArrival": "2026-10-25T05:13:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:13:00+01:00",
+							"plannedDeparture": "2026-10-25T05:13:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900100013",
+								"name": "U Spittelmarkt (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900100013",
+									"latitude": 52.511413,
+									"longitude": 13.402027
+								},
+								"products": {
+									"suburban": false,
+									"subway": true,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900100013"
+								},
+								"stationDHID": "de:11000:900100013"
+							},
+							"arrival": "2026-10-25T05:15:00+01:00",
+							"plannedArrival": "2026-10-25T05:15:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:15:00+01:00",
+							"plannedDeparture": "2026-10-25T05:15:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900012104",
+								"name": "Lindenstr./Oranienstr. (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900012104",
+									"latitude": 52.506964,
+									"longitude": 13.398368
+								},
+								"products": {
+									"suburban": false,
+									"subway": false,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900012104"
+								},
+								"stationDHID": "de:11000:900012104"
+							},
+							"arrival": "2026-10-25T05:16:00+01:00",
+							"plannedArrival": "2026-10-25T05:16:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:16:00+01:00",
+							"plannedDeparture": "2026-10-25T05:16:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900012157",
+								"name": "Jüdisches Museum (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900012157",
+									"latitude": 52.503278,
+									"longitude": 13.395384
+								},
+								"products": {
+									"suburban": false,
+									"subway": false,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900012157"
+								},
+								"stationDHID": "de:11000:900012157"
+							},
+							"arrival": "2026-10-25T05:17:00+01:00",
+							"plannedArrival": "2026-10-25T05:17:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:17:00+01:00",
+							"plannedDeparture": "2026-10-25T05:17:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900012158",
+								"name": "Franz-Klühs-Str. (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900012158",
+									"latitude": 52.500419,
+									"longitude": 13.394808
+								},
+								"products": {
+									"suburban": false,
+									"subway": false,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900012158"
+								},
+								"stationDHID": "de:11000:900012158"
+							},
+							"arrival": "2026-10-25T05:17:00+01:00",
+							"plannedArrival": "2026-10-25T05:17:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:17:00+01:00",
+							"plannedDeparture": "2026-10-25T05:17:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900016103",
+								"name": "Zossener Brücke (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900016103",
+									"latitude": 52.498424,
+									"longitude": 13.395842
+								},
+								"products": {
+									"suburban": false,
+									"subway": false,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900016103"
+								},
+								"stationDHID": "de:11000:900016103"
+							},
+							"arrival": "2026-10-25T05:18:00+01:00",
+							"plannedArrival": "2026-10-25T05:18:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:18:00+01:00",
+							"plannedDeparture": "2026-10-25T05:18:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900012103",
+								"name": "U Hallesches Tor (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900012103",
+									"latitude": 52.497777,
+									"longitude": 13.391761
+								},
+								"products": {
+									"suburban": false,
+									"subway": true,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900012103"
+								},
+								"stationDHID": "de:11000:900012103"
+							},
+							"arrival": "2026-10-25T05:19:00+01:00",
+							"plannedArrival": "2026-10-25T05:19:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:19:00+01:00",
+							"plannedDeparture": "2026-10-25T05:19:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900017101",
+								"name": "U Mehringdamm (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900017101",
+									"latitude": 52.49357,
+									"longitude": 13.388138
+								},
+								"products": {
+									"suburban": false,
+									"subway": true,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900017101"
+								},
+								"stationDHID": "de:11000:900017101"
+							},
+							"arrival": "2026-10-25T05:22:00+01:00",
+							"plannedArrival": "2026-10-25T05:22:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:28:00+01:00",
+							"plannedDeparture": "2026-10-25T05:28:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900017151",
+								"name": "Bergmannstr. (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900017151",
+									"latitude": 52.490073,
+									"longitude": 13.386511
+								},
+								"products": {
+									"suburban": false,
+									"subway": false,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900017151"
+								},
+								"stationDHID": "de:11000:900017151"
+							},
+							"arrival": "2026-10-25T05:28:00+01:00",
+							"plannedArrival": "2026-10-25T05:28:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:28:00+01:00",
+							"plannedDeparture": "2026-10-25T05:28:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900017102",
+								"name": "U Platz der Luftbrücke (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900017102",
+									"latitude": 52.484868,
+									"longitude": 13.385927
+								},
+								"products": {
+									"suburban": false,
+									"subway": true,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900017102"
+								},
+								"stationDHID": "de:11000:900017102"
+							},
+							"arrival": "2026-10-25T05:29:00+01:00",
+							"plannedArrival": "2026-10-25T05:29:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:29:00+01:00",
+							"plannedDeparture": "2026-10-25T05:29:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900068102",
+								"name": "Dudenstr./Katzbachstr. (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900068102",
+									"latitude": 52.48494,
+									"longitude": 13.376785
+								},
+								"products": {
+									"suburban": false,
+									"subway": false,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900068102"
+								},
+								"stationDHID": "de:11000:900068102"
+							},
+							"arrival": "2026-10-25T05:31:00+01:00",
+							"plannedArrival": "2026-10-25T05:31:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:31:00+01:00",
+							"plannedDeparture": "2026-10-25T05:31:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900068153",
+								"name": "Badener Ring (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900068153",
+									"latitude": 52.482108,
+									"longitude": 13.377441
+								},
+								"products": {
+									"suburban": false,
+									"subway": false,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900068153"
+								},
+								"stationDHID": "de:11000:900068153"
+							},
+							"arrival": "2026-10-25T05:32:00+01:00",
+							"plannedArrival": "2026-10-25T05:32:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:32:00+01:00",
+							"plannedDeparture": "2026-10-25T05:32:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900068152",
+								"name": "Wüsthoffstr. (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900068152",
+									"latitude": 52.4788,
+									"longitude": 13.37674
+								},
+								"products": {
+									"suburban": false,
+									"subway": false,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900068152"
+								},
+								"stationDHID": "de:11000:900068152"
+							},
+							"arrival": "2026-10-25T05:33:00+01:00",
+							"plannedArrival": "2026-10-25T05:33:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:33:00+01:00",
+							"plannedDeparture": "2026-10-25T05:33:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900068106",
+								"name": "Bäumerplan (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900068106",
+									"latitude": 52.476032,
+									"longitude": 13.375571
+								},
+								"products": {
+									"suburban": false,
+									"subway": false,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900068106"
+								},
+								"stationDHID": "de:11000:900068106"
+							},
+							"arrival": "2026-10-25T05:34:00+01:00",
+							"plannedArrival": "2026-10-25T05:34:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:34:00+01:00",
+							"plannedDeparture": "2026-10-25T05:34:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900068151",
+								"name": "Gontermannstr. (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900068151",
+									"latitude": 52.474531,
+									"longitude": 13.371346
+								},
+								"products": {
+									"suburban": false,
+									"subway": false,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900068151"
+								},
+								"stationDHID": "de:11000:900068151"
+							},
+							"arrival": "2026-10-25T05:35:00+01:00",
+							"plannedArrival": "2026-10-25T05:35:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:35:00+01:00",
+							"plannedDeparture": "2026-10-25T05:35:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900058100",
+								"name": "S Südkreuz Bhf/Ostseite (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900058100",
+									"latitude": 52.474504,
+									"longitude": 13.367184
+								},
+								"products": {
+									"suburban": false,
+									"subway": false,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900058100"
+								},
+								"stationDHID": "de:11000:900058100"
+							},
+							"arrival": "2026-10-25T05:36:00+01:00",
+							"plannedArrival": "2026-10-25T05:36:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:36:00+01:00",
+							"plannedDeparture": "2026-10-25T05:36:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900058109",
+								"name": "Reichartstr. (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900058109",
+									"latitude": 52.472562,
+									"longitude": 13.367059
+								},
+								"products": {
+									"suburban": false,
+									"subway": false,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900058109"
+								},
+								"stationDHID": "de:11000:900058109"
+							},
+							"arrival": "2026-10-25T05:37:00+01:00",
+							"plannedArrival": "2026-10-25T05:37:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:37:00+01:00",
+							"plannedDeparture": "2026-10-25T05:37:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900058101",
+								"name": "S Südkreuz Bhf (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900058101",
+									"latitude": 52.475501,
+									"longitude": 13.365548
+								},
+								"products": {
+									"suburban": true,
+									"subway": false,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": true,
+									"regional": true
+								},
+								"ids": {
+									"ifopt": "de:11000:900058101"
+								},
+								"stationDHID": "de:11000:900058101"
+							},
+							"arrival": "2026-10-25T05:38:00+01:00",
+							"plannedArrival": "2026-10-25T05:38:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": null,
+							"plannedDeparture": null,
+							"departureDelay": null,
+							"departurePlatform": null,
+							"departurePrognosisType": null,
+							"plannedDeparturePlatform": null
+						}
+					],
+					"remarks": [
+						{
+							"type": "hint",
+							"code": "OPERATOR",
+							"text": "BVG"
+						},
+						{
+							"type": "hint",
+							"code": "text.occup.jny.max.11",
+							"text": "low occupancy expected"
+						}
+					]
+				}
+			],
+			"refreshToken": "¶HKI¶T$A=1@O=S+U Alexanderplatz Bhf/Memhardstr. (Berlin)@L=900100031@a=128@$A=1@O=S Südkreuz Bhf (Berlin)@L=900058101@a=128@$202610250504$202610250538$     N42$$1$$$$$$¶KC¶#VE#2#CF#100#CA#0#CM#0#SICT#0#AM#16417#AM2#0#RT#15#¶KCC¶I1ZFIzEjRVJHIzgxOTMjSElOIzM5MCNFQ0sjMTMyNjl8MTMyNjR8MTMyODl8MTMyOTh8MHwwfDE2NXwxMzI2MXwyfDB8MnwwfDB8LTIxNDc0ODM2NDgjR0FNIzI1MTAyNjA1MDQjClojVk4jMSNTVCMxNzkyNzE1NDM3I1BJIzAjWkkjNDI5NDAjVEEjMCNEQSMyNTEwMjYjMVMjOTAwMTAwMDMxIzFUIzUwNCNMUyM5MDAwNTgxMDEjTFQjNTM4I1BVIzg2I1JUIzEjQ0EjQiNaRSNONDIjWkIjICAgICBONDIjUEMjMyNGUiM5MDAxMDAwMzEjRlQjNTA0I1RPIzkwMDA1ODEwMSNUVCM1Mzgj¶KRCC¶#VE#1#",
+			"remarks": []
+		},
+		{
+			"type": "journey",
+			"legs": [
+				{
+					"origin": {
+						"type": "stop",
+						"id": "900100003",
+						"name": "S+U Alexanderplatz Bhf (Berlin)",
+						"location": {
+							"type": "location",
+							"id": "900100003",
+							"latitude": 52.521508,
+							"longitude": 13.411267
+						},
+						"products": {
+							"suburban": true,
+							"subway": true,
+							"tram": false,
+							"bus": false,
+							"ferry": false,
+							"express": false,
+							"regional": false
+						},
+						"ids": {
+							"ifopt": "de:11000:900100003"
+						},
+						"stationDHID": "de:11000:900100003"
+					},
+					"destination": {
+						"type": "stop",
+						"id": "900100020",
+						"name": "S+U Potsdamer Platz Bhf (Berlin)",
+						"location": {
+							"type": "location",
+							"id": "900100020",
+							"latitude": 52.509355,
+							"longitude": 13.376551
+						},
+						"products": {
+							"suburban": true,
+							"subway": true,
+							"tram": false,
+							"bus": true,
+							"ferry": false,
+							"express": false,
+							"regional": true
+						},
+						"ids": {
+							"ifopt": "de:11000:900100020"
+						},
+						"stationDHID": "de:11000:900100020"
+					},
+					"departure": "2026-10-25T05:05:00+01:00",
+					"plannedDeparture": "2026-10-25T05:05:00+01:00",
+					"departureDelay": 0,
+					"arrival": "2026-10-25T05:17:00+01:00",
+					"plannedArrival": "2026-10-25T05:17:00+01:00",
+					"arrivalDelay": 0,
+					"reachable": true,
+					"tripId": "1|51796|7|86|25102026",
+					"line": {
+						"type": "line",
+						"id": "de-vbb-11000000-u-bahn-u2",
+						"fahrtNr": "6677",
+						"name": "U2",
+						"public": true,
+						"adminCode": "BVU---",
+						"productName": "U",
+						"mode": "train",
+						"product": "subway",
+						"operator": {
+							"type": "operator",
+							"id": "berliner-verkehrsbetriebe",
+							"name": "Berliner Verkehrsbetriebe"
+						},
+						"color": {
+							"fg": "#fff",
+							"bg": "#e75313"
+						}
+					},
+					"direction": "Ruhleben",
+					"currentLocation": {
+						"type": "location",
+						"latitude": 52.548305,
+						"longitude": 13.413461
+					},
+					"arrivalPlatform": "1 (U2)",
+					"plannedArrivalPlatform": "1 (U2)",
+					"arrivalPrognosisType": "prognosed",
+					"departurePlatform": "1 (U2)",
+					"plannedDeparturePlatform": "1 (U2)",
+					"departurePrognosisType": "prognosed",
+					"stopovers": [
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900100003",
+								"name": "S+U Alexanderplatz Bhf (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900100003",
+									"latitude": 52.521508,
+									"longitude": 13.411267
+								},
+								"products": {
+									"suburban": true,
+									"subway": true,
+									"tram": false,
+									"bus": false,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900100003"
+								},
+								"stationDHID": "de:11000:900100003"
+							},
+							"arrival": null,
+							"plannedArrival": null,
+							"arrivalDelay": null,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": null,
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:05:00+01:00",
+							"plannedDeparture": "2026-10-25T05:05:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								},
+								{
+									"type": "hint",
+									"code": "FK",
+									"text": "Bicycle conveyance (S+U Alexanderplatz Bhf (Berlin))"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900100015",
+								"name": "U Klosterstr. (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900100015",
+									"latitude": 52.517229,
+									"longitude": 13.412454
+								},
+								"products": {
+									"suburban": false,
+									"subway": true,
+									"tram": false,
+									"bus": false,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900100015"
+								},
+								"stationDHID": "de:11000:900100015"
+							},
+							"arrival": "2026-10-25T05:07:00+01:00",
+							"plannedArrival": "2026-10-25T05:07:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:07:00+01:00",
+							"plannedDeparture": "2026-10-25T05:07:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900100014",
+								"name": "U Märkisches Museum (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900100014",
+									"latitude": 52.512007,
+									"longitude": 13.408768
+								},
+								"products": {
+									"suburban": false,
+									"subway": true,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900100014"
+								},
+								"stationDHID": "de:11000:900100014"
+							},
+							"arrival": "2026-10-25T05:09:00+01:00",
+							"plannedArrival": "2026-10-25T05:09:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:09:00+01:00",
+							"plannedDeparture": "2026-10-25T05:09:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900100013",
+								"name": "U Spittelmarkt (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900100013",
+									"latitude": 52.511413,
+									"longitude": 13.402027
+								},
+								"products": {
+									"suburban": false,
+									"subway": true,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900100013"
+								},
+								"stationDHID": "de:11000:900100013"
+							},
+							"arrival": "2026-10-25T05:10:00+01:00",
+							"plannedArrival": "2026-10-25T05:10:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:10:00+01:00",
+							"plannedDeparture": "2026-10-25T05:10:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900100012",
+								"name": "U Hausvogteiplatz (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900100012",
+									"latitude": 52.513364,
+									"longitude": 13.395348
+								},
+								"products": {
+									"suburban": false,
+									"subway": true,
+									"tram": false,
+									"bus": false,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900100012"
+								},
+								"stationDHID": "de:11000:900100012"
+							},
+							"arrival": "2026-10-25T05:12:00+01:00",
+							"plannedArrival": "2026-10-25T05:12:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:12:00+01:00",
+							"plannedDeparture": "2026-10-25T05:12:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900100011",
+								"name": "U Stadtmitte (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900100011",
+									"latitude": 52.511494,
+									"longitude": 13.38972
+								},
+								"products": {
+									"suburban": false,
+									"subway": true,
+									"tram": false,
+									"bus": false,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900100011"
+								},
+								"stationDHID": "de:11000:900100011"
+							},
+							"arrival": "2026-10-25T05:14:00+01:00",
+							"plannedArrival": "2026-10-25T05:14:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:14:00+01:00",
+							"plannedDeparture": "2026-10-25T05:14:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900100010",
+								"name": "U Anton-Wilhelm-Amo-Str. (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900100010",
+									"latitude": 52.511521,
+									"longitude": 13.383796
+								},
+								"products": {
+									"suburban": false,
+									"subway": true,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900100010"
+								},
+								"stationDHID": "de:11000:900100010"
+							},
+							"arrival": "2026-10-25T05:15:00+01:00",
+							"plannedArrival": "2026-10-25T05:15:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:15:00+01:00",
+							"plannedDeparture": "2026-10-25T05:15:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900100020",
+								"name": "S+U Potsdamer Platz Bhf (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900100020",
+									"latitude": 52.509355,
+									"longitude": 13.376551
+								},
+								"products": {
+									"suburban": true,
+									"subway": true,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": true
+								},
+								"ids": {
+									"ifopt": "de:11000:900100020"
+								},
+								"stationDHID": "de:11000:900100020"
+							},
+							"arrival": "2026-10-25T05:17:00+01:00",
+							"plannedArrival": "2026-10-25T05:17:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": null,
+							"plannedDeparture": null,
+							"departureDelay": null,
+							"departurePlatform": null,
+							"departurePrognosisType": null,
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "FK",
+									"text": "Bicycle conveyance (S+U Potsdamer Platz Bhf (Berlin))"
+								}
+							]
+						}
+					],
+					"remarks": [
+						{
+							"type": "hint",
+							"code": "OPERATOR",
+							"text": "BVG"
+						},
+						{
+							"type": "hint",
+							"code": "text.occup.jny.max.11",
+							"text": "low occupancy expected"
+						}
+					],
+					"cycle": {
+						"min": 600,
+						"max": 900,
+						"nr": 10
+					}
+				},
+				{
+					"origin": {
+						"type": "stop",
+						"id": "900100020",
+						"name": "S+U Potsdamer Platz Bhf (Berlin)",
+						"location": {
+							"type": "location",
+							"id": "900100020",
+							"latitude": 52.509355,
+							"longitude": 13.376551
+						},
+						"products": {
+							"suburban": true,
+							"subway": true,
+							"tram": false,
+							"bus": true,
+							"ferry": false,
+							"express": false,
+							"regional": true
+						},
+						"ids": {
+							"ifopt": "de:11000:900100020"
+						},
+						"stationDHID": "de:11000:900100020"
+					},
+					"destination": {
+						"type": "stop",
+						"id": "900100020",
+						"name": "S+U Potsdamer Platz Bhf (Berlin)",
+						"location": {
+							"type": "location",
+							"id": "900100020",
+							"latitude": 52.509355,
+							"longitude": 13.376551
+						},
+						"products": {
+							"suburban": true,
+							"subway": true,
+							"tram": false,
+							"bus": true,
+							"ferry": false,
+							"express": false,
+							"regional": true
+						},
+						"ids": {
+							"ifopt": "de:11000:900100020"
+						},
+						"stationDHID": "de:11000:900100020"
+					},
+					"departure": "2026-10-25T05:17:00+01:00",
+					"plannedDeparture": "2026-10-25T05:17:00+01:00",
+					"departureDelay": 0,
+					"arrival": "2026-10-25T05:17:00+01:00",
+					"plannedArrival": "2026-10-25T05:17:00+01:00",
+					"arrivalDelay": 0,
+					"public": true,
+					"walking": true,
+					"distance": null
+				},
+				{
+					"origin": {
+						"type": "stop",
+						"id": "900100020",
+						"name": "S+U Potsdamer Platz Bhf (Berlin)",
+						"location": {
+							"type": "location",
+							"id": "900100020",
+							"latitude": 52.509355,
+							"longitude": 13.376551
+						},
+						"products": {
+							"suburban": true,
+							"subway": true,
+							"tram": false,
+							"bus": true,
+							"ferry": false,
+							"express": false,
+							"regional": true
+						},
+						"ids": {
+							"ifopt": "de:11000:900100020"
+						},
+						"stationDHID": "de:11000:900100020"
+					},
+					"destination": {
+						"type": "stop",
+						"id": "900058101",
+						"name": "S Südkreuz Bhf (Berlin)",
+						"location": {
+							"type": "location",
+							"id": "900058101",
+							"latitude": 52.475501,
+							"longitude": 13.365548
+						},
+						"products": {
+							"suburban": true,
+							"subway": false,
+							"tram": false,
+							"bus": true,
+							"ferry": false,
+							"express": true,
+							"regional": true
+						},
+						"ids": {
+							"ifopt": "de:11000:900058101"
+						},
+						"stationDHID": "de:11000:900058101"
+					},
+					"departure": "2026-10-25T05:26:00+01:00",
+					"plannedDeparture": "2026-10-25T05:26:00+01:00",
+					"departureDelay": 0,
+					"arrival": "2026-10-25T05:29:00+01:00",
+					"plannedArrival": "2026-10-25T05:29:00+01:00",
+					"arrivalDelay": 0,
+					"reachable": true,
+					"tripId": "1|69585|0|86|25102026",
+					"line": {
+						"type": "line",
+						"id": "de-vbb-11000000-r-bahn-fex",
+						"fahrtNr": "356",
+						"name": "FEX",
+						"public": true,
+						"adminCode": "800165",
+						"productName": "RE",
+						"mode": "train",
+						"product": "regional",
+						"operator": {
+							"type": "operator",
+							"id": "db-regio-ag",
+							"name": "DB Regio AG"
+						},
+						"color": {
+							"fg": "#fff",
+							"bg": "#730050"
+						}
+					},
+					"direction": "Flughafen BER",
+					"arrivalPlatform": "3",
+					"plannedArrivalPlatform": "3",
+					"arrivalPrognosisType": "prognosed",
+					"departurePlatform": "1",
+					"plannedDeparturePlatform": "1",
+					"departurePrognosisType": "prognosed",
+					"stopovers": [
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900100020",
+								"name": "S+U Potsdamer Platz Bhf (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900100020",
+									"latitude": 52.509355,
+									"longitude": 13.376551
+								},
+								"products": {
+									"suburban": true,
+									"subway": true,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": true
+								},
+								"ids": {
+									"ifopt": "de:11000:900100020"
+								},
+								"stationDHID": "de:11000:900100020"
+							},
+							"arrival": null,
+							"plannedArrival": null,
+							"arrivalDelay": null,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": null,
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:26:00+01:00",
+							"plannedDeparture": "2026-10-25T05:26:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								},
+								{
+									"type": "hint",
+									"code": "FK",
+									"text": "Bicycle conveyance (S+U Potsdamer Platz Bhf (Berlin))"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900058101",
+								"name": "S Südkreuz Bhf (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900058101",
+									"latitude": 52.475501,
+									"longitude": 13.365548
+								},
+								"products": {
+									"suburban": true,
+									"subway": false,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": true,
+									"regional": true
+								},
+								"ids": {
+									"ifopt": "de:11000:900058101"
+								},
+								"stationDHID": "de:11000:900058101"
+							},
+							"arrival": "2026-10-25T05:29:00+01:00",
+							"plannedArrival": "2026-10-25T05:29:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": null,
+							"plannedDeparture": null,
+							"departureDelay": null,
+							"departurePlatform": null,
+							"departurePrognosisType": null,
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "FK",
+									"text": "Bicycle conveyance (S Südkreuz Bhf (Berlin))"
+								}
+							]
+						}
+					],
+					"remarks": [
+						{
+							"type": "hint",
+							"code": "OPERATOR",
+							"text": "DB Regio"
+						},
+						{
+							"type": "hint",
+							"code": "gn",
+							"text": "vehicle-mounted access aid"
+						},
+						{
+							"type": "hint",
+							"code": "WV",
+							"text": "Wifi available"
+						},
+						{
+							"type": "hint",
+							"code": "text.occup.jny.max.11",
+							"text": "low occupancy expected"
+						}
+					],
+					"cycle": {
+						"min": 60,
+						"max": 960,
+						"nr": 18
+					},
+					"alternatives": [
+						{
+							"tripId": "1|57081|0|86|25102026",
+							"line": {
+								"type": "line",
+								"id": "de-vbb-11000000-r-bahn-re3",
+								"fahrtNr": "444",
+								"name": "RE3",
+								"public": true,
+								"adminCode": "800158",
+								"productName": "RE",
+								"mode": "train",
+								"product": "regional",
+								"operator": {
+									"type": "operator",
+									"id": "db-regio-ag",
+									"name": "DB Regio AG"
+								},
+								"color": {
+									"fg": "#fff",
+									"bg": "#eb7405"
+								}
+							},
+							"direction": "Lutherstadt Wittenberg, Hauptbahnhof",
+							"when": "2026-10-25T05:38:00+01:00",
+							"plannedWhen": "2026-10-25T05:35:00+01:00",
+							"delay": 180
+						},
+						{
+							"tripId": "1|69587|0|86|25102026",
+							"line": {
+								"type": "line",
+								"id": "de-vbb-11000000-r-bahn-fex",
+								"fahrtNr": "355",
+								"name": "FEX",
+								"public": true,
+								"adminCode": "800165",
+								"productName": "RE",
+								"mode": "train",
+								"product": "regional",
+								"operator": {
+									"type": "operator",
+									"id": "db-regio-ag",
+									"name": "DB Regio AG"
+								},
+								"color": {
+									"fg": "#fff",
+									"bg": "#730050"
+								}
+							},
+							"direction": "Flughafen BER",
+							"when": "2026-10-25T05:41:00+01:00",
+							"plannedWhen": "2026-10-25T05:41:00+01:00",
+							"delay": 0
+						},
+						{
+							"tripId": "1|69193|0|86|25102026",
+							"line": {
+								"type": "line",
+								"id": "de-vbb-11000000-r-bahn-re8",
+								"fahrtNr": "866",
+								"name": "RE8",
+								"public": true,
+								"adminCode": "ODRE8_",
+								"productName": "RE",
+								"mode": "train",
+								"product": "regional",
+								"operator": {
+									"type": "operator",
+									"id": "odeg-ostdeutsche-eisenbahn-gmbh",
+									"name": "ODEG Ostdeutsche Eisenbahn GmbH"
+								}
+							},
+							"direction": "Baruth, Bahnhof",
+							"when": "2026-10-25T05:46:00+01:00",
+							"plannedWhen": "2026-10-25T05:46:00+01:00",
+							"delay": 0
+						},
+						{
+							"tripId": "1|69577|0|86|25102026",
+							"line": {
+								"type": "line",
+								"id": "de-vbb-11000000-r-bahn-fex",
+								"fahrtNr": "377",
+								"name": "FEX",
+								"public": true,
+								"adminCode": "800165",
+								"productName": "RE",
+								"mode": "train",
+								"product": "regional",
+								"operator": {
+									"type": "operator",
+									"id": "db-regio-ag",
+									"name": "DB Regio AG"
+								},
+								"color": {
+									"fg": "#fff",
+									"bg": "#730050"
+								}
+							},
+							"direction": "Flughafen BER",
+							"when": "2026-10-25T05:56:00+01:00",
+							"plannedWhen": "2026-10-25T05:56:00+01:00",
+							"delay": 0
+						},
+						{
+							"tripId": "1|57299|0|86|25102026",
+							"line": {
+								"type": "line",
+								"id": "de-vbb-12072240-bahn-re4-db",
+								"fahrtNr": "320",
+								"name": "RE4",
+								"public": true,
+								"adminCode": "800158",
+								"productName": "RE",
+								"mode": "train",
+								"product": "regional",
+								"operator": {
+									"type": "operator",
+									"id": "db-regio-ag",
+									"name": "DB Regio AG"
+								},
+								"color": {
+									"fg": "#fff",
+									"bg": "#992746"
+								}
+							},
+							"direction": "Jüterbog, Bahnhof",
+							"when": "2026-10-25T06:10:00+01:00",
+							"plannedWhen": "2026-10-25T06:10:00+01:00",
+							"delay": 0
+						}
+					]
+				}
+			],
+			"refreshToken": "¶HKI¶T$A=1@O=S+U Alexanderplatz Bhf (Berlin)@L=900100003@a=128@$A=1@O=S+U Potsdamer Platz Bhf (Berlin)@L=900100020@a=128@$202610250505$202610250517$      U2$$1$$$$$$§T$A=1@O=S+U Potsdamer Platz Bhf (Berlin)@L=900100020@a=128@$A=1@O=S Südkreuz Bhf (Berlin)@L=900058101@a=128@$202610250526$202610250529$     FEX$$1$$$$$$¶KC¶#VE#2#CF#100#CA#0#CM#0#SICT#0#AM#16417#AM2#0#RT#15#¶KCC¶I1ZFIzEjRVJHIzgxOTQjSElOIzAjRUNLIzEzMjY5fDEzMjY1fDEzMjg5fDEzMjg5fDB8MHwxNjV8MTMyNjF8M3wwfDJ8MHwwfC0yMTQ3NDgzNjQ4I0dBTSMyNTEwMjYwNTA1IwpaI1ZOIzEjU1QjMTc5MjcxNTQzNyNQSSMwI1pJIzUxNzk2I1RBIzcjREEjMjUxMDI2IzFTIzkwMDEzMDAwMiMxVCM0NTQjTFMjOTAwMDI1MjAyI0xUIzU0NCNQVSM4NiNSVCMxI0NBI1UjWkUjVTIjWkIjICAgICAgVTIjUEMjMSNGUiM5MDAxMDAwMDMjRlQjNTA1I1RPIzkwMDEwMDAyMCNUVCM1MTcjClojVk4jMSNTVCMxNzkyNzE1NDM3I1BJIzAjWkkjNjk1ODUjVEEjMCNEQSMyNTEwMjYjMVMjOTAwMDAzMjAwIzFUIzUyMiNMUyM5MDAyNjAwMDkjTFQjNTQ1I1BVIzg2I1JUIzEjQ0EjTlJFI1pFI0ZFWCNaQiMgICAgIEZFWCNQQyM2I0ZSIzkwMDEwMDAyMCNGVCM1MjYjVE8jOTAwMDU4MTAxI1RUIzUyOSM=¶KRCC¶#VE#1#",
+			"cycle": {
+				"min": 600
+			}
+		},
+		{
+			"type": "journey",
+			"legs": [
+				{
+					"origin": {
+						"type": "stop",
+						"id": "900100003",
+						"name": "S+U Alexanderplatz Bhf (Berlin)",
+						"location": {
+							"type": "location",
+							"id": "900100003",
+							"latitude": 52.521508,
+							"longitude": 13.411267
+						},
+						"products": {
+							"suburban": true,
+							"subway": true,
+							"tram": false,
+							"bus": false,
+							"ferry": false,
+							"express": false,
+							"regional": false
+						},
+						"ids": {
+							"ifopt": "de:11000:900100003"
+						},
+						"stationDHID": "de:11000:900100003"
+					},
+					"destination": {
+						"type": "stop",
+						"id": "900100025",
+						"name": "S+U Brandenburger Tor (Berlin)",
+						"location": {
+							"type": "location",
+							"id": "900100025",
+							"latitude": 52.51651,
+							"longitude": 13.381936
+						},
+						"products": {
+							"suburban": true,
+							"subway": true,
+							"tram": false,
+							"bus": true,
+							"ferry": false,
+							"express": false,
+							"regional": false
+						},
+						"ids": {
+							"ifopt": "de:11000:900100025"
+						},
+						"stationDHID": "de:11000:900100025"
+					},
+					"departure": "2026-10-25T05:10:00+01:00",
+					"plannedDeparture": "2026-10-25T05:09:00+01:00",
+					"departureDelay": 60,
+					"arrival": "2026-10-25T05:15:00+01:00",
+					"plannedArrival": "2026-10-25T05:14:00+01:00",
+					"arrivalDelay": 60,
+					"reachable": true,
+					"tripId": "1|52362|6|86|25102026",
+					"line": {
+						"type": "line",
+						"id": "de-vbb-11000000-u-bahn-u5",
+						"fahrtNr": "9761",
+						"name": "U5",
+						"public": true,
+						"adminCode": "BVU---",
+						"productName": "U",
+						"mode": "train",
+						"product": "subway",
+						"operator": {
+							"type": "operator",
+							"id": "berliner-verkehrsbetriebe",
+							"name": "Berliner Verkehrsbetriebe"
+						},
+						"color": {
+							"fg": "#fff",
+							"bg": "#805233"
+						}
+					},
+					"direction": "Hauptbahnhof",
+					"currentLocation": {
+						"type": "location",
+						"latitude": 52.511917,
+						"longitude": 13.493582
+					},
+					"arrivalPlatform": "1 (U5)",
+					"plannedArrivalPlatform": "1 (U5)",
+					"arrivalPrognosisType": "prognosed",
+					"departurePlatform": "1 (U5)",
+					"plannedDeparturePlatform": "1 (U5)",
+					"departurePrognosisType": "prognosed",
+					"stopovers": [
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900100003",
+								"name": "S+U Alexanderplatz Bhf (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900100003",
+									"latitude": 52.521508,
+									"longitude": 13.411267
+								},
+								"products": {
+									"suburban": true,
+									"subway": true,
+									"tram": false,
+									"bus": false,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900100003"
+								},
+								"stationDHID": "de:11000:900100003"
+							},
+							"arrival": null,
+							"plannedArrival": null,
+							"arrivalDelay": null,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": null,
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:10:00+01:00",
+							"plannedDeparture": "2026-10-25T05:09:00+01:00",
+							"departureDelay": 60,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								},
+								{
+									"type": "hint",
+									"code": "FK",
+									"text": "Bicycle conveyance (S+U Alexanderplatz Bhf (Berlin))"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900100045",
+								"name": "U Rotes Rathaus (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900100045",
+									"latitude": 52.518461,
+									"longitude": 13.407061
+								},
+								"products": {
+									"suburban": false,
+									"subway": true,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900100045"
+								},
+								"stationDHID": "de:11000:900100045"
+							},
+							"arrival": "2026-10-25T05:11:00+01:00",
+							"plannedArrival": "2026-10-25T05:10:00+01:00",
+							"arrivalDelay": 60,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:11:00+01:00",
+							"plannedDeparture": "2026-10-25T05:10:00+01:00",
+							"departureDelay": 60,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900100537",
+								"name": "U Museumsinsel (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900100537",
+									"latitude": 52.517391,
+									"longitude": 13.399195
+								},
+								"products": {
+									"suburban": false,
+									"subway": true,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900100537"
+								},
+								"stationDHID": "de:11000:900100537"
+							},
+							"arrival": "2026-10-25T05:12:00+01:00",
+							"plannedArrival": "2026-10-25T05:11:00+01:00",
+							"arrivalDelay": 60,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:12:00+01:00",
+							"plannedDeparture": "2026-10-25T05:11:00+01:00",
+							"departureDelay": 60,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900100513",
+								"name": "U Unter den Linden (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900100513",
+									"latitude": 52.516996,
+									"longitude": 13.388875
+								},
+								"products": {
+									"suburban": false,
+									"subway": true,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900100513"
+								},
+								"stationDHID": "de:11000:900100513"
+							},
+							"arrival": "2026-10-25T05:14:00+01:00",
+							"plannedArrival": "2026-10-25T05:13:00+01:00",
+							"arrivalDelay": 60,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:14:00+01:00",
+							"plannedDeparture": "2026-10-25T05:13:00+01:00",
+							"departureDelay": 60,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900100025",
+								"name": "S+U Brandenburger Tor (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900100025",
+									"latitude": 52.51651,
+									"longitude": 13.381936
+								},
+								"products": {
+									"suburban": true,
+									"subway": true,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900100025"
+								},
+								"stationDHID": "de:11000:900100025"
+							},
+							"arrival": "2026-10-25T05:15:00+01:00",
+							"plannedArrival": "2026-10-25T05:14:00+01:00",
+							"arrivalDelay": 60,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": null,
+							"plannedDeparture": null,
+							"departureDelay": null,
+							"departurePlatform": null,
+							"departurePrognosisType": null,
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "FK",
+									"text": "Bicycle conveyance (S+U Brandenburger Tor (Berlin))"
+								}
+							]
+						}
+					],
+					"remarks": [
+						{
+							"type": "hint",
+							"code": "OPERATOR",
+							"text": "BVG"
+						},
+						{
+							"type": "hint",
+							"code": "text.occup.jny.max.11",
+							"text": "low occupancy expected"
+						}
+					],
+					"cycle": {
+						"min": 540,
+						"max": 900,
+						"nr": 9
+					},
+					"alternatives": [
+						{
+							"tripId": "1|52362|7|86|25102026",
+							"line": {
+								"type": "line",
+								"id": "de-vbb-11000000-u-bahn-u5",
+								"fahrtNr": "9762",
+								"name": "U5",
+								"public": true,
+								"adminCode": "BVU---",
+								"productName": "U",
+								"mode": "train",
+								"product": "subway",
+								"operator": {
+									"type": "operator",
+									"id": "berliner-verkehrsbetriebe",
+									"name": "Berliner Verkehrsbetriebe"
+								},
+								"color": {
+									"fg": "#fff",
+									"bg": "#805233"
+								}
+							},
+							"direction": "Hauptbahnhof",
+							"when": "2026-10-25T05:24:00+01:00",
+							"plannedWhen": "2026-10-25T05:24:00+01:00",
+							"delay": 0
+						},
+						{
+							"tripId": "1|52362|8|86|25102026",
+							"line": {
+								"type": "line",
+								"id": "de-vbb-11000000-u-bahn-u5",
+								"fahrtNr": "9763",
+								"name": "U5",
+								"public": true,
+								"adminCode": "BVU---",
+								"productName": "U",
+								"mode": "train",
+								"product": "subway",
+								"operator": {
+									"type": "operator",
+									"id": "berliner-verkehrsbetriebe",
+									"name": "Berliner Verkehrsbetriebe"
+								},
+								"color": {
+									"fg": "#fff",
+									"bg": "#805233"
+								}
+							},
+							"direction": "Hauptbahnhof",
+							"when": "2026-10-25T05:39:00+01:00",
+							"plannedWhen": "2026-10-25T05:39:00+01:00",
+							"delay": 0
+						},
+						{
+							"tripId": "1|52360|0|86|25102026",
+							"line": {
+								"type": "line",
+								"id": "de-vbb-11000000-u-bahn-u5",
+								"fahrtNr": "9764",
+								"name": "U5",
+								"public": true,
+								"adminCode": "BVU---",
+								"productName": "U",
+								"mode": "train",
+								"product": "subway",
+								"operator": {
+									"type": "operator",
+									"id": "berliner-verkehrsbetriebe",
+									"name": "Berliner Verkehrsbetriebe"
+								},
+								"color": {
+									"fg": "#fff",
+									"bg": "#805233"
+								}
+							},
+							"direction": "Hauptbahnhof",
+							"when": "2026-10-25T05:54:00+01:00",
+							"plannedWhen": "2026-10-25T05:54:00+01:00",
+							"delay": null
+						},
+						{
+							"tripId": "1|52360|1|86|25102026",
+							"line": {
+								"type": "line",
+								"id": "de-vbb-11000000-u-bahn-u5",
+								"fahrtNr": "9765",
+								"name": "U5",
+								"public": true,
+								"adminCode": "BVU---",
+								"productName": "U",
+								"mode": "train",
+								"product": "subway",
+								"operator": {
+									"type": "operator",
+									"id": "berliner-verkehrsbetriebe",
+									"name": "Berliner Verkehrsbetriebe"
+								},
+								"color": {
+									"fg": "#fff",
+									"bg": "#805233"
+								}
+							},
+							"direction": "Hauptbahnhof",
+							"when": "2026-10-25T06:09:00+01:00",
+							"plannedWhen": "2026-10-25T06:09:00+01:00",
+							"delay": 0
+						},
+						{
+							"tripId": "1|52360|2|86|25102026",
+							"line": {
+								"type": "line",
+								"id": "de-vbb-11000000-u-bahn-u5",
+								"fahrtNr": "9766",
+								"name": "U5",
+								"public": true,
+								"adminCode": "BVU---",
+								"productName": "U",
+								"mode": "train",
+								"product": "subway",
+								"operator": {
+									"type": "operator",
+									"id": "berliner-verkehrsbetriebe",
+									"name": "Berliner Verkehrsbetriebe"
+								},
+								"color": {
+									"fg": "#fff",
+									"bg": "#805233"
+								}
+							},
+							"direction": "Hauptbahnhof",
+							"when": "2026-10-25T06:24:00+01:00",
+							"plannedWhen": "2026-10-25T06:24:00+01:00",
+							"delay": 0
+						}
+					]
+				},
+				{
+					"origin": {
+						"type": "stop",
+						"id": "900100025",
+						"name": "S+U Brandenburger Tor (Berlin)",
+						"location": {
+							"type": "location",
+							"id": "900100025",
+							"latitude": 52.51651,
+							"longitude": 13.381936
+						},
+						"products": {
+							"suburban": true,
+							"subway": true,
+							"tram": false,
+							"bus": true,
+							"ferry": false,
+							"express": false,
+							"regional": false
+						},
+						"ids": {
+							"ifopt": "de:11000:900100025"
+						},
+						"stationDHID": "de:11000:900100025"
+					},
+					"destination": {
+						"type": "stop",
+						"id": "900100025",
+						"name": "S+U Brandenburger Tor (Berlin)",
+						"location": {
+							"type": "location",
+							"id": "900100025",
+							"latitude": 52.51651,
+							"longitude": 13.381936
+						},
+						"products": {
+							"suburban": true,
+							"subway": true,
+							"tram": false,
+							"bus": true,
+							"ferry": false,
+							"express": false,
+							"regional": false
+						},
+						"ids": {
+							"ifopt": "de:11000:900100025"
+						},
+						"stationDHID": "de:11000:900100025"
+					},
+					"departure": "2026-10-25T05:15:00+01:00",
+					"plannedDeparture": "2026-10-25T05:14:00+01:00",
+					"departureDelay": 60,
+					"arrival": "2026-10-25T05:15:00+01:00",
+					"plannedArrival": "2026-10-25T05:14:00+01:00",
+					"arrivalDelay": 60,
+					"public": true,
+					"walking": true,
+					"distance": null
+				},
+				{
+					"origin": {
+						"type": "stop",
+						"id": "900100025",
+						"name": "S+U Brandenburger Tor (Berlin)",
+						"location": {
+							"type": "location",
+							"id": "900100025",
+							"latitude": 52.51651,
+							"longitude": 13.381936
+						},
+						"products": {
+							"suburban": true,
+							"subway": true,
+							"tram": false,
+							"bus": true,
+							"ferry": false,
+							"express": false,
+							"regional": false
+						},
+						"ids": {
+							"ifopt": "de:11000:900100025"
+						},
+						"stationDHID": "de:11000:900100025"
+					},
+					"destination": {
+						"type": "stop",
+						"id": "900100020",
+						"name": "S+U Potsdamer Platz Bhf (Berlin)",
+						"location": {
+							"type": "location",
+							"id": "900100020",
+							"latitude": 52.509355,
+							"longitude": 13.376551
+						},
+						"products": {
+							"suburban": true,
+							"subway": true,
+							"tram": false,
+							"bus": true,
+							"ferry": false,
+							"express": false,
+							"regional": true
+						},
+						"ids": {
+							"ifopt": "de:11000:900100020"
+						},
+						"stationDHID": "de:11000:900100020"
+					},
+					"departure": "2026-10-25T05:22:00+01:00",
+					"plannedDeparture": "2026-10-25T05:22:00+01:00",
+					"departureDelay": 0,
+					"arrival": "2026-10-25T05:23:00+01:00",
+					"plannedArrival": "2026-10-25T05:23:00+01:00",
+					"arrivalDelay": 0,
+					"reachable": true,
+					"tripId": "1|629|2|86|25102026",
+					"line": {
+						"type": "line",
+						"id": "de-vbb-11000000-s-bahn-s2-s2-w",
+						"fahrtNr": "15751",
+						"name": "S2",
+						"public": true,
+						"adminCode": "DBS---",
+						"productName": "S",
+						"mode": "train",
+						"product": "suburban",
+						"operator": {
+							"type": "operator",
+							"id": "s-bahn-berlin-gmbh",
+							"name": "S-Bahn Berlin GmbH"
+						},
+						"color": {
+							"fg": "#fff",
+							"bg": "#00b300"
+						}
+					},
+					"direction": "S Blankenfelde (TF) Bhf",
+					"currentLocation": {
+						"type": "location",
+						"latitude": 52.549833,
+						"longitude": 13.396166
+					},
+					"arrivalPlatform": "11",
+					"plannedArrivalPlatform": "11",
+					"arrivalPrognosisType": "prognosed",
+					"departurePlatform": "1",
+					"plannedDeparturePlatform": "1",
+					"departurePrognosisType": "prognosed",
+					"stopovers": [
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900100025",
+								"name": "S+U Brandenburger Tor (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900100025",
+									"latitude": 52.51651,
+									"longitude": 13.381936
+								},
+								"products": {
+									"suburban": true,
+									"subway": true,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900100025"
+								},
+								"stationDHID": "de:11000:900100025"
+							},
+							"arrival": null,
+							"plannedArrival": null,
+							"arrivalDelay": null,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": null,
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:22:00+01:00",
+							"plannedDeparture": "2026-10-25T05:22:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								},
+								{
+									"type": "hint",
+									"code": "FK",
+									"text": "Bicycle conveyance (S+U Brandenburger Tor (Berlin))"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900100020",
+								"name": "S+U Potsdamer Platz Bhf (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900100020",
+									"latitude": 52.509355,
+									"longitude": 13.376551
+								},
+								"products": {
+									"suburban": true,
+									"subway": true,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": true
+								},
+								"ids": {
+									"ifopt": "de:11000:900100020"
+								},
+								"stationDHID": "de:11000:900100020"
+							},
+							"arrival": "2026-10-25T05:23:00+01:00",
+							"plannedArrival": "2026-10-25T05:23:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": null,
+							"plannedDeparture": null,
+							"departureDelay": null,
+							"departurePlatform": null,
+							"departurePrognosisType": null,
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "FK",
+									"text": "Bicycle conveyance (S+U Potsdamer Platz Bhf (Berlin))"
+								}
+							]
+						}
+					],
+					"remarks": [
+						{
+							"type": "hint",
+							"code": "OPERATOR",
+							"text": "DBS"
+						},
+						{
+							"type": "hint",
+							"code": "text.occup.jny.max.11",
+							"text": "low occupancy expected"
+						}
+					],
+					"cycle": {
+						"min": 120,
+						"max": 1380,
+						"nr": 14
+					},
+					"alternatives": [
+						{
+							"tripId": "1|143|0|86|25102026",
+							"line": {
+								"type": "line",
+								"id": "de-vbb-11000000-s-bahn-s1-s1-p",
+								"fahrtNr": "74",
+								"name": "S1",
+								"public": true,
+								"adminCode": "DBS---",
+								"productName": "S",
+								"mode": "train",
+								"product": "suburban",
+								"operator": {
+									"type": "operator",
+									"id": "s-bahn-berlin-gmbh",
+									"name": "S-Bahn Berlin GmbH"
+								},
+								"color": {
+									"fg": "#fff",
+									"bg": "#da6ba3"
+								}
+							},
+							"direction": "S Wannsee Bhf (Berlin)",
+							"when": "2026-10-25T05:37:00+01:00",
+							"plannedWhen": "2026-10-25T05:37:00+01:00",
+							"delay": 0
+						},
+						{
+							"tripId": "1|963|1|86|25102026",
+							"line": {
+								"type": "line",
+								"id": "de-vbb-11000000-s-bahn-s25-s25-v",
+								"fahrtNr": "16400",
+								"name": "S25",
+								"public": true,
+								"adminCode": "DBS---",
+								"productName": "S",
+								"mode": "train",
+								"product": "suburban",
+								"operator": {
+									"type": "operator",
+									"id": "s-bahn-berlin-gmbh",
+									"name": "S-Bahn Berlin GmbH"
+								},
+								"color": {
+									"fg": "#fff",
+									"bg": "#00b300"
+								}
+							},
+							"direction": "S Teltow Stadt",
+							"when": "2026-10-25T05:45:00+01:00",
+							"plannedWhen": "2026-10-25T05:45:00+01:00",
+							"delay": 0
+						},
+						{
+							"tripId": "1|629|3|86|25102026",
+							"line": {
+								"type": "line",
+								"id": "de-vbb-11000000-s-bahn-s2-s2-w",
+								"fahrtNr": "15756",
+								"name": "S2",
+								"public": true,
+								"adminCode": "DBS---",
+								"productName": "S",
+								"mode": "train",
+								"product": "suburban",
+								"operator": {
+									"type": "operator",
+									"id": "s-bahn-berlin-gmbh",
+									"name": "S-Bahn Berlin GmbH"
+								},
+								"color": {
+									"fg": "#fff",
+									"bg": "#00b300"
+								}
+							},
+							"direction": "S Blankenfelde (TF) Bhf",
+							"when": "2026-10-25T05:52:00+01:00",
+							"plannedWhen": "2026-10-25T05:52:00+01:00",
+							"delay": 0
+						},
+						{
+							"tripId": "1|967|0|86|25102026",
+							"line": {
+								"type": "line",
+								"id": "de-vbb-11000000-s-bahn-s25-s25-v",
+								"fahrtNr": "16394",
+								"name": "S25",
+								"public": true,
+								"adminCode": "DBS---",
+								"productName": "S",
+								"mode": "train",
+								"product": "suburban",
+								"operator": {
+									"type": "operator",
+									"id": "s-bahn-berlin-gmbh",
+									"name": "S-Bahn Berlin GmbH"
+								},
+								"color": {
+									"fg": "#fff",
+									"bg": "#00b300"
+								}
+							},
+							"direction": "S Teltow Stadt",
+							"when": "2026-10-25T06:15:00+01:00",
+							"plannedWhen": "2026-10-25T06:15:00+01:00",
+							"delay": 0
+						},
+						{
+							"tripId": "1|632|0|86|25102026",
+							"line": {
+								"type": "line",
+								"id": "de-vbb-11000000-s-bahn-s2-s2-w",
+								"fahrtNr": "15735",
+								"name": "S2",
+								"public": true,
+								"adminCode": "DBS---",
+								"productName": "S",
+								"mode": "train",
+								"product": "suburban",
+								"operator": {
+									"type": "operator",
+									"id": "s-bahn-berlin-gmbh",
+									"name": "S-Bahn Berlin GmbH"
+								},
+								"color": {
+									"fg": "#fff",
+									"bg": "#00b300"
+								}
+							},
+							"direction": "S Blankenfelde (TF) Bhf",
+							"when": "2026-10-25T06:20:00+01:00",
+							"plannedWhen": "2026-10-25T06:20:00+01:00",
+							"delay": 0
+						}
+					]
+				},
+				{
+					"origin": {
+						"type": "stop",
+						"id": "900100020",
+						"name": "S+U Potsdamer Platz Bhf (Berlin)",
+						"location": {
+							"type": "location",
+							"id": "900100020",
+							"latitude": 52.509355,
+							"longitude": 13.376551
+						},
+						"products": {
+							"suburban": true,
+							"subway": true,
+							"tram": false,
+							"bus": true,
+							"ferry": false,
+							"express": false,
+							"regional": true
+						},
+						"ids": {
+							"ifopt": "de:11000:900100020"
+						},
+						"stationDHID": "de:11000:900100020"
+					},
+					"destination": {
+						"type": "stop",
+						"id": "900100020",
+						"name": "S+U Potsdamer Platz Bhf (Berlin)",
+						"location": {
+							"type": "location",
+							"id": "900100020",
+							"latitude": 52.509355,
+							"longitude": 13.376551
+						},
+						"products": {
+							"suburban": true,
+							"subway": true,
+							"tram": false,
+							"bus": true,
+							"ferry": false,
+							"express": false,
+							"regional": true
+						},
+						"ids": {
+							"ifopt": "de:11000:900100020"
+						},
+						"stationDHID": "de:11000:900100020"
+					},
+					"departure": "2026-10-25T05:23:00+01:00",
+					"plannedDeparture": "2026-10-25T05:23:00+01:00",
+					"departureDelay": 0,
+					"arrival": "2026-10-25T05:23:00+01:00",
+					"plannedArrival": "2026-10-25T05:23:00+01:00",
+					"arrivalDelay": 0,
+					"public": true,
+					"walking": true,
+					"distance": null
+				},
+				{
+					"origin": {
+						"type": "stop",
+						"id": "900100020",
+						"name": "S+U Potsdamer Platz Bhf (Berlin)",
+						"location": {
+							"type": "location",
+							"id": "900100020",
+							"latitude": 52.509355,
+							"longitude": 13.376551
+						},
+						"products": {
+							"suburban": true,
+							"subway": true,
+							"tram": false,
+							"bus": true,
+							"ferry": false,
+							"express": false,
+							"regional": true
+						},
+						"ids": {
+							"ifopt": "de:11000:900100020"
+						},
+						"stationDHID": "de:11000:900100020"
+					},
+					"destination": {
+						"type": "stop",
+						"id": "900058101",
+						"name": "S Südkreuz Bhf (Berlin)",
+						"location": {
+							"type": "location",
+							"id": "900058101",
+							"latitude": 52.475501,
+							"longitude": 13.365548
+						},
+						"products": {
+							"suburban": true,
+							"subway": false,
+							"tram": false,
+							"bus": true,
+							"ferry": false,
+							"express": true,
+							"regional": true
+						},
+						"ids": {
+							"ifopt": "de:11000:900058101"
+						},
+						"stationDHID": "de:11000:900058101"
+					},
+					"departure": "2026-10-25T05:26:00+01:00",
+					"plannedDeparture": "2026-10-25T05:26:00+01:00",
+					"departureDelay": 0,
+					"arrival": "2026-10-25T05:29:00+01:00",
+					"plannedArrival": "2026-10-25T05:29:00+01:00",
+					"arrivalDelay": 0,
+					"reachable": true,
+					"tripId": "1|69585|0|86|25102026",
+					"line": {
+						"type": "line",
+						"id": "de-vbb-11000000-r-bahn-fex",
+						"fahrtNr": "356",
+						"name": "FEX",
+						"public": true,
+						"adminCode": "800165",
+						"productName": "RE",
+						"mode": "train",
+						"product": "regional",
+						"operator": {
+							"type": "operator",
+							"id": "db-regio-ag",
+							"name": "DB Regio AG"
+						},
+						"color": {
+							"fg": "#fff",
+							"bg": "#730050"
+						}
+					},
+					"direction": "Flughafen BER",
+					"arrivalPlatform": "3",
+					"plannedArrivalPlatform": "3",
+					"arrivalPrognosisType": "prognosed",
+					"departurePlatform": "1",
+					"plannedDeparturePlatform": "1",
+					"departurePrognosisType": "prognosed",
+					"stopovers": [
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900100020",
+								"name": "S+U Potsdamer Platz Bhf (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900100020",
+									"latitude": 52.509355,
+									"longitude": 13.376551
+								},
+								"products": {
+									"suburban": true,
+									"subway": true,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": true
+								},
+								"ids": {
+									"ifopt": "de:11000:900100020"
+								},
+								"stationDHID": "de:11000:900100020"
+							},
+							"arrival": null,
+							"plannedArrival": null,
+							"arrivalDelay": null,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": null,
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:26:00+01:00",
+							"plannedDeparture": "2026-10-25T05:26:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								},
+								{
+									"type": "hint",
+									"code": "FK",
+									"text": "Bicycle conveyance (S+U Potsdamer Platz Bhf (Berlin))"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900058101",
+								"name": "S Südkreuz Bhf (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900058101",
+									"latitude": 52.475501,
+									"longitude": 13.365548
+								},
+								"products": {
+									"suburban": true,
+									"subway": false,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": true,
+									"regional": true
+								},
+								"ids": {
+									"ifopt": "de:11000:900058101"
+								},
+								"stationDHID": "de:11000:900058101"
+							},
+							"arrival": "2026-10-25T05:29:00+01:00",
+							"plannedArrival": "2026-10-25T05:29:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": null,
+							"plannedDeparture": null,
+							"departureDelay": null,
+							"departurePlatform": null,
+							"departurePrognosisType": null,
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "FK",
+									"text": "Bicycle conveyance (S Südkreuz Bhf (Berlin))"
+								}
+							]
+						}
+					],
+					"remarks": [
+						{
+							"type": "hint",
+							"code": "OPERATOR",
+							"text": "DB Regio"
+						},
+						{
+							"type": "hint",
+							"code": "gn",
+							"text": "vehicle-mounted access aid"
+						},
+						{
+							"type": "hint",
+							"code": "WV",
+							"text": "Wifi available"
+						},
+						{
+							"type": "hint",
+							"code": "text.occup.jny.max.11",
+							"text": "low occupancy expected"
+						}
+					],
+					"cycle": {
+						"min": 60,
+						"max": 960,
+						"nr": 18
+					},
+					"alternatives": [
+						{
+							"tripId": "1|57081|0|86|25102026",
+							"line": {
+								"type": "line",
+								"id": "de-vbb-11000000-r-bahn-re3",
+								"fahrtNr": "444",
+								"name": "RE3",
+								"public": true,
+								"adminCode": "800158",
+								"productName": "RE",
+								"mode": "train",
+								"product": "regional",
+								"operator": {
+									"type": "operator",
+									"id": "db-regio-ag",
+									"name": "DB Regio AG"
+								},
+								"color": {
+									"fg": "#fff",
+									"bg": "#eb7405"
+								}
+							},
+							"direction": "Lutherstadt Wittenberg, Hauptbahnhof",
+							"when": "2026-10-25T05:38:00+01:00",
+							"plannedWhen": "2026-10-25T05:35:00+01:00",
+							"delay": 180
+						},
+						{
+							"tripId": "1|69587|0|86|25102026",
+							"line": {
+								"type": "line",
+								"id": "de-vbb-11000000-r-bahn-fex",
+								"fahrtNr": "355",
+								"name": "FEX",
+								"public": true,
+								"adminCode": "800165",
+								"productName": "RE",
+								"mode": "train",
+								"product": "regional",
+								"operator": {
+									"type": "operator",
+									"id": "db-regio-ag",
+									"name": "DB Regio AG"
+								},
+								"color": {
+									"fg": "#fff",
+									"bg": "#730050"
+								}
+							},
+							"direction": "Flughafen BER",
+							"when": "2026-10-25T05:41:00+01:00",
+							"plannedWhen": "2026-10-25T05:41:00+01:00",
+							"delay": 0
+						},
+						{
+							"tripId": "1|69193|0|86|25102026",
+							"line": {
+								"type": "line",
+								"id": "de-vbb-11000000-r-bahn-re8",
+								"fahrtNr": "866",
+								"name": "RE8",
+								"public": true,
+								"adminCode": "ODRE8_",
+								"productName": "RE",
+								"mode": "train",
+								"product": "regional",
+								"operator": {
+									"type": "operator",
+									"id": "odeg-ostdeutsche-eisenbahn-gmbh",
+									"name": "ODEG Ostdeutsche Eisenbahn GmbH"
+								}
+							},
+							"direction": "Baruth, Bahnhof",
+							"when": "2026-10-25T05:46:00+01:00",
+							"plannedWhen": "2026-10-25T05:46:00+01:00",
+							"delay": 0
+						},
+						{
+							"tripId": "1|69577|0|86|25102026",
+							"line": {
+								"type": "line",
+								"id": "de-vbb-11000000-r-bahn-fex",
+								"fahrtNr": "377",
+								"name": "FEX",
+								"public": true,
+								"adminCode": "800165",
+								"productName": "RE",
+								"mode": "train",
+								"product": "regional",
+								"operator": {
+									"type": "operator",
+									"id": "db-regio-ag",
+									"name": "DB Regio AG"
+								},
+								"color": {
+									"fg": "#fff",
+									"bg": "#730050"
+								}
+							},
+							"direction": "Flughafen BER",
+							"when": "2026-10-25T05:56:00+01:00",
+							"plannedWhen": "2026-10-25T05:56:00+01:00",
+							"delay": 0
+						},
+						{
+							"tripId": "1|57299|0|86|25102026",
+							"line": {
+								"type": "line",
+								"id": "de-vbb-12072240-bahn-re4-db",
+								"fahrtNr": "320",
+								"name": "RE4",
+								"public": true,
+								"adminCode": "800158",
+								"productName": "RE",
+								"mode": "train",
+								"product": "regional",
+								"operator": {
+									"type": "operator",
+									"id": "db-regio-ag",
+									"name": "DB Regio AG"
+								},
+								"color": {
+									"fg": "#fff",
+									"bg": "#992746"
+								}
+							},
+							"direction": "Jüterbog, Bahnhof",
+							"when": "2026-10-25T06:10:00+01:00",
+							"plannedWhen": "2026-10-25T06:10:00+01:00",
+							"delay": 0
+						}
+					]
+				}
+			],
+			"refreshToken": "¶HKI¶T$A=1@O=S+U Alexanderplatz Bhf (Berlin)@L=900100003@a=128@$A=1@O=S+U Brandenburger Tor (Berlin)@L=900100025@a=128@$202610250509$202610250514$      U5$$1$$$$$$§T$A=1@O=S+U Brandenburger Tor (Berlin)@L=900100025@a=128@$A=1@O=S+U Potsdamer Platz Bhf (Berlin)@L=900100020@a=128@$202610250522$202610250523$      S2$$1$$$$$$§T$A=1@O=S+U Potsdamer Platz Bhf (Berlin)@L=900100020@a=128@$A=1@O=S Südkreuz Bhf (Berlin)@L=900058101@a=128@$202610250526$202610250529$     FEX$$1$$$$$$¶KC¶#VE#2#CF#100#CA#0#CM#0#SICT#0#AM#16417#AM2#0#RT#15#¶KCC¶I1ZFIzEjRVJHIzMjSElOIzAjRUNLIzEzMjY5fDEzMjY5fDEzMjg5fDEzMjg5fDB8MHw2NTcwMXwxMzI2MXw0fDB8MTB8MHwwfC0yMTQ3NDgzNjQ4I0dBTSMyNTEwMjYwNTA5IwpaI1ZOIzEjU1QjMTc5MjcxNTQzNyNQSSMwI1pJIzUyMzYyI1RBIzYjREEjMjUxMDI2IzFTIzkwMDE3NTAxMCMxVCM0MzUjTFMjOTAwMDAzMjAxI0xUIzUxNyNQVSM4NiNSVCMxI0NBI1UjWkUjVTUjWkIjICAgICAgVTUjUEMjMSNGUiM5MDAxMDAwMDMjRlQjNTA5I1RPIzkwMDEwMDAyNSNUVCM1MTQjClojVk4jMSNTVCMxNzkyNzE1NDM3I1BJIzAjWkkjNjI5I1RBIzIjREEjMjUxMDI2IzFTIzkwMDM1MDE2MCMxVCM0MzAjTFMjOTAwMjQ1MDI3I0xUIzU1MyNQVSM4NiNSVCMxI0NBI1MtNSNaRSNTMiNaQiMgICAgICBTMiNQQyMwI0ZSIzkwMDEwMDAyNSNGVCM1MjIjVE8jOTAwMTAwMDIwI1RUIzUyMyMKWiNWTiMxI1NUIzE3OTI3MTU0MzcjUEkjMCNaSSM2OTU4NSNUQSMwI0RBIzI1MTAyNiMxUyM5MDAwMDMyMDAjMVQjNTIyI0xTIzkwMDI2MDAwOSNMVCM1NDUjUFUjODYjUlQjMSNDQSNOUkUjWkUjRkVYI1pCIyAgICAgRkVYI1BDIzYjRlIjOTAwMTAwMDIwI0ZUIzUyNiNUTyM5MDAwNTgxMDEjVFQjNTI5Iw==¶KRCC¶#VE#1#",
+			"cycle": {
+				"min": 540
+			}
+		},
+		{
+			"type": "journey",
+			"legs": [
+				{
+					"origin": {
+						"type": "stop",
+						"id": "900100003",
+						"name": "S+U Alexanderplatz Bhf (Berlin)",
+						"location": {
+							"type": "location",
+							"id": "900100003",
+							"latitude": 52.521508,
+							"longitude": 13.411267
+						},
+						"products": {
+							"suburban": true,
+							"subway": true,
+							"tram": false,
+							"bus": false,
+							"ferry": false,
+							"express": false,
+							"regional": false
+						},
+						"ids": {
+							"ifopt": "de:11000:900100003"
+						},
+						"stationDHID": "de:11000:900100003"
+					},
+					"destination": {
+						"type": "stop",
+						"id": "900100025",
+						"name": "S+U Brandenburger Tor (Berlin)",
+						"location": {
+							"type": "location",
+							"id": "900100025",
+							"latitude": 52.51651,
+							"longitude": 13.381936
+						},
+						"products": {
+							"suburban": true,
+							"subway": true,
+							"tram": false,
+							"bus": true,
+							"ferry": false,
+							"express": false,
+							"regional": false
+						},
+						"ids": {
+							"ifopt": "de:11000:900100025"
+						},
+						"stationDHID": "de:11000:900100025"
+					},
+					"departure": "2026-10-25T05:10:00+01:00",
+					"plannedDeparture": "2026-10-25T05:09:00+01:00",
+					"departureDelay": 60,
+					"arrival": "2026-10-25T05:15:00+01:00",
+					"plannedArrival": "2026-10-25T05:14:00+01:00",
+					"arrivalDelay": 60,
+					"reachable": true,
+					"tripId": "1|52362|6|86|25102026",
+					"line": {
+						"type": "line",
+						"id": "de-vbb-11000000-u-bahn-u5",
+						"fahrtNr": "9761",
+						"name": "U5",
+						"public": true,
+						"adminCode": "BVU---",
+						"productName": "U",
+						"mode": "train",
+						"product": "subway",
+						"operator": {
+							"type": "operator",
+							"id": "berliner-verkehrsbetriebe",
+							"name": "Berliner Verkehrsbetriebe"
+						},
+						"color": {
+							"fg": "#fff",
+							"bg": "#805233"
+						}
+					},
+					"direction": "Hauptbahnhof",
+					"currentLocation": {
+						"type": "location",
+						"latitude": 52.511917,
+						"longitude": 13.493582
+					},
+					"arrivalPlatform": "1 (U5)",
+					"plannedArrivalPlatform": "1 (U5)",
+					"arrivalPrognosisType": "prognosed",
+					"departurePlatform": "1 (U5)",
+					"plannedDeparturePlatform": "1 (U5)",
+					"departurePrognosisType": "prognosed",
+					"stopovers": [
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900100003",
+								"name": "S+U Alexanderplatz Bhf (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900100003",
+									"latitude": 52.521508,
+									"longitude": 13.411267
+								},
+								"products": {
+									"suburban": true,
+									"subway": true,
+									"tram": false,
+									"bus": false,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900100003"
+								},
+								"stationDHID": "de:11000:900100003"
+							},
+							"arrival": null,
+							"plannedArrival": null,
+							"arrivalDelay": null,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": null,
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:10:00+01:00",
+							"plannedDeparture": "2026-10-25T05:09:00+01:00",
+							"departureDelay": 60,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								},
+								{
+									"type": "hint",
+									"code": "FK",
+									"text": "Bicycle conveyance (S+U Alexanderplatz Bhf (Berlin))"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900100045",
+								"name": "U Rotes Rathaus (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900100045",
+									"latitude": 52.518461,
+									"longitude": 13.407061
+								},
+								"products": {
+									"suburban": false,
+									"subway": true,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900100045"
+								},
+								"stationDHID": "de:11000:900100045"
+							},
+							"arrival": "2026-10-25T05:11:00+01:00",
+							"plannedArrival": "2026-10-25T05:10:00+01:00",
+							"arrivalDelay": 60,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:11:00+01:00",
+							"plannedDeparture": "2026-10-25T05:10:00+01:00",
+							"departureDelay": 60,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900100537",
+								"name": "U Museumsinsel (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900100537",
+									"latitude": 52.517391,
+									"longitude": 13.399195
+								},
+								"products": {
+									"suburban": false,
+									"subway": true,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900100537"
+								},
+								"stationDHID": "de:11000:900100537"
+							},
+							"arrival": "2026-10-25T05:12:00+01:00",
+							"plannedArrival": "2026-10-25T05:11:00+01:00",
+							"arrivalDelay": 60,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:12:00+01:00",
+							"plannedDeparture": "2026-10-25T05:11:00+01:00",
+							"departureDelay": 60,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900100513",
+								"name": "U Unter den Linden (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900100513",
+									"latitude": 52.516996,
+									"longitude": 13.388875
+								},
+								"products": {
+									"suburban": false,
+									"subway": true,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900100513"
+								},
+								"stationDHID": "de:11000:900100513"
+							},
+							"arrival": "2026-10-25T05:14:00+01:00",
+							"plannedArrival": "2026-10-25T05:13:00+01:00",
+							"arrivalDelay": 60,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:14:00+01:00",
+							"plannedDeparture": "2026-10-25T05:13:00+01:00",
+							"departureDelay": 60,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900100025",
+								"name": "S+U Brandenburger Tor (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900100025",
+									"latitude": 52.51651,
+									"longitude": 13.381936
+								},
+								"products": {
+									"suburban": true,
+									"subway": true,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900100025"
+								},
+								"stationDHID": "de:11000:900100025"
+							},
+							"arrival": "2026-10-25T05:15:00+01:00",
+							"plannedArrival": "2026-10-25T05:14:00+01:00",
+							"arrivalDelay": 60,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": null,
+							"plannedDeparture": null,
+							"departureDelay": null,
+							"departurePlatform": null,
+							"departurePrognosisType": null,
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "FK",
+									"text": "Bicycle conveyance (S+U Brandenburger Tor (Berlin))"
+								}
+							]
+						}
+					],
+					"remarks": [
+						{
+							"type": "hint",
+							"code": "OPERATOR",
+							"text": "BVG"
+						},
+						{
+							"type": "hint",
+							"code": "text.occup.jny.max.11",
+							"text": "low occupancy expected"
+						}
+					],
+					"cycle": {
+						"min": 540,
+						"max": 900,
+						"nr": 9
+					},
+					"alternatives": [
+						{
+							"tripId": "1|52362|7|86|25102026",
+							"line": {
+								"type": "line",
+								"id": "de-vbb-11000000-u-bahn-u5",
+								"fahrtNr": "9762",
+								"name": "U5",
+								"public": true,
+								"adminCode": "BVU---",
+								"productName": "U",
+								"mode": "train",
+								"product": "subway",
+								"operator": {
+									"type": "operator",
+									"id": "berliner-verkehrsbetriebe",
+									"name": "Berliner Verkehrsbetriebe"
+								},
+								"color": {
+									"fg": "#fff",
+									"bg": "#805233"
+								}
+							},
+							"direction": "Hauptbahnhof",
+							"when": "2026-10-25T05:24:00+01:00",
+							"plannedWhen": "2026-10-25T05:24:00+01:00",
+							"delay": 0
+						},
+						{
+							"tripId": "1|52362|8|86|25102026",
+							"line": {
+								"type": "line",
+								"id": "de-vbb-11000000-u-bahn-u5",
+								"fahrtNr": "9763",
+								"name": "U5",
+								"public": true,
+								"adminCode": "BVU---",
+								"productName": "U",
+								"mode": "train",
+								"product": "subway",
+								"operator": {
+									"type": "operator",
+									"id": "berliner-verkehrsbetriebe",
+									"name": "Berliner Verkehrsbetriebe"
+								},
+								"color": {
+									"fg": "#fff",
+									"bg": "#805233"
+								}
+							},
+							"direction": "Hauptbahnhof",
+							"when": "2026-10-25T05:39:00+01:00",
+							"plannedWhen": "2026-10-25T05:39:00+01:00",
+							"delay": 0
+						},
+						{
+							"tripId": "1|52360|0|86|25102026",
+							"line": {
+								"type": "line",
+								"id": "de-vbb-11000000-u-bahn-u5",
+								"fahrtNr": "9764",
+								"name": "U5",
+								"public": true,
+								"adminCode": "BVU---",
+								"productName": "U",
+								"mode": "train",
+								"product": "subway",
+								"operator": {
+									"type": "operator",
+									"id": "berliner-verkehrsbetriebe",
+									"name": "Berliner Verkehrsbetriebe"
+								},
+								"color": {
+									"fg": "#fff",
+									"bg": "#805233"
+								}
+							},
+							"direction": "Hauptbahnhof",
+							"when": "2026-10-25T05:54:00+01:00",
+							"plannedWhen": "2026-10-25T05:54:00+01:00",
+							"delay": null
+						},
+						{
+							"tripId": "1|52360|1|86|25102026",
+							"line": {
+								"type": "line",
+								"id": "de-vbb-11000000-u-bahn-u5",
+								"fahrtNr": "9765",
+								"name": "U5",
+								"public": true,
+								"adminCode": "BVU---",
+								"productName": "U",
+								"mode": "train",
+								"product": "subway",
+								"operator": {
+									"type": "operator",
+									"id": "berliner-verkehrsbetriebe",
+									"name": "Berliner Verkehrsbetriebe"
+								},
+								"color": {
+									"fg": "#fff",
+									"bg": "#805233"
+								}
+							},
+							"direction": "Hauptbahnhof",
+							"when": "2026-10-25T06:09:00+01:00",
+							"plannedWhen": "2026-10-25T06:09:00+01:00",
+							"delay": 0
+						},
+						{
+							"tripId": "1|52360|2|86|25102026",
+							"line": {
+								"type": "line",
+								"id": "de-vbb-11000000-u-bahn-u5",
+								"fahrtNr": "9766",
+								"name": "U5",
+								"public": true,
+								"adminCode": "BVU---",
+								"productName": "U",
+								"mode": "train",
+								"product": "subway",
+								"operator": {
+									"type": "operator",
+									"id": "berliner-verkehrsbetriebe",
+									"name": "Berliner Verkehrsbetriebe"
+								},
+								"color": {
+									"fg": "#fff",
+									"bg": "#805233"
+								}
+							},
+							"direction": "Hauptbahnhof",
+							"when": "2026-10-25T06:24:00+01:00",
+							"plannedWhen": "2026-10-25T06:24:00+01:00",
+							"delay": 0
+						}
+					]
+				},
+				{
+					"origin": {
+						"type": "stop",
+						"id": "900100025",
+						"name": "S+U Brandenburger Tor (Berlin)",
+						"location": {
+							"type": "location",
+							"id": "900100025",
+							"latitude": 52.51651,
+							"longitude": 13.381936
+						},
+						"products": {
+							"suburban": true,
+							"subway": true,
+							"tram": false,
+							"bus": true,
+							"ferry": false,
+							"express": false,
+							"regional": false
+						},
+						"ids": {
+							"ifopt": "de:11000:900100025"
+						},
+						"stationDHID": "de:11000:900100025"
+					},
+					"destination": {
+						"type": "stop",
+						"id": "900100025",
+						"name": "S+U Brandenburger Tor (Berlin)",
+						"location": {
+							"type": "location",
+							"id": "900100025",
+							"latitude": 52.51651,
+							"longitude": 13.381936
+						},
+						"products": {
+							"suburban": true,
+							"subway": true,
+							"tram": false,
+							"bus": true,
+							"ferry": false,
+							"express": false,
+							"regional": false
+						},
+						"ids": {
+							"ifopt": "de:11000:900100025"
+						},
+						"stationDHID": "de:11000:900100025"
+					},
+					"departure": "2026-10-25T05:15:00+01:00",
+					"plannedDeparture": "2026-10-25T05:14:00+01:00",
+					"departureDelay": 60,
+					"arrival": "2026-10-25T05:15:00+01:00",
+					"plannedArrival": "2026-10-25T05:14:00+01:00",
+					"arrivalDelay": 60,
+					"public": true,
+					"walking": true,
+					"distance": null
+				},
+				{
+					"origin": {
+						"type": "stop",
+						"id": "900100025",
+						"name": "S+U Brandenburger Tor (Berlin)",
+						"location": {
+							"type": "location",
+							"id": "900100025",
+							"latitude": 52.51651,
+							"longitude": 13.381936
+						},
+						"products": {
+							"suburban": true,
+							"subway": true,
+							"tram": false,
+							"bus": true,
+							"ferry": false,
+							"express": false,
+							"regional": false
+						},
+						"ids": {
+							"ifopt": "de:11000:900100025"
+						},
+						"stationDHID": "de:11000:900100025"
+					},
+					"destination": {
+						"type": "stop",
+						"id": "900058101",
+						"name": "S Südkreuz Bhf (Berlin)",
+						"location": {
+							"type": "location",
+							"id": "900058101",
+							"latitude": 52.475501,
+							"longitude": 13.365548
+						},
+						"products": {
+							"suburban": true,
+							"subway": false,
+							"tram": false,
+							"bus": true,
+							"ferry": false,
+							"express": true,
+							"regional": true
+						},
+						"ids": {
+							"ifopt": "de:11000:900058101"
+						},
+						"stationDHID": "de:11000:900058101"
+					},
+					"departure": "2026-10-25T05:22:00+01:00",
+					"plannedDeparture": "2026-10-25T05:22:00+01:00",
+					"departureDelay": 0,
+					"arrival": "2026-10-25T05:31:00+01:00",
+					"plannedArrival": "2026-10-25T05:31:00+01:00",
+					"arrivalDelay": 0,
+					"reachable": true,
+					"tripId": "1|629|2|86|25102026",
+					"line": {
+						"type": "line",
+						"id": "de-vbb-11000000-s-bahn-s2-s2-w",
+						"fahrtNr": "15751",
+						"name": "S2",
+						"public": true,
+						"adminCode": "DBS---",
+						"productName": "S",
+						"mode": "train",
+						"product": "suburban",
+						"operator": {
+							"type": "operator",
+							"id": "s-bahn-berlin-gmbh",
+							"name": "S-Bahn Berlin GmbH"
+						},
+						"color": {
+							"fg": "#fff",
+							"bg": "#00b300"
+						}
+					},
+					"direction": "S Blankenfelde (TF) Bhf",
+					"currentLocation": {
+						"type": "location",
+						"latitude": 52.549833,
+						"longitude": 13.396166
+					},
+					"arrivalPlatform": "1",
+					"plannedArrivalPlatform": "1",
+					"arrivalPrognosisType": "prognosed",
+					"departurePlatform": "1",
+					"plannedDeparturePlatform": "1",
+					"departurePrognosisType": "prognosed",
+					"stopovers": [
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900100025",
+								"name": "S+U Brandenburger Tor (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900100025",
+									"latitude": 52.51651,
+									"longitude": 13.381936
+								},
+								"products": {
+									"suburban": true,
+									"subway": true,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900100025"
+								},
+								"stationDHID": "de:11000:900100025"
+							},
+							"arrival": null,
+							"plannedArrival": null,
+							"arrivalDelay": null,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": null,
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:22:00+01:00",
+							"plannedDeparture": "2026-10-25T05:22:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								},
+								{
+									"type": "hint",
+									"code": "FK",
+									"text": "Bicycle conveyance (S+U Brandenburger Tor (Berlin))"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900100020",
+								"name": "S+U Potsdamer Platz Bhf (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900100020",
+									"latitude": 52.509355,
+									"longitude": 13.376551
+								},
+								"products": {
+									"suburban": true,
+									"subway": true,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": true
+								},
+								"ids": {
+									"ifopt": "de:11000:900100020"
+								},
+								"stationDHID": "de:11000:900100020"
+							},
+							"arrival": "2026-10-25T05:23:00+01:00",
+							"plannedArrival": "2026-10-25T05:23:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:24:00+01:00",
+							"plannedDeparture": "2026-10-25T05:24:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900012101",
+								"name": "S Anhalter Bahnhof (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900012101",
+									"latitude": 52.504537,
+									"longitude": 13.38208
+								},
+								"products": {
+									"suburban": true,
+									"subway": false,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900012101"
+								},
+								"stationDHID": "de:11000:900012101"
+							},
+							"arrival": "2026-10-25T05:26:00+01:00",
+							"plannedArrival": "2026-10-25T05:26:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:26:00+01:00",
+							"plannedDeparture": "2026-10-25T05:26:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900058103",
+								"name": "S+U Yorckstr. (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900058103",
+									"latitude": 52.492356,
+									"longitude": 13.372209
+								},
+								"products": {
+									"suburban": true,
+									"subway": true,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": false,
+									"regional": false
+								},
+								"ids": {
+									"ifopt": "de:11000:900058103"
+								},
+								"stationDHID": "de:11000:900058103"
+							},
+							"arrival": "2026-10-25T05:28:00+01:00",
+							"plannedArrival": "2026-10-25T05:28:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": "2026-10-25T05:29:00+01:00",
+							"plannedDeparture": "2026-10-25T05:29:00+01:00",
+							"departureDelay": 0,
+							"departurePlatform": null,
+							"departurePrognosisType": "prognosed",
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "text.occup.loc.max.11",
+									"text": "low occupancy expected"
+								}
+							]
+						},
+						{
+							"stop": {
+								"type": "stop",
+								"id": "900058101",
+								"name": "S Südkreuz Bhf (Berlin)",
+								"location": {
+									"type": "location",
+									"id": "900058101",
+									"latitude": 52.475501,
+									"longitude": 13.365548
+								},
+								"products": {
+									"suburban": true,
+									"subway": false,
+									"tram": false,
+									"bus": true,
+									"ferry": false,
+									"express": true,
+									"regional": true
+								},
+								"ids": {
+									"ifopt": "de:11000:900058101"
+								},
+								"stationDHID": "de:11000:900058101"
+							},
+							"arrival": "2026-10-25T05:31:00+01:00",
+							"plannedArrival": "2026-10-25T05:31:00+01:00",
+							"arrivalDelay": 0,
+							"arrivalPlatform": null,
+							"arrivalPrognosisType": "prognosed",
+							"plannedArrivalPlatform": null,
+							"departure": null,
+							"plannedDeparture": null,
+							"departureDelay": null,
+							"departurePlatform": null,
+							"departurePrognosisType": null,
+							"plannedDeparturePlatform": null,
+							"remarks": [
+								{
+									"type": "hint",
+									"code": "FK",
+									"text": "Bicycle conveyance (S Südkreuz Bhf (Berlin))"
+								}
+							]
+						}
+					],
+					"remarks": [
+						{
+							"type": "hint",
+							"code": "OPERATOR",
+							"text": "DBS"
+						},
+						{
+							"type": "hint",
+							"code": "text.occup.jny.max.11",
+							"text": "low occupancy expected"
+						}
+					],
+					"cycle": {
+						"min": 300,
+						"max": 1380,
+						"nr": 10
+					},
+					"alternatives": [
+						{
+							"tripId": "1|963|1|86|25102026",
+							"line": {
+								"type": "line",
+								"id": "de-vbb-11000000-s-bahn-s25-s25-v",
+								"fahrtNr": "16400",
+								"name": "S25",
+								"public": true,
+								"adminCode": "DBS---",
+								"productName": "S",
+								"mode": "train",
+								"product": "suburban",
+								"operator": {
+									"type": "operator",
+									"id": "s-bahn-berlin-gmbh",
+									"name": "S-Bahn Berlin GmbH"
+								},
+								"color": {
+									"fg": "#fff",
+									"bg": "#00b300"
+								}
+							},
+							"direction": "S Teltow Stadt",
+							"when": "2026-10-25T05:45:00+01:00",
+							"plannedWhen": "2026-10-25T05:45:00+01:00",
+							"delay": 0
+						},
+						{
+							"tripId": "1|629|3|86|25102026",
+							"line": {
+								"type": "line",
+								"id": "de-vbb-11000000-s-bahn-s2-s2-w",
+								"fahrtNr": "15756",
+								"name": "S2",
+								"public": true,
+								"adminCode": "DBS---",
+								"productName": "S",
+								"mode": "train",
+								"product": "suburban",
+								"operator": {
+									"type": "operator",
+									"id": "s-bahn-berlin-gmbh",
+									"name": "S-Bahn Berlin GmbH"
+								},
+								"color": {
+									"fg": "#fff",
+									"bg": "#00b300"
+								}
+							},
+							"direction": "S Blankenfelde (TF) Bhf",
+							"when": "2026-10-25T05:52:00+01:00",
+							"plannedWhen": "2026-10-25T05:52:00+01:00",
+							"delay": 0
+						},
+						{
+							"tripId": "1|967|0|86|25102026",
+							"line": {
+								"type": "line",
+								"id": "de-vbb-11000000-s-bahn-s25-s25-v",
+								"fahrtNr": "16394",
+								"name": "S25",
+								"public": true,
+								"adminCode": "DBS---",
+								"productName": "S",
+								"mode": "train",
+								"product": "suburban",
+								"operator": {
+									"type": "operator",
+									"id": "s-bahn-berlin-gmbh",
+									"name": "S-Bahn Berlin GmbH"
+								},
+								"color": {
+									"fg": "#fff",
+									"bg": "#00b300"
+								}
+							},
+							"direction": "S Teltow Stadt",
+							"when": "2026-10-25T06:15:00+01:00",
+							"plannedWhen": "2026-10-25T06:15:00+01:00",
+							"delay": 0
+						},
+						{
+							"tripId": "1|632|0|86|25102026",
+							"line": {
+								"type": "line",
+								"id": "de-vbb-11000000-s-bahn-s2-s2-w",
+								"fahrtNr": "15735",
+								"name": "S2",
+								"public": true,
+								"adminCode": "DBS---",
+								"productName": "S",
+								"mode": "train",
+								"product": "suburban",
+								"operator": {
+									"type": "operator",
+									"id": "s-bahn-berlin-gmbh",
+									"name": "S-Bahn Berlin GmbH"
+								},
+								"color": {
+									"fg": "#fff",
+									"bg": "#00b300"
+								}
+							},
+							"direction": "S Blankenfelde (TF) Bhf",
+							"when": "2026-10-25T06:20:00+01:00",
+							"plannedWhen": "2026-10-25T06:20:00+01:00",
+							"delay": 0
+						},
+						{
+							"tripId": "1|644|0|86|25102026",
+							"line": {
+								"type": "line",
+								"id": "de-vbb-11000000-s-bahn-s2-s2-w",
+								"fahrtNr": "15747",
+								"name": "S2",
+								"public": true,
+								"adminCode": "DBS---",
+								"productName": "S",
+								"mode": "train",
+								"product": "suburban",
+								"operator": {
+									"type": "operator",
+									"id": "s-bahn-berlin-gmbh",
+									"name": "S-Bahn Berlin GmbH"
+								},
+								"color": {
+									"fg": "#fff",
+									"bg": "#00b300"
+								}
+							},
+							"direction": "S Blankenfelde (TF) Bhf",
+							"when": "2026-10-25T06:40:00+01:00",
+							"plannedWhen": "2026-10-25T06:40:00+01:00",
+							"delay": 0
+						}
+					]
+				}
+			],
+			"refreshToken": "¶HKI¶T$A=1@O=S+U Alexanderplatz Bhf (Berlin)@L=900100003@a=128@$A=1@O=S+U Brandenburger Tor (Berlin)@L=900100025@a=128@$202610250509$202610250514$      U5$$1$$$$$$§T$A=1@O=S+U Brandenburger Tor (Berlin)@L=900100025@a=128@$A=1@O=S Südkreuz Bhf (Berlin)@L=900058101@a=128@$202610250522$202610250531$      S2$$1$$$$$$¶KC¶#VE#2#CF#100#CA#0#CM#0#SICT#0#AM#16417#AM2#0#RT#15#¶KCC¶I1ZFIzEjRVJHIzgxOTQjSElOIzAjRUNLIzEzMjY5fDEzMjY5fDEzMjg5fDEzMjkxfDB8MHwxNjV8MTMyNjF8NXwwfDJ8MHwwfC0yMTQ3NDgzNjQ4I0dBTSMyNTEwMjYwNTA5IwpaI1ZOIzEjU1QjMTc5MjcxNTQzNyNQSSMwI1pJIzUyMzYyI1RBIzYjREEjMjUxMDI2IzFTIzkwMDE3NTAxMCMxVCM0MzUjTFMjOTAwMDAzMjAxI0xUIzUxNyNQVSM4NiNSVCMxI0NBI1UjWkUjVTUjWkIjICAgICAgVTUjUEMjMSNGUiM5MDAxMDAwMDMjRlQjNTA5I1RPIzkwMDEwMDAyNSNUVCM1MTQjClojVk4jMSNTVCMxNzkyNzE1NDM3I1BJIzAjWkkjNjI5I1RBIzIjREEjMjUxMDI2IzFTIzkwMDM1MDE2MCMxVCM0MzAjTFMjOTAwMjQ1MDI3I0xUIzU1MyNQVSM4NiNSVCMxI0NBI1MtNSNaRSNTMiNaQiMgICAgICBTMiNQQyMwI0ZSIzkwMDEwMDAyNSNGVCM1MjIjVE8jOTAwMDU4MTAxI1RUIzUzMSM=¶KRCC¶#VE#1#",
+			"cycle": {
+				"min": 540
+			}
+		}
+	],
+	"realtimeDataUpdatedAt": 1792900670
+}

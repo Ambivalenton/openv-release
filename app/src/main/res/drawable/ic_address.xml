@@ -1,0 +1,5 @@
+<!-- An address (house with door), own drawing. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+    <path android:fillColor="#FF000000" android:fillType="evenOdd"
+        android:pathData="M12,2.6 L1.6,11.8 H4.6 V21 H19.4 V11.8 H22.4 Z M6.6,10.4 L12,5.6 L17.4,10.4 V19 H14.2 V13.6 H9.8 V19 H6.6 Z" />
+</vector>

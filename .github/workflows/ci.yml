@@ -1,0 +1,114 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Prüft jeden Push und Pull Request: Quellen und generierte Dateien, alle Tests, Lint und die
+# Test-App „Öpen-V · Vorschau“ (dev.ambivalenton.openv.next, ARM64). Auf main erscheint die
+# Vorschau im Release „vorschau“, das bei jedem Lauf ersetzt wird.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    permissions:
+      contents: write
+    env:
+      # Endpoint of an individually granted timetable access (docs/timetable-services.md); unused for VRR.
+      OPENV_TIMETABLE_ENDPOINT: ${{ secrets.OPENV_TIMETABLE_ENDPOINT }}
+      HAS_PREVIEW_KEY: ${{ secrets.OPENV_REVIEW_KEYSTORE_BASE64 != '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Android SDK 36 bereitstellen
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0"
+
+      - name: Quellen und generierte Dateien prüfen
+        run: python3 tools/check_release.py
+
+      - name: Tests
+        run: ./gradlew --no-daemon --console=plain :app:testDebugUnitTest
+
+      - name: Lint
+        run: ./gradlew --no-daemon --console=plain :app:lintDebug
+
+      - name: Testschlüssel wiederherstellen
+        if: env.HAS_PREVIEW_KEY == 'true'
+        env:
+          KEY_B64: ${{ secrets.OPENV_REVIEW_KEYSTORE_BASE64 }}
+        run: |
+          printf '%s' "$KEY_B64" | base64 --decode --ignore-garbage > "$RUNNER_TEMP/preview.keystore"
+          echo "OPENV_REVIEW_KEYSTORE=$RUNNER_TEMP/preview.keystore" >> "$GITHUB_ENV"
+
+      - name: Vorschau-APK bauen
+        run: ./gradlew --no-daemon --console=plain :app:assemblePreview -PapkSplits=true -PapkAbis=arm64-v8a
+
+      - name: APK prüfen und benennen
+        id: apk
+        run: |
+          apk=$(find app/build/outputs/apk/preview -name '*.apk' | head -n1)
+          test -n "$apk"
+          code=$(grep -oE 'versionCode = [0-9]+' app/build.gradle.kts | grep -oE '[0-9]+')
+          version=$(grep -oE 'versionName = "[^"]+"' app/build.gradle.kts | cut -d'"' -f2)
+          python3 tools/verify_apk.py --apk "$apk" --package dev.ambivalenton.openv.next --version-code "$code" \
+            --abi arm64-v8a --report-cert --json "$RUNNER_TEMP/apk-check.json"
+          if [ "$HAS_PREVIEW_KEY" = "true" ]; then
+            note="Mit dem festen Testschlüssel signiert: installiert sich als Update der vorherigen Vorschau."
+            suffix=""
+          else
+            note="Ohne festen Testschlüssel gebaut (Secret OPENV_REVIEW_KEYSTORE_BASE64 fehlt): installierbar, aber nur nach Deinstallation der vorherigen Vorschau."
+            suffix="_einmalig"
+          fi
+          name="OpenV-Vorschau_${version}_b${code}_${GITHUB_SHA::7}${suffix}.apk"
+          mkdir -p "$RUNNER_TEMP/out"
+          cp "$apk" "$RUNNER_TEMP/out/$name"
+          echo "file=$RUNNER_TEMP/out/$name" >> "$GITHUB_OUTPUT"
+          echo "note=$note" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: oepenv-vorschau
+          path: ${{ steps.apk.outputs.file }}
+          retention-days: 14
+
+      - name: Release „vorschau“ aktualisieren
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete vorschau --yes --cleanup-tag 2>/dev/null || true
+          gh release create vorschau "${{ steps.apk.outputs.file }}" --prerelease --target "$GITHUB_SHA" \
+            --title "Öpen-V · Vorschau ${{ steps.apk.outputs.version }} (Build ${{ steps.apk.outputs.code }}, ${GITHUB_SHA::7})" \
+            --notes "Test-App „Öpen-V · Vorschau“ (dev.ambivalenton.openv.next) vom aktuellen Stand auf main. Sie installiert sich neben der normalen App. ${{ steps.apk.outputs.note }} Commit ${GITHUB_SHA}."
+
+      - name: Testberichte bei Fehler sichern
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: testberichte
+          path: |
+            app/build/reports/tests/
+            app/build/reports/lint-results-debug.html
+          retention-days: 7
+          if-no-files-found: ignore

@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Öpen-V</string>
+    <string name="quick_widget_name">Öpen-V · Favourites</string>
+    <string name="board_widget_name">Öpen-V · Departure board</string>
+    <string name="widget_description">Your destinations. Straight to your connections.</string>
+    <string name="board_widget_description">Live departures at your nearest saved stop.</string>
+    <string name="widget_tagline">Your places. Your journeys.</string>
+    <string name="board_preview_station">Your nearest stop</string>
+    <string name="board_preview_columns">Line · Destination · Departure · Platform</string>
+    <string name="board_widget_error_title">Öpen-V · Departure board</string>
+    <string name="board_widget_error_message">Please open the app and refresh the departure board.</string>
+</resources>

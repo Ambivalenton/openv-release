@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!-- Soap bubble: a ring very slightly wider than tall, with a light reflection in its upper third.
+     Own drawing for Öpen-V. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+    <path android:fillColor="#FF000000" android:fillType="evenOdd"
+        android:pathData="M12,3.8a9.3,8.6 0,1 0,0 17.2a9.3,8.6 0,1 0,0 -17.2zM12,5.6a7.5,6.8 0,1 1,0 13.6a7.5,6.8 0,1 1,0 -13.6z"/>
+    <path android:strokeColor="#FF000000" android:strokeWidth="1.5" android:strokeLineCap="round"
+        android:pathData="M7.6,9.9C7.9,8.4 9,7.3 10.5,7"/>
+    <path android:fillColor="#FF000000"
+        android:pathData="M12.9,6.1a0.8,0.8 0,1 0,0 1.6a0.8,0.8 0,1 0,0 -1.6z"/>
+</vector>

@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+ <uses-permission android:name="android.permission.INTERNET"/>
+ <uses-permission android:name="android.permission.VIBRATE"/>
+ <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+ <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+ <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+ <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+ <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
+ <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
+ <!-- Optional floating bubble of the pinned journey; requested only when the user enables it. -->
+ <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+ <application android:name=".OpenVApp" android:label="@string/app_name" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round" android:theme="@style/Theme.OpenV" android:allowBackup="false" android:fullBackupContent="false" android:dataExtractionRules="@xml/data_extraction_rules" android:usesCleartextTraffic="false" android:supportsRtl="true" android:localeConfig="@xml/locales_config">
+  <activity android:name=".MainActivity" android:windowSoftInputMode="adjustResize" android:exported="true" android:launchMode="singleTop">
+   <intent-filter><action android:name="android.intent.action.VIEW"/><category android:name="android.intent.category.DEFAULT"/><category android:name="android.intent.category.BROWSABLE"/><data android:scheme="openv"/><data android:host="route"/><data android:host="settings"/><data android:host="search"/><data android:host="departures"/><data android:host="overview"/></intent-filter>
+  </activity>
+  <activity android:name=".launcher.LauncherEntryActivity" android:exported="false" android:relinquishTaskIdentity="true" android:theme="@android:style/Theme.NoDisplay" />
+  <activity-alias android:name=".launcher.LogoORIGINAL" android:targetActivity=".launcher.LauncherEntryActivity" android:enabled="true" android:exported="true" android:icon="@mipmap/ic_launcher" android:label="@string/app_name">
+   <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+  </activity-alias>
+  <activity-alias android:name=".launcher.LogoMODERN" android:targetActivity=".launcher.LauncherEntryActivity" android:enabled="false" android:exported="true" android:icon="@mipmap/logo_modern" android:label="@string/app_name">
+   <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+  </activity-alias>
+  <activity-alias android:name=".launcher.LogoMINIMAL" android:targetActivity=".launcher.LauncherEntryActivity" android:enabled="false" android:exported="true" android:icon="@mipmap/logo_minimal" android:label="@string/app_name">
+   <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+  </activity-alias>
+  <activity-alias android:name=".launcher.LogoPIXEL" android:targetActivity=".launcher.LauncherEntryActivity" android:enabled="false" android:exported="true" android:icon="@mipmap/logo_pixel" android:label="@string/app_name">
+   <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+  </activity-alias>
+  <activity-alias android:name=".launcher.LogoRETRO" android:targetActivity=".launcher.LauncherEntryActivity" android:enabled="false" android:exported="true" android:icon="@mipmap/logo_retro" android:label="@string/app_name">
+   <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+  </activity-alias>
+  <activity-alias android:name=".launcher.LogoDECO" android:targetActivity=".launcher.LauncherEntryActivity" android:enabled="false" android:exported="true" android:icon="@mipmap/logo_deco" android:label="@string/app_name">
+   <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+  </activity-alias>
+  <activity-alias android:name=".launcher.LogoGLASS" android:targetActivity=".launcher.LauncherEntryActivity" android:enabled="false" android:exported="true" android:icon="@mipmap/logo_glass" android:label="@string/app_name">
+   <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+  </activity-alias>
+  <activity-alias android:name=".launcher.LogoMAP" android:targetActivity=".launcher.LauncherEntryActivity" android:enabled="false" android:exported="true" android:icon="@mipmap/logo_map" android:label="@string/app_name">
+   <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+  </activity-alias>
+  <activity-alias android:name=".launcher.LogoORIGAMI" android:targetActivity=".launcher.LauncherEntryActivity" android:enabled="false" android:exported="true" android:icon="@mipmap/logo_origami" android:label="@string/app_name">
+   <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+  </activity-alias>
+  <activity-alias android:name=".launcher.LogoSUNRISE" android:targetActivity=".launcher.LauncherEntryActivity" android:enabled="false" android:exported="true" android:icon="@mipmap/logo_sunrise" android:label="@string/app_name">
+   <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+  </activity-alias>
+  <activity-alias android:name=".launcher.LogoORBIT" android:targetActivity=".launcher.LauncherEntryActivity" android:enabled="false" android:exported="true" android:icon="@mipmap/logo_orbit" android:label="@string/app_name">
+   <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+  </activity-alias>
+  <activity-alias android:name=".launcher.LogoPLAY" android:targetActivity=".launcher.LauncherEntryActivity" android:enabled="false" android:exported="true" android:icon="@mipmap/logo_play" android:label="@string/app_name">
+   <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+  </activity-alias>
+  <activity-alias android:name=".launcher.LogoNIGHT" android:targetActivity=".launcher.LauncherEntryActivity" android:enabled="false" android:exported="true" android:icon="@mipmap/logo_night" android:label="@string/app_name">
+   <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+  </activity-alias>
+  <activity-alias android:name=".launcher.LogoBRAND_PIXEL" android:targetActivity=".launcher.LauncherEntryActivity" android:enabled="false" android:exported="true" android:icon="@mipmap/logo_brand_pixel" android:label="@string/app_name">
+   <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+  </activity-alias>
+  <activity-alias android:name=".launcher.LogoBRAND_NET" android:targetActivity=".launcher.LauncherEntryActivity" android:enabled="false" android:exported="true" android:icon="@mipmap/logo_brand_net" android:label="@string/app_name">
+   <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+  </activity-alias>
+  <activity-alias android:name=".launcher.LogoBRAND_SKETCH" android:targetActivity=".launcher.LauncherEntryActivity" android:enabled="false" android:exported="true" android:icon="@mipmap/logo_brand_sketch" android:label="@string/app_name">
+   <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+  </activity-alias>
+  <activity-alias android:name=".launcher.LogoBRAND_MATRIX" android:targetActivity=".launcher.LauncherEntryActivity" android:enabled="false" android:exported="true" android:icon="@mipmap/logo_brand_matrix" android:label="@string/app_name">
+   <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+  </activity-alias>
+  <activity-alias android:name=".launcher.LogoBRAND_DOTS" android:targetActivity=".launcher.LauncherEntryActivity" android:enabled="false" android:exported="true" android:icon="@mipmap/logo_brand_dots" android:label="@string/app_name">
+   <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+  </activity-alias>
+  <activity-alias android:name=".launcher.LogoBRAND_SPECTRUM" android:targetActivity=".launcher.LauncherEntryActivity" android:enabled="false" android:exported="true" android:icon="@mipmap/logo_brand_spectrum" android:label="@string/app_name">
+   <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+  </activity-alias>
+  <activity-alias android:name=".launcher.LogoBARS" android:targetActivity=".launcher.LauncherEntryActivity" android:enabled="false" android:exported="true" android:icon="@mipmap/logo_bars" android:label="@string/app_name">
+   <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+  </activity-alias>
+  <activity-alias android:name=".launcher.LogoBAR_V" android:targetActivity=".launcher.LauncherEntryActivity" android:enabled="false" android:exported="true" android:icon="@mipmap/logo_bar_v" android:label="@string/app_name">
+   <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+  </activity-alias>
+  <activity-alias android:name=".launcher.LogoNETWORK" android:targetActivity=".launcher.LauncherEntryActivity" android:enabled="false" android:exported="true" android:icon="@mipmap/logo_network" android:label="@string/app_name">
+   <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+  </activity-alias>
+  <activity-alias android:name=".launcher.LogoNET_NIGHT" android:targetActivity=".launcher.LauncherEntryActivity" android:enabled="false" android:exported="true" android:icon="@mipmap/logo_net_night" android:label="@string/app_name">
+   <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+  </activity-alias>
+  <activity-alias android:name=".launcher.LogoTIMELINE" android:targetActivity=".launcher.LauncherEntryActivity" android:enabled="false" android:exported="true" android:icon="@mipmap/logo_timeline" android:label="@string/app_name">
+   <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+  </activity-alias>
+  <activity-alias android:name=".launcher.LogoCLOCK" android:targetActivity=".launcher.LauncherEntryActivity" android:enabled="false" android:exported="true" android:icon="@mipmap/logo_clock" android:label="@string/app_name">
+   <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+  </activity-alias>
+  <activity-alias android:name=".launcher.LogoTICKET" android:targetActivity=".launcher.LauncherEntryActivity" android:enabled="false" android:exported="true" android:icon="@mipmap/logo_ticket" android:label="@string/app_name">
+   <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+  </activity-alias>
+  <activity-alias android:name=".launcher.LogoRAILS" android:targetActivity=".launcher.LauncherEntryActivity" android:enabled="false" android:exported="true" android:icon="@mipmap/logo_rails" android:label="@string/app_name">
+   <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+  </activity-alias>
+  <activity-alias android:name=".launcher.LogoPIN" android:targetActivity=".launcher.LauncherEntryActivity" android:enabled="false" android:exported="true" android:icon="@mipmap/logo_pin" android:label="@string/app_name">
+   <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+  </activity-alias>
+  <activity-alias android:name=".launcher.LogoGRADIENT" android:targetActivity=".launcher.LauncherEntryActivity" android:enabled="false" android:exported="true" android:icon="@mipmap/logo_gradient" android:label="@string/app_name">
+   <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+  </activity-alias>
+  <service android:name=".tracking.PinnedJourneyService" android:exported="false" android:foregroundServiceType="location|dataSync" android:stopWithTask="false"/>
+  <receiver android:name=".widget.AppQuickWidgetReceiver" android:exported="false" android:label="@string/quick_widget_name">
+   <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE"/></intent-filter>
+   <meta-data android:name="android.appwidget.provider" android:resource="@xml/quick_widget_info"/>
+  </receiver>
+  <activity android:name=".widget.QuickLaunchActivity" android:exported="false" android:excludeFromRecents="true"/>
+  <activity android:name=".widget.BoardRefreshActivity" android:exported="false" android:excludeFromRecents="true" android:theme="@style/Theme.OpenV.WidgetRefresh"/>
+  <receiver android:name=".widget.DepartureBoardWidgetReceiver" android:exported="false" android:label="@string/board_widget_name">
+   <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE"/></intent-filter>
+   <meta-data android:name="android.appwidget.provider" android:resource="@xml/departure_board_widget_info"/>
+  </receiver>
+  <receiver android:name=".widget.WidgetTimeReceiver" android:exported="false">
+   <intent-filter><action android:name="android.intent.action.TIMEZONE_CHANGED"/><action android:name="android.intent.action.TIME_SET"/><action android:name="android.intent.action.DATE_CHANGED"/><action android:name="android.intent.action.MY_PACKAGE_REPLACED"/></intent-filter>
+  </receiver>
+ </application>
+</manifest>

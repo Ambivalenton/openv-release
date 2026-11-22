@@ -1,0 +1,1 @@
+Erste Version von Öpen-V: Lieblingsorte als Netzplan, Verbindungen im Balkendiagramm, Abfahrten als Anzeigetafel und Widget, Reisebegleitung mit Hinweisen zu Umstiegen. Kostenlos, werbefrei, ohne Konto und ohne Tracking.

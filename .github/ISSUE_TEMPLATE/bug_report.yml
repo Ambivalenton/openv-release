@@ -1,0 +1,42 @@
+name: Fehler melden
+description: Etwas funktioniert nicht wie erwartet.
+labels: ["fehler"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Danke für deine Meldung! Bitte keine Wohnadressen oder Fotos mit persönlichen Daten anhängen.
+        Sicherheitslücken bitte vertraulich melden (siehe SECURITY.md).
+  - type: textarea
+    id: what
+    attributes:
+      label: Was ist passiert?
+      description: Was hast du erwartet, was ist stattdessen passiert?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Schritte zum Nachstellen
+      placeholder: |
+        1. Suche von … nach …
+        2. Tippe auf …
+        3. …
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: App-Version
+      description: Einstellungen → Info & Hilfe, z. B. „1.0.0 · Build 100“ oder „Vorschau“.
+    validations:
+      required: true
+  - type: input
+    id: android
+    attributes:
+      label: Android-Version und Gerät
+      placeholder: Android 15, Pixel 8
+  - type: textarea
+    id: extra
+    attributes:
+      label: Bildschirmfotos oder Ergänzungen

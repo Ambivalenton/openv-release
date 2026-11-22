@@ -1,0 +1,2 @@
+<!-- Favourite symbol drawn for Öpen-V (GPL-3.0-or-later). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="#FF000000" android:fillType="evenOdd" android:pathData="M3,13h8v8H3zM13,13h8v8h-8zM8,3.5h8v8H8zM5,17a2,2 0 1,0 4,0a2,2 0 1,0 -4,0zM17,14.6L19.3,19L14.7,19zM10.5,6h3v3h-3z"/></vector>

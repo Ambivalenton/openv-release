@@ -1,0 +1,20 @@
+# Einheitliche Zeilenenden, Binärdateien unverändert
+* text=auto eol=lf
+*.bat text eol=crlf
+gradlew text eol=lf
+*.jar binary
+*.png binary
+*.jpg binary
+*.webp binary
+*.ttf binary
+*.otf binary
+*.catalog binary
+# Upstream licence texts stay byte-identical (some use CRLF)
+app/src/main/assets/font_licenses/** -text
+app/src/main/assets/licenses/** -text
+# Generierte Dateien in Diffs einklappen
+app/src/main/java/dev/ambivalenton/openv/localization/EnglishCatalog.kt linguist-generated=true
+app/src/main/java/dev/ambivalenton/openv/data/model/AppGlossary.kt linguist-generated=true
+app/src/main/assets/legal/** linguist-generated=true
+docs/privacy/index.html linguist-generated=true
+THIRD_PARTY_NOTICES.md linguist-generated=true

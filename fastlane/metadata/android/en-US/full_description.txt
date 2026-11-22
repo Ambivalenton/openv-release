@@ -1,0 +1,27 @@
+Your journey does not have to look like a spreadsheet.
+
+Öpen-V turns your next connections into readable sentences. Choose the building blocks: departure, arrival, stops, duration, changes, walking sections or an optional weather hint for your destination. Spend less time searching and get a clearer picture of the journeys you actually take.
+
+• Your places: save destinations with your own names, icons and colours. Time rules can highlight or temporarily hide them.
+• Your connections: search from your location or a manual origin. A timeline, list, intermediate stops and realtime predictions help you plan where provider data is available.
+• Your departure board: choose saved stops and personalise 16 designs, from Material to flip dots, split flaps and e-paper.
+• Your widgets: quick destinations and a departure board on your Android home screen.
+• Your style: 11 app themes, custom colours, light and dark appearances, and AMOLED.
+• On the go: pin journeys, explore maps and open walking directions externally with OpenStreetMap.
+• A little company: 989 offline facts, thoughts, free-form travel haiku and satire entries and optional Open-Meteo weather hints.
+• German and English follow your Android language; other languages fall back to English.
+
+Öpen-V is 100 % vibecoded: its own app code was created with AI assistance. Ambivalenton originally wanted a tool for personal everyday journeys. Over time, other people asked to use it too. That interest became this free software release. There is no AI service running in the app.
+
+No account, ads, tracking SDKs or Google Play Services. Saved places and settings stay on your device. Transit, place-search, map and weather requests send the necessary query information and your IP address to the selected providers. Weather starts switched off. Widgets request no additional background-location permission. A manual origin works without location permission.
+
+Where does it work? Öpen-V uses VRR OpenService, focused on Rhine-Ruhr. Complete German or cross-border coverage is not guaranteed. Worldwide place search does not imply worldwide transit routing.
+
+New journeys need internet. Realtime data may be missing; old board departures are not an offline timetable. Android may delay widget updates. No ticket sales or verified accessible-route planning. Open-Meteo’s free hosted API is limited to non-commercial use.
+
+Free software under GPL-3.0-or-later. An independent project, not an official transport operator app. Transit results rely on external, partly proprietary upstream systems.
+
+Live journey guidance: pin a connection paragraph to see your next step, disruptions and reachable alternatives in a focus dialog and local notification. The app attempts an update approximately every minute; Android and the provider may delay updates.
+
+
+Transit data: VRR. Information is supplied without guarantee.

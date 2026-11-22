@@ -1,0 +1,27 @@
+Dein Weg muss nicht wie eine Tabelle aussehen.
+
+Öpen-V bringt deine nächsten Verbindungen in einen lesbaren Satz. Du entscheidest, welche Bausteine hineingehören: Abfahrt, Ankunft, Haltestellen, Dauer, Umstiege, Fußwege oder optional ein Wetterhinweis fürs Ankommen. Weniger Suchen, mehr Überblick über die Wege, die du wirklich fährst.
+
+• Deine Orte: Speichere Ziele mit eigenen Namen, Symbolen und Farben. Zeitregeln können sie hervorheben oder vorübergehend ausblenden.
+• Deine Verbindungen: Suche ab deinem Standort oder einem manuellen Start. Zeitstrahl, Liste, Zwischenhalte und Echtzeitprognosen helfen beim Planen, soweit der Anbieter Daten liefert.
+• Deine Anzeigetafel: Wähle gespeicherte Haltestellen und gestalte sie mit 16 Designs, von Material bis Klapppunkt, Fallblatt und E-Paper.
+• Deine Widgets: Schnellziele und Anzeigetafel direkt auf dem Android-Startbildschirm.
+• Dein Stil: 11 App-Themes, eigene Farben, helle und dunkle Darstellung sowie AMOLED.
+• Für unterwegs: Reisen anpinnen, Karten ansehen und Fußwege extern mit OpenStreetMap öffnen.
+• Kleine Reisebegleitung: 989 lokale Fakten, Gedanken, freie Reisehaikus und Satiretexte und freiwillige Wetterhinweise von Open-Meteo.
+• Deutsch und Englisch folgen deiner Android-Sprache; andere Sprachen erhalten Englisch.
+
+Öpen-V ist zu 100 % vibecoded: Der eigene App-Code entstand mit KI-Unterstützung. Ursprünglich wollte Ambivalenton nur ein Werkzeug für den eigenen Alltag bauen. Mit der Zeit fragten andere, ob sie es ebenfalls nutzen könnten. Daraus wurde diese freie Veröffentlichung. Zur Laufzeit steckt kein KI-Dienst dahinter.
+
+Ohne Konto, Werbung, Tracking-SDKs oder Google Play Services. Favoriten und Einstellungen bleiben lokal. Fahrplan-, Orts-, Karten- und Wetteranfragen übertragen notwendige Angaben und die IP-Adresse an die gewählten Anbieter. Wetter ist anfangs aus. Widgets verlangen keine zusätzliche Hintergrundstandort-Berechtigung. Ein manueller Start funktioniert ohne Standortfreigabe.
+
+Wo funktioniert es? Öpen-V nutzt VRR OpenService mit Schwerpunkt Rhein-Ruhr. Eine vollständige deutschlandweite oder grenzüberschreitende Abdeckung wird nicht zugesichert. Weltweite Ortsuche bedeutet keine weltweite ÖPNV-Auskunft.
+
+Neue Fahrten benötigen Internet. Echtzeitwerte können fehlen; alte Anzeigetafel-Daten sind kein Offline-Fahrplan. Android kann Widget-Aktualisierungen verzögern. Kein Fahrkartenverkauf und keine geprüfte barrierefreie Routenplanung. Die kostenlose gehostete Open-Meteo-API ist für nichtkommerzielle Nutzung begrenzt.
+
+Freie Software unter GPL-3.0-or-later. Unabhängiges Projekt, keine offizielle App eines Verkehrsunternehmens. Die Fahrplanauskunft hängt von externen, teilweise proprietären Hintergrundsystemen ab.
+
+Live-Fahrtbegleitung: Pinne einen Verbindungstext an und sieh den nächsten Schritt, Störungen und erreichbare Alternativen im Fokusfenster und in einer lokalen Benachrichtigung. Die App versucht ungefähr jede Minute einen Abgleich; Android und der Datenanbieter können Aktualisierungen verzögern.
+
+
+Fahrplandaten: VRR. Alle Angaben ohne Gewähr.

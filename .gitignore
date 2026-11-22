@@ -1,0 +1,48 @@
+# Gradle, Kotlin und Android Studio
+**/build/
+.gradle/
+.kotlin/
+.idea/
+.vscode/
+.fleet/
+*.iml
+local.properties
+.externalNativeBuild/
+.cxx/
+captures/
+
+# Signierung und lokale Geheimnisse – nie committen
+*.keystore
+*.jks
+*.p12
+*.pfx
+*.pem
+*.key
+signing/
+signing.properties
+keystore.properties
+.env
+.env.*
+!.env.example
+
+# Gebaute Pakete, Berichte und Logs
+*.apk
+*.aab
+*.apks
+*.idsig
+audit/
+/out/
+/dist/
+*.log
+hs_err_pid*
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+
+# Betriebssysteme
+.DS_Store
+Thumbs.db
+Desktop.ini

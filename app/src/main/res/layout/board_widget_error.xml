@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:padding="12dp" android:background="#141819">
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="@string/board_widget_error_title" android:textColor="#FFD58A" android:textSize="14sp" />
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="@string/board_widget_error_message"
+        android:textColor="#F1ECE4" android:textSize="12sp" />
+</LinearLayout>

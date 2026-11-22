@@ -1,0 +1,78 @@
+# How to use Öpen-V
+
+Your places set the pace. Save a destination, find a journey and keep it close while travelling. Expand a topic whenever you need the details.
+
+> **Quick start:** Choose a destination in Search → search for a journey → open a connection. Pin it to start the journey companion.
+
+## 1 · Your places, your network
+
+- **Save a favourite:** Search for a place and hold the result. Choose its name, icon, colour, transport filters and time rules.
+- **Use the network plan:** Tap a favourite to travel there. Tap a line to search between its two places in an allowed direction; with both directions enabled, proximity selects the start.
+- **Edit the plan:** Open Edit. Hold briefly and drag to move a place; swipe from one favourite to another to connect them. Tap a line to change its direction or remove it. Unplaced places stay in the tray. By default, holding a favourite also starts moving it directly.
+- **Choose a hold action:** Under Favourite settings → Network map grid, choose what holding a favourite does: nothing, move it, set it as your current location, pin a connection or show it in Overview.
+- **Set your start:** Choose Set as current location as your hold action. Then hold a favourite to plan from it; hold it again to undo. You can also choose a manual start under Travel & navigation.
+
+Favourite settings contain the start radius and grid size. Changing the grid rearranges the places and removes the lines. A station can be a destination or a transfer point. Hold an empty area of the plan to reveal hidden place names. The tiny vehicles are decoration.
+
+## 2 · Overview and search
+
+Overview tells you the next way to your visible favourites, as text or information cards. Connected places use your network plan. Time rules highlight suitable journeys; favourites where you currently are are hidden. Highlighted journeys take priority. Weather on arrival is optional.
+
+The **Show in Overview** hold action keeps up to five favourites in Overview alongside highlighted destinations; on the network map their shape is highlighted in the design’s accent colour. With neither, all destination places appear; transfer-only places are left out. Hold again or choose Unpin to undo. Keeping a place in Overview does not start journey assistance.
+
+In Search, choose start, destination, departure or arrival time and transport types. Once a destination is chosen, a map below shows the destination point: tap a spot or drag the pin to refine it (not in power saving mode). Extras contains further options. A waypoint adds a place of your own, optionally with a stay. Reorder favourite, stop and address results under Travel & navigation.
+
+## 3 · Compare bars, open a journey
+
+Each bar-chart row is a connection. Coloured sections represent transport types; footprints mark walking. Tap to open the timeline with stops, times and available platforms. The chart always shows whole connections, at least five side by side, and adjusts its time axis so every visible connection, walks included, is shown completely. Swipe towards an edge to load more connections.
+
+| You want to … | Here’s how |
+| --- | --- |
+| Follow a journey while travelling | Pin the connection. |
+| Keep a connection for later | Hold its pin to save it. |
+| Act by holding a bar | Choose the action under Modes & behaviour, such as the compact view or adding a waypoint. |
+
+A saved connection does not start the companion. It stays until its known departure or until you remove it.
+
+## 4 · Travel with the companion
+
+Pinning keeps your next stop, transfer and expected arrival close. With a usable location, Öpen-V checks progress locally. Without a reliable position, or in power-saving mode, it uses provider times. Tunnels and large stations can make the position uncertain.
+
+Find better reachable alternatives in the pinned timeline. Turn automatic comparisons off under Journey search; they only appear shortly before departure or during travel. A clearly missed boarding or a connection on the same main journey can be replanned automatically. When suitable readings indicate an earlier or later service, the app searches for a matching connection; uncertain readings do not confirm a service change.
+
+The optional **floating journey card** shows your next departure even while another app is open. Android asks for special permission. Closing it only hides the floating card. X or swiping down minimises the companion; confirmed removal on the journey card ends it.
+
+> **A hint, not a guarantee:** Check displays and announcements at the station. Location and forecasts cannot prove the right platform or a safe connection.
+
+## 5 · Walking and pace
+
+Set your walking pace under Travel & navigation → Walking & navigation. Optional local measurements can suggest a pace; only Apply changes your setting. Delete measurements in the same place.
+
+Detailed walking guidance offers street instructions and expandable mini-maps where map data is available. Open external navigation deliberately. Footprint style, size and visibility in the bar chart are adjustable.
+
+> **Ignore walking times** hides walking sections and may allow transfers that are too tight. Account for the real walk yourself when using this option.
+
+## 6 · Departure board and widgets
+
+The board shows departures, rather than a complete route. Its **stop list automatically includes your favourite places**. Add other places there, hide entries or remove them only from the board; the favourite remains. **Nearest from my list** uses the available location to pick a stop from this list. A **fixed stop** shows departures even without location. **Stops near you** searches the surroundings independently of the list. Automatic rotation and display options are under Departure board design; 0 seconds disables rotation.
+
+Add favourite and departure widgets from your Android home screen. Size and updates also depend on your launcher and power settings. Widgets use a fixed stop or the last permitted location.
+
+**Add a widget:** Touch and hold an empty spot on the home screen, tap “Widgets”, look for “Öpen-V” and drag the widget into place. To resize it, touch and hold the widget and drag its edges. The steps are named slightly differently depending on the launcher.
+
+In the departures widget the refresh button reads **Refresh departures** when a fixed stop applies and **Refresh location and departures** when the nearest stop from your list is used. If the location is missing, the widget leads to **Choose a fixed stop for this widget**. If the destination of a favourite widget was removed, a tap opens the search with a short explanation.
+
+## 7 · Make Öpen-V yours
+
+- **Design & appearance:** App themes, colours, bundled fonts, app icon and separate designs for Overview, network plan, bars and departure board. App theme follows your current app design.
+- **Personal themes:** Save your design with the disk icon, then apply or delete it later.
+- **Modes & behaviour:** Quiet mode with its own design, monochrome, power saving and minimalism. Minimalism hides extra content and gives the board more space.
+- **Quotes & facts:** Tap to change the text. Hold it to open the text history with previously read entries and usage tips.
+- **Modes & behaviour → Back up & transfer:** Save settings, favourites, network plan and other stored content as JSON. **Save backup** verifies the saved file. **Restore backup** first shows what the file contains and what is skipped, compares it with your current data and replaces the current data only after confirmation. During first-launch setup, the first step offers **Import backup** for this. Backups are not encrypted.
+
+## When something is missing
+
+No location? Choose a manual start. No current journeys? Check internet access and the transit provider under Info & help → Services & data. Finding a stop does not guarantee a connection. See Where does Öpen-V work? for details.
+
+Look up unfamiliar words in Terms explained. Reopen usage hints and setup from Info & help. All help texts and example illustrations work offline; external links open only after a tap.
+

@@ -1,0 +1,118 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Ein Tag „v<versionName>“ (z. B. v1.0.0) baut die Release-APK und das App Bundle für Google Play,
+# prüft beide und veröffentlicht sie mit Prüfsummen als GitHub-Release. Signiert wird nur mit dem
+# Upload-Schlüssel aus den Repository-Secrets; ohne ihn entstehen ausdrücklich unsignierte Dateien.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    env:
+      # Endpoint of an individually granted timetable access (docs/timetable-services.md); unused for VRR.
+      OPENV_TIMETABLE_ENDPOINT: ${{ secrets.OPENV_TIMETABLE_ENDPOINT }}
+      HAS_UPLOAD_KEY: ${{ secrets.OPENV_KEYSTORE_BASE64 != '' && secrets.OPENV_STORE_PASSWORD != '' && secrets.OPENV_KEY_ALIAS != '' && secrets.OPENV_KEY_PASSWORD != '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Android SDK 36 bereitstellen
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0"
+
+      - name: Tag und Version abgleichen
+        id: version
+        run: |
+          version=$(grep -oE 'versionName = "[^"]+"' app/build.gradle.kts | cut -d'"' -f2)
+          code=$(grep -oE 'versionCode = [0-9]+' app/build.gradle.kts | grep -oE '[0-9]+')
+          if [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME passt nicht zu versionName $version (erwartet v$version)."
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+
+      - name: Quellen prüfen und testen
+        run: |
+          python3 tools/check_release.py
+          ./gradlew --no-daemon --console=plain :app:testDebugUnitTest :app:lintRelease
+
+      - name: Upload-Schlüssel wiederherstellen
+        if: env.HAS_UPLOAD_KEY == 'true'
+        env:
+          KEY_B64: ${{ secrets.OPENV_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.OPENV_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.OPENV_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.OPENV_KEY_PASSWORD }}
+        run: |
+          printf '%s' "$KEY_B64" | base64 --decode --ignore-garbage > "$RUNNER_TEMP/upload.keystore"
+          {
+            echo "OPENV_KEYSTORE=$RUNNER_TEMP/upload.keystore"
+            echo "OPENV_STORE_PASSWORD=$STORE_PASSWORD"
+            echo "OPENV_KEY_ALIAS=$KEY_ALIAS"
+            echo "OPENV_KEY_PASSWORD=$KEY_PASSWORD"
+          } >> "$GITHUB_ENV"
+
+      - name: APK und App Bundle bauen
+        run: |
+          ./gradlew --no-daemon --console=plain :app:assembleRelease
+          ./gradlew --no-daemon --console=plain :app:bundleRelease
+
+      - name: Dateien prüfen und benennen
+        id: files
+        run: |
+          version=${{ steps.version.outputs.version }}
+          out="$RUNNER_TEMP/out"; mkdir -p "$out"
+          apk=$(find app/build/outputs/apk/release -name '*.apk' | head -n1)
+          aab=$(find app/build/outputs/bundle/release -name '*.aab' | head -n1)
+          test -n "$apk" && test -n "$aab"
+          if [ "$HAS_UPLOAD_KEY" = "true" ]; then sign=(--report-cert); bundle=(--signed); suffix=""; else sign=(--unsigned); bundle=(); suffix="_UNSIGNIERT"; fi
+          python3 tools/verify_apk.py --apk "$apk" --package dev.ambivalenton.openv --version-code "${{ steps.version.outputs.code }}" \
+            --abi arm64-v8a --abi armeabi-v7a --abi x86 --abi x86_64 "${sign[@]}" --json "$out/apk-check.json"
+          curl --fail --location --silent --show-error --output "$RUNNER_TEMP/bundletool.jar" \
+            https://github.com/google/bundletool/releases/download/1.18.2/bundletool-all-1.18.2.jar
+          echo "378b5434cd1378bef6b2bc527b8c7f0ff2584b273830335bce54d6d0813c8584  $RUNNER_TEMP/bundletool.jar" | sha256sum --check
+          python3 tools/verify_bundle.py --bundle "$aab" --bundletool "$RUNNER_TEMP/bundletool.jar" "${bundle[@]}" --json "$out/bundle-check.json"
+          cp "$apk" "$out/OpenV-${version}${suffix}.apk"
+          cp "$aab" "$out/OpenV-${version}${suffix}.aab"
+          (cd "$out" && sha256sum OpenV-*.apk OpenV-*.aab > "OpenV-${version}-SHA256SUMS.txt")
+          echo "dir=$out" >> "$GITHUB_OUTPUT"
+
+      - name: Versionshinweise aus dem CHANGELOG
+        run: |
+          version=${{ steps.version.outputs.version }}
+          awk -v v="$version" '
+            $0 ~ "^## \\[" v "\\]" {found=1; next}
+            found && /^## \[/ {exit}
+            found {print}
+          ' CHANGELOG.md > "$RUNNER_TEMP/notes.md"
+          if [ ! -s "$RUNNER_TEMP/notes.md" ]; then echo "Öpen-V $version" > "$RUNNER_TEMP/notes.md"; fi
+          if [ "$HAS_UPLOAD_KEY" != "true" ]; then
+            printf '\n> Diese Dateien sind **unsigniert** (Upload-Schlüssel fehlt) und lassen sich nicht installieren oder bei Google Play hochladen.\n' >> "$RUNNER_TEMP/notes.md"
+          fi
+
+      - name: GitHub-Release veröffentlichen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          dir=${{ steps.files.outputs.dir }}
+          tag=$GITHUB_REF_NAME
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" "$dir"/OpenV-* --clobber
+          else
+            gh release create "$tag" "$dir"/OpenV-* --verify-tag --title "Öpen-V ${{ steps.version.outputs.version }}" --notes-file "$RUNNER_TEMP/notes.md"
+          fi

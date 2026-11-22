@@ -1,0 +1,7 @@
+<resources><style name="Theme.OpenV" parent="android:style/Theme.Material.Light.NoActionBar"><item name="android:fontFamily">sans</item><item name="android:windowLightStatusBar">true</item><item name="android:windowActionModeOverlay">true</item></style><style name="Theme.OpenV.WidgetRefresh" parent="Theme.OpenV">
+    <item name="android:windowIsTranslucent">true</item>
+    <item name="android:windowBackground">@android:color/transparent</item>
+    <item name="android:windowNoTitle">true</item>
+    <item name="android:backgroundDimEnabled">true</item>
+    <item name="android:colorBackgroundCacheHint">@null</item>
+</style></resources>

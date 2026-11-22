@@ -1,0 +1,5 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools" tools:ignore="Overdraw" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="16dp" android:background="#11242A">
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/board_widget_name" android:textColor="#A4F2DF" android:textSize="16sp" android:fontFamily="monospace"/>
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/board_preview_station" android:textColor="#FFFFFF" android:textSize="14sp" android:layout_marginTop="12dp"/>
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/board_preview_columns" android:textColor="#C4D3D4" android:textSize="12sp" android:layout_marginTop="12dp"/>
+</LinearLayout>

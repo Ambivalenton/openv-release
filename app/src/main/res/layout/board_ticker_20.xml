@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ViewFlipper xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/board_ticker_flipper" android:layout_width="match_parent" android:layout_height="match_parent"
+    android:clipChildren="true" android:clipToPadding="true" android:autoStart="true" android:animateFirstView="true"
+    android:flipInterval="20000" android:inAnimation="@anim/board_ticker_enter_20"
+    android:outAnimation="@anim/board_ticker_exit">
+    <TextView android:id="@+id/board_ticker_a" android:layout_width="wrap_content" android:layout_height="match_parent"
+        android:singleLine="true" android:scrollHorizontally="true" android:fontFamily="sans-serif-medium"
+        android:includeFontPadding="true" android:gravity="center_vertical" android:focusable="false" />
+    <TextView android:id="@+id/board_ticker_b" android:layout_width="wrap_content" android:layout_height="match_parent"
+        android:singleLine="true" android:scrollHorizontally="true" android:fontFamily="sans-serif-medium"
+        android:includeFontPadding="true" android:gravity="center_vertical" android:focusable="false" />
+</ViewFlipper>

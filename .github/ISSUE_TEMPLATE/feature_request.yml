@@ -1,0 +1,22 @@
+name: Idee vorschlagen
+description: Ein Vorschlag, der Öpen-V im Alltag besser macht.
+labels: ["idee"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Welches Problem hast du unterwegs?
+      description: Beschreibe die Situation, nicht gleich die Lösung.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Wie könnte Öpen-V helfen?
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Ergänzungen
+      description: Skizzen, Beispiele aus anderen Apps, betroffene Haltestellen oder Linien.

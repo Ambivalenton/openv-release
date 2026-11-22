@@ -1,0 +1,79 @@
+# So nutzt du Öpen-V
+
+Deine Orte geben den Takt vor. Speichere ein Ziel, suche eine Verbindung und lass dich unterwegs begleiten. Die Details klappst du auf, wenn du sie brauchst.
+
+> **Schnellstart:** Unter Suchen ein Ziel wählen → Verbindung suchen → passende Fahrt öffnen. Mit dem Pin startet der Reisebegleiter.
+
+## 1 · Deine Orte, dein Netz
+
+- **Favorit anlegen:** Einen Ort suchen und den Treffer gedrückt halten. Name, Symbol, Farbe, Verkehrsfilter und Zeitregeln legst du selbst fest.
+- **Netzplan nutzen:** Ein Tipp auf einen Favoriten sucht den Weg dorthin. Eine Linie sucht zwischen ihren beiden Orten in einer erlaubten Richtung; bei zwei Richtungen entscheidet die Nähe.
+- **Netz bearbeiten:** Bearbeiten öffnen. Kurz halten und ziehen verschiebt einen Ort; von Favorit zu Favorit wischen verbindet sie. Ein Tipp auf die Linie ändert die Richtung oder entfernt sie. Nicht platzierte Orte liegen in der Ablage. Standardmäßig startet auch langes Halten auf einen Favoriten direkt das Verschieben.
+- **Halte-Aktion wählen:** Unter Favoriten-Einstellungen → Raster des Netzplans legst du fest, was langes Halten auf einen Favoriten auslöst: nichts, Verschieben, als aktuellen Standort festlegen, eine Verbindung anpinnen oder in der Übersicht anzeigen.
+- **Start festlegen:** Wähle als Halte-Aktion Als aktuellen Standort festlegen. Halte danach einen Favoriten, um ab dort zu planen; erneutes Halten hebt die Festlegung auf. Ein manueller Start ist auch unter Fahrt & Navigation möglich.
+
+Den Umkreis, in dem ein Favorit als Start dient, und die Rastergröße findest du in den Favoriten-Einstellungen. Eine neue Rastergröße ordnet die Orte neu und entfernt die Linien. Eine Station kann Ziel oder Umstiegspunkt sein. Halte eine freie Stelle im Plan gedrückt, um ausgeblendete Ortsnamen zu sehen. Die kleinen Fahrzeuge im Plan sind Dekoration.
+
+## 2 · Übersicht und Suche
+
+Die Übersicht erzählt dir den nächsten Weg zu deinen sichtbaren Favoriten – als Text oder Infokarten. Mit verbundenen Orten berücksichtigt sie deinen Netzplan. Zeitregeln heben passende Wege hervor; Favoriten, an denen du dich gerade aufhältst, blendet sie aus. Hervorgehobene Wege haben Vorrang. Wetter bei der Ankunft lässt sich freiwillig zuschalten.
+
+Mit der Halte-Aktion **In Übersicht anzeigen** heftest du bis zu fünf Favoriten an die Übersicht; im Netzplan leuchtet ihre Form dann in der Akzentfarbe des Designs. Die Übersicht zeigt diese Orte und hervorgehobene Ziele. Ohne beides erscheinen alle Zielorte; reine Umstiegspunkte bleiben außen vor. Erneutes Halten oder Lösen hebt die Anheftung auf. Dieser Übersichtsplatz startet keine Reisebegleitung.
+
+Unter Suchen wählst du Start, Ziel, Abfahrt oder Ankunft und die gewünschten Verkehrsmittel. Ist ein Ziel gewählt, zeigt eine Karte darunter den Zielpunkt: Tippe auf eine Stelle oder ziehe die Nadel, um ihn zu verfeinern (nicht im Stromsparmodus). Über Extras sind zusätzliche Optionen erreichbar. Ein Zwischenstopp ergänzt einen eigenen Zielort, auf Wunsch mit Aufenthalt. Die Reihenfolge von Favoriten-, Haltestellen- und Adresstreffern änderst du unter Fahrt & Navigation.
+
+## 3 · Balken vergleichen, Fahrt öffnen
+
+Im Balkendiagramm steht jede Zeile für eine Verbindung. Farbige Abschnitte zeigen Verkehrsmittel, Fußabdrücke die Gehwege. Tippen öffnet den Zeitstrahl mit Halten, Zeiten und verfügbaren Gleisen. Das Diagramm zeigt immer ganze Verbindungen, mindestens fünf nebeneinander, und passt die Zeitachse so an, dass jede sichtbare Verbindung samt Fußwegen vollständig zu sehen ist. Am Rand werden beim Weiterwischen zusätzliche Verbindungen geladen.
+
+| Du möchtest … | So geht’s |
+| --- | --- |
+| Unterwegs begleitet werden | Verbindung anpinnen. |
+| Eine Fahrt für später ablegen | Den Pin gedrückt halten: vormerken. |
+| Einen Balken per Langdruck bedienen | Aktion unter Modi & Verhalten wählen, etwa Kompaktansicht oder Zwischenstopp hinzufügen. |
+
+Eine Vormerkung startet keine Reisebegleitung. Sie bleibt bis zur bekannten Abfahrt oder bis du sie entfernst.
+
+## 4 · Unterwegs mit dem Reisebegleiter
+
+Der Pin hält deine Reise griffbereit: nächster Halt, Umstieg und erwartete Zielankunft. Bei brauchbarem Standort gleicht Öpen-V den Fortschritt lokal ab. Ohne verlässliche Position oder im Stromsparmodus helfen die Anbieterzeiten. In Tunneln und an großen Bahnhöfen bleibt die Zuordnung unsicher.
+
+Erreichbare bessere Alternativen findest du im angepinnten Zeitstrahl. Automatische Vergleichsfenster lassen sich unter Verbindungssuche abschalten; sie erscheinen nur kurz vor dem Start oder unterwegs. Ein klar verpasster Einstieg oder ein Anschluss auf derselben Hauptfahrt kann automatisch neu geplant werden. Erkennt die App anhand geeigneter Messungen eine frühere oder spätere Fahrt, sucht sie nach einer passenden Verbindung; unsichere Messungen lösen keinen sicheren Fahrtwechsel aus.
+
+Die optionale **schwebende Reisekarte** zeigt deine nächste Abfahrt, auch wenn du eine andere App geöffnet hast. Android fragt dafür nach einer Sondererlaubnis. Schließen blendet nur die schwebende Karte aus. X oder Herunterwischen minimiert den Reisebegleiter; bestätigtes Entfernen auf der Reisekarte beendet die Begleitung.
+
+> **Ein Hinweis, kein Versprechen:** Prüfe Anzeigen und Durchsagen vor Ort. Standort und Prognosen beweisen weder den richtigen Bahnsteig noch einen sicheren Anschluss.
+
+## 5 · Fußwege und Gehtempo
+
+Unter Fahrt & Navigation → Fußwege & Navigation passt du dein Gehtempo an. Optional schlägt Öpen-V anhand lokaler Messungen ein Tempo vor; erst Übernehmen ändert deine Einstellung. Messungen lassen sich dort löschen.
+
+Genaue Gehführung zeigt, soweit Kartendaten vorliegen, Straßenhinweise und vergrößerbare Minikarten. Externe Navigation öffnest du bewusst. Fußabdrücke, Größe und Anzeige im Balkendiagramm sind gestaltbar.
+
+> **Gehzeiten ignorieren** blendet Fußwege aus und kann zu knappe Umstiege zulassen. Nutze diese Option nur, wenn du den tatsächlichen Weg selbst einplanst.
+
+## 6 · Anzeigetafel und Widgets
+
+Die Anzeigetafel zeigt Abfahrten, keine komplette Route. Ihre **Haltestellen-Liste enthält automatisch deine Favoritenorte**. Weitere Orte fügst du dort hinzu; Einträge lassen sich ausblenden oder nur aus der Tafel entfernen. Dein Favorit bleibt dabei erhalten. **Nächstgelegene aus meiner Liste** wählt anhand des verfügbaren Standorts eine Haltestelle aus dieser Liste. Eine **feste Haltestelle** zeigt Abfahrten auch ohne Standort. Unter **Haltestellen in deiner Nähe** suchst du unabhängig von der Liste im Umkreis. Automatischer Wechsel und Anzeigeoptionen stehen unter Anzeigetafel-Design; 0 Sekunden schaltet den Wechsel aus.
+
+Favoriten- und Abfahrten-Widgets fügst du über deinen Android-Startbildschirm hinzu. Größe und Aktualisierungen hängen auch vom Launcher und den Energiespareinstellungen ab. Widgets nutzen eine feste Haltestelle oder den zuletzt freigegebenen Standort.
+
+**Widget hinzufügen:** Halte eine freie Stelle auf dem Startbildschirm gedrückt, tippe auf „Widgets“, suche „Öpen-V“ und ziehe das gewünschte Widget an seinen Platz. Zum Ändern der Größe hältst du das Widget gedrückt und ziehst an seinen Rändern. Je nach Launcher heißen die Schritte etwas anders.
+
+Im Abfahrten-Widget heißt die Aktualisieren-Taste **Abfahrten aktualisieren**, wenn eine feste Haltestelle gilt, und **Standort und Abfahrten aktualisieren**, wenn die nächstgelegene Haltestelle aus deiner Liste gesucht wird. Fehlt der Standort, führt das Widget zu **Feste Haltestelle für dieses Widget wählen**. Wurde das Ziel eines Favoriten-Widgets entfernt, öffnet ein Tipp die Suche mit einer kurzen Erklärung.
+
+## 7 · Mach Öpen-V zu deiner App
+
+- **Design & Darstellung:** App-Themes, Farben, lokale Schriften, App-Logo und eigene Designs für Übersicht, Netzplan, Balken und Anzeigetafel. Die Auswahl App-Theme übernimmt dein App-Design.
+- **Persönliche Themes:** Mit der Diskette dein Design speichern, später anwenden oder löschen.
+- **Modi & Verhalten:** Ruhemodus mit eigenem Design, Schwarz/Weiß, Stromsparmodus und Minimalismus. Minimalismus blendet Zusatzinhalte aus und gibt der Anzeigetafel mehr Platz.
+- **Sprüche & Fakten:** Antippen wechselt den Text. Langes Halten öffnet die Textchronik mit bereits gelesenen Beiträgen und Bedienungstipps.
+- **Modi & Verhalten → Sichern & Übertragen:** Einstellungen, Favoriten, Netzplan und weitere gespeicherte Inhalte als JSON sichern. **Sicherung speichern** prüft die gespeicherte Datei. **Sicherung wiederherstellen** zeigt vorher, was die Datei enthält und was übersprungen wird, stellt den aktuellen Stand der Sicherung gegenüber und ersetzt erst nach Bestätigung den vorhandenen Bestand. Bei der Ersteinrichtung gibt es dafür im ersten Schritt **Sicherung importieren**. Sicherungen sind unverschlüsselt.
+
+## Wenn etwas fehlt
+
+Kein Standort? Wähle einen manuellen Start. Keine aktuellen Fahrten? Prüfe Internet und Fahrplandienst unter Info & Hilfe → Dienste & Daten. Ein Haltestellentreffer allein garantiert keine Verbindung. Mehr dazu unter Wo funktioniert Öpen-V?.
+
+Begriffe kurz erklärt hilft beim Nachschlagen. Bedienhinweise und Einrichtung kannst du in Info & Hilfe erneut öffnen. Alle Hilfetexte und Beispielgrafiken sind offline verfügbar; externe Links öffnen sich erst nach Antippen.
+
+

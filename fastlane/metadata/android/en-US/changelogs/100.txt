@@ -1,0 +1,1 @@
+First release of Öpen-V: favourite places as a network map, connections in a bar chart, departures as a departure board and widget, and a journey companion with transfer hints. Free, ad-free, no account and no tracking.

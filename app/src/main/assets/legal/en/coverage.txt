@@ -1,0 +1,18 @@
+# Where does Öpen-V work?
+
+Öpen-V uses VRR OpenService, focused on Rhine-Ruhr and services included by its backend. Complete NRW, German or cross-border coverage is not promised. Worldwide address search does not imply worldwide transit routing. Öpen-V searches the DELFI stop catalogue on the device.
+
+Manual origins and fixed stops need no location permission. New online results require internet; stored places, settings, local text and the bundled stop catalogue remain available offline. Cached results are temporary and may be outdated. Widgets use fixed stops or the last permitted position and request no additional background-location permission. An explicitly pinned journey can continue with a visible notification; its End journey action stops it. Android may delay or terminate updates.
+
+Öpen-V offers departure and arrival search, filters, favourites, a network plan, timeline, saved plans, departure boards, widgets and journey guidance. Results load on demand. Öpen-V offers journey information. Ticket sales and verified accessible routing are outside its scope. Personal backups exclude full transit responses.
+
+Requests are bounded and identical in-flight requests are shared. Provider Retry-After pauses support seconds and HTTP dates without shortening long pauses. These safeguards are not provider quotas or a guarantee of availability. Use of the timetable service follows the VRR API terms.
+
+## Quellen / Sources
+
+- https://www.opendata-oepnv.de/ht/de/api
+- https://www.opendata-oepnv.de/ht/de/standards/nutzungsvereinbarung-api
+- https://photon.komoot.io/
+- https://operations.osmfoundation.org/policies/tiles/
+- https://routing.openstreetmap.de/about.html
+- https://open-meteo.com/en/terms

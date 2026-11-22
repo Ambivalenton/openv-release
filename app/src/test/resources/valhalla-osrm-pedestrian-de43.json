@@ -1,0 +1,451 @@
+{
+  "routes": [
+    {
+      "weight_name": "pedestrian",
+      "weight": 319.694,
+      "duration": 282.038,
+      "distance": 345.084,
+      "legs": [
+        {
+          "via_waypoints": [],
+          "admins": [
+            {
+              "iso_3166_1_alpha3": "DEU",
+              "iso_3166_1": "DE"
+            }
+          ],
+          "weight": 319.694,
+          "duration": 282.038,
+          "steps": [
+            {
+              "intersections": [
+                {
+                  "classes": [
+                    "tunnel"
+                  ],
+                  "bearings": [
+                    265
+                  ],
+                  "entry": [
+                    true
+                  ],
+                  "admin_index": 0,
+                  "out": 0,
+                  "geometry_index": 0,
+                  "location": [
+                    13.377752,
+                    52.516273
+                  ]
+                }
+              ],
+              "maneuver": {
+                "instruction": "Auf Fußweg Richtung Westen laufen.",
+                "type": "depart",
+                "bearing_after": 265,
+                "bearing_before": 0,
+                "location": [
+                  13.377752,
+                  52.516273
+                ]
+              },
+              "name": "",
+              "duration": 6.494,
+              "distance": 10.0,
+              "driving_side": "right",
+              "weight": 6.494,
+              "mode": "walking",
+              "geometry": "azidcBolooXN|G"
+            },
+            {
+              "intersections": [
+                {
+                  "bearings": [
+                    85,
+                    264
+                  ],
+                  "entry": [
+                    false,
+                    true
+                  ],
+                  "in": 0,
+                  "turn_weight": 5.0,
+                  "admin_index": 0,
+                  "out": 1,
+                  "geometry_index": 1,
+                  "location": [
+                    13.377609,
+                    52.516265
+                  ]
+                }
+              ],
+              "maneuver": {
+                "modifier": "straight",
+                "instruction": "Weiter auf Platz des 18. März.",
+                "type": "new name",
+                "bearing_after": 264,
+                "bearing_before": 265,
+                "location": [
+                  13.377609,
+                  52.516265
+                ]
+              },
+              "name": "Platz des 18. März",
+              "duration": 5.647,
+              "distance": 8.0,
+              "driving_side": "right",
+              "weight": 10.647,
+              "mode": "walking",
+              "geometry": "qyidcBqcooXLbF"
+            },
+            {
+              "intersections": [
+                {
+                  "entry": [
+                    false,
+                    true,
+                    true,
+                    true
+                  ],
+                  "in": 0,
+                  "bearings": [
+                    84,
+                    173,
+                    266,
+                    353
+                  ],
+                  "duration": 9.318,
+                  "turn_weight": 5.0,
+                  "admin_index": 0,
+                  "out": 3,
+                  "weight": 14.318,
+                  "geometry_index": 2,
+                  "location": [
+                    13.377495,
+                    52.516258
+                  ]
+                },
+                {
+                  "entry": [
+                    true,
+                    false,
+                    true,
+                    true
+                  ],
+                  "in": 1,
+                  "bearings": [
+                    84,
+                    173,
+                    265,
+                    354
+                  ],
+                  "duration": 67.595,
+                  "admin_index": 0,
+                  "out": 3,
+                  "weight": 77.735,
+                  "geometry_index": 3,
+                  "location": [
+                    13.377474,
+                    52.516369
+                  ]
+                },
+                {
+                  "entry": [
+                    true,
+                    false,
+                    true,
+                    true
+                  ],
+                  "in": 1,
+                  "bearings": [
+                    82,
+                    175,
+                    262,
+                    357
+                  ],
+                  "duration": 1.706,
+                  "turn_weight": 1.0,
+                  "turn_duration": 1.0,
+                  "admin_index": 0,
+                  "out": 3,
+                  "weight": 1.706,
+                  "geometry_index": 6,
+                  "location": [
+                    13.377488,
+                    52.517006
+                  ]
+                },
+                {
+                  "entry": [
+                    false,
+                    true
+                  ],
+                  "in": 0,
+                  "bearings": [
+                    177,
+                    344
+                  ],
+                  "duration": 2.824,
+                  "admin_index": 0,
+                  "out": 1,
+                  "weight": 2.824,
+                  "geometry_index": 7,
+                  "location": [
+                    13.377487,
+                    52.517016
+                  ]
+                },
+                {
+                  "entry": [
+                    true,
+                    false,
+                    true
+                  ],
+                  "in": 1,
+                  "bearings": [
+                    84,
+                    164,
+                    344
+                  ],
+                  "duration": 59.012,
+                  "admin_index": 0,
+                  "out": 2,
+                  "weight": 59.012,
+                  "geometry_index": 8,
+                  "location": [
+                    13.377469,
+                    52.517054
+                  ]
+                },
+                {
+                  "entry": [
+                    true,
+                    false,
+                    true
+                  ],
+                  "in": 1,
+                  "bearings": [
+                    3,
+                    167,
+                    253
+                  ],
+                  "duration": 2.118,
+                  "admin_index": 0,
+                  "out": 0,
+                  "weight": 2.118,
+                  "geometry_index": 10,
+                  "location": [
+                    13.377171,
+                    52.51771
+                  ]
+                },
+                {
+                  "entry": [
+                    true,
+                    false,
+                    true
+                  ],
+                  "in": 1,
+                  "bearings": [
+                    62,
+                    183,
+                    328
+                  ],
+                  "duration": 4.235,
+                  "admin_index": 0,
+                  "out": 2,
+                  "weight": 4.235,
+                  "geometry_index": 11,
+                  "location": [
+                    13.377173,
+                    52.517733
+                  ]
+                },
+                {
+                  "bearings": [
+                    148,
+                    342
+                  ],
+                  "entry": [
+                    false,
+                    true
+                  ],
+                  "in": 0,
+                  "admin_index": 0,
+                  "out": 1,
+                  "geometry_index": 12,
+                  "location": [
+                    13.377124,
+                    52.517781
+                  ]
+                }
+              ],
+              "maneuver": {
+                "modifier": "right",
+                "instruction": "Rechts auf Fußweg abbiegen.",
+                "type": "turn",
+                "bearing_after": 353,
+                "bearing_before": 264,
+                "location": [
+                  13.377495,
+                  52.516258
+                ]
+              },
+              "name": "",
+              "duration": 148.925,
+              "distance": 177.0,
+              "driving_side": "right",
+              "weight": 164.064,
+              "mode": "walking",
+              "geometry": "cyidcBm|noX}Eh@aKfA}OsCyIn@S@kAb@qf@tQm@Am@C_B`Bw@\\"
+            },
+            {
+              "intersections": [
+                {
+                  "entry": [
+                    true,
+                    false,
+                    true,
+                    true
+                  ],
+                  "in": 1,
+                  "bearings": [
+                    71,
+                    162,
+                    252,
+                    342
+                  ],
+                  "duration": 14.824,
+                  "turn_weight": 5.0,
+                  "admin_index": 0,
+                  "out": 0,
+                  "weight": 19.824,
+                  "geometry_index": 13,
+                  "location": [
+                    13.377109,
+                    52.517809
+                  ]
+                },
+                {
+                  "entry": [
+                    true,
+                    false
+                  ],
+                  "in": 1,
+                  "bearings": [
+                    83,
+                    251
+                  ],
+                  "duration": 62.584,
+                  "admin_index": 0,
+                  "out": 0,
+                  "weight": 75.1,
+                  "geometry_index": 15,
+                  "location": [
+                    13.377403,
+                    52.517869
+                  ]
+                },
+                {
+                  "bearings": [
+                    84,
+                    264
+                  ],
+                  "entry": [
+                    true,
+                    false
+                  ],
+                  "in": 1,
+                  "admin_index": 0,
+                  "out": 0,
+                  "geometry_index": 17,
+                  "location": [
+                    13.378316,
+                    52.517932
+                  ]
+                }
+              ],
+              "maneuver": {
+                "modifier": "right",
+                "instruction": "Rechts auf Dorotheenstraße/B 2 abbiegen.",
+                "type": "turn",
+                "bearing_after": 71,
+                "bearing_before": 342,
+                "location": [
+                  13.377109,
+                  52.517809
+                ]
+              },
+              "name": "Dorotheenstraße",
+              "duration": 120.972,
+              "distance": 150.084,
+              "driving_side": "right",
+              "weight": 138.489,
+              "mode": "walking",
+              "ref": "B 2",
+              "geometry": "azldcBidnoXq@yDeAqKGwAuBiu@eCo|@"
+            },
+            {
+              "intersections": [
+                {
+                  "bearings": [
+                    264
+                  ],
+                  "entry": [
+                    true
+                  ],
+                  "in": 0,
+                  "admin_index": 0,
+                  "geometry_index": 18,
+                  "location": [
+                    13.3793,
+                    52.517999
+                  ]
+                }
+              ],
+              "maneuver": {
+                "instruction": "Ziel erreicht.",
+                "type": "arrive",
+                "bearing_after": 0,
+                "bearing_before": 84,
+                "location": [
+                  13.3793,
+                  52.517999
+                ]
+              },
+              "name": "Dorotheenstraße",
+              "duration": 0.0,
+              "distance": 0.0,
+              "driving_side": "right",
+              "weight": 0.0,
+              "mode": "walking",
+              "ref": "B 2",
+              "geometry": "}emdcBgmroX??"
+            }
+          ],
+          "distance": 345.084,
+          "summary": "Platz des 18. März, Dorotheenstraße"
+        }
+      ],
+      "geometry": "azidcBolooXN|GLbF}Eh@aKfA}OsCyIn@S@kAb@qf@tQm@Am@C_B`Bw@\\q@yDeAqKGwAuBiu@eCo|@"
+    }
+  ],
+  "waypoints": [
+    {
+      "distance": 4.644,
+      "name": "",
+      "location": [
+        13.377752,
+        52.516273
+      ]
+    },
+    {
+      "distance": 0.102,
+      "name": "Dorotheenstraße",
+      "location": [
+        13.3793,
+        52.517999
+      ]
+    }
+  ],
+  "code": "Ok"
+}
