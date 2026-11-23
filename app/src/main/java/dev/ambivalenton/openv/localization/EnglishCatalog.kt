@@ -122,6 +122,7 @@ internal val englishStrings: Map<String, String> = buildMap {
     put(". Die Verbindung startet um ", ". The connection leaves at ")
     put(". Du kommst um ", ". You arrive at ")
     put("00er · Chromwelle", "00s · chrome wave")
+    put("1 Hinweis", "1 notice")
     put("1 Minute", "1 minute")
     put("1 Umstieg", "1 change")
     put("1 Verbindung", "1 connection")

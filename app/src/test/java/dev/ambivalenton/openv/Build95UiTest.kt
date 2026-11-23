@@ -61,7 +61,7 @@ class Build95UiTest {
         compose.onNodeWithText("Hervorhebung ausblenden").performClick()
         compose.onNodeWithTag("journey-notice").assertDoesNotExist()
         compose.onNodeWithTag("notice-mark-ride").assertExists()
-        compose.onNodeWithText("1 Hinweise").performScrollTo().performClick()
+        compose.onNodeWithText("1 Hinweis").performScrollTo().performClick()
         compose.onNodeWithText(notice).assertExists()
     }
 

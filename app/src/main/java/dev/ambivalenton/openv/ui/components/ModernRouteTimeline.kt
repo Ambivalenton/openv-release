@@ -790,7 +790,8 @@ private fun TimelineRow(
 private fun SegmentNotices(notices: List<String>) {
     var expanded by rememberSaveable(notices) { mutableStateOf(false) }
     val rows = remember(notices) { notices.distinct() }
-    RailToggle(expanded, if (expanded) tr("Hinweise schließen") else tr("%1\$s Hinweise", rows.size), { expanded = !expanded })
+    RailToggle(expanded, if (expanded) tr("Hinweise schließen") else if (rows.size == 1) tr("1 Hinweis") else tr("%1\$s Hinweise", rows.size),
+        { expanded = !expanded })
     CalmVisibility(
         expanded,
         enter = expandVertically(spring(dampingRatio = .86f, stiffness = 360f, visibilityThreshold = androidx.compose.ui.unit.IntSize.VisibilityThreshold)) +

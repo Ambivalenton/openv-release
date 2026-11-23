@@ -61,6 +61,12 @@ class Build105TimelineTest {
         stops = stops(stop("Dortmund Rombergpark", "r", 7.47), stop("Dortmund Hörde Bf", "hb", 7.5), now, 6),
         notices = (1..10).map { "Hinweis $it: Umleitung wegen Bauarbeiten." })), "VRR", now)
 
+    /** Recognised notices (stop relocated) before the first ride and before the ride after the transfer. */
+    private val relocated = journey.copy(id = "r", segments = journey.segments.mapIndexed { i, s -> when (i) {
+        1 -> s.copy(notices = listOf("Dortmund Hacheney: Haltestelle vorübergehend verlegt."))
+        2 -> s.copy(notices = listOf("Dortmund Hbf: Haltestelle vorübergehend verlegt.", "Aufzug außer Betrieb."))
+        else -> s } })
+
     private var shown by mutableStateOf<Pair<Trip, AppTheme?>?>(null)
     private var fontScale by mutableStateOf(1f)
     private var started = false
@@ -104,6 +110,7 @@ class Build105TimelineTest {
         compose.onNodeWithTag("intermediate-stops-tram").performClick()
         render(tram, "tram-dark-stops", AppTheme.CLASSIC_DARK)
         render(journey, "journey-synthwave", AppTheme.SYNTHWAVE)
+        render(relocated, "notices-recognised")
         render(journey, "journey-large-font", scale = 1.6f)
     }
 
@@ -221,5 +228,27 @@ class Build105TimelineTest {
             val file = File("../audit/build105/capsule-${m.name.lowercase()}.png"); file.parentFile!!.mkdirs()
             file.outputStream().use { strip.compress(Bitmap.CompressFormat.PNG, 100, it) }
         }
+    }
+
+    /** A recognised notice (stop relocated) keeps its exclamation mark on the rail, in the ride's colour, before the boarding point. */
+    @Test fun aRecognisedNoticeKeepsItsExclamationMark() {
+        fun near(a: Int, b: Int) = listOf(16, 8, 0).all { sh -> kotlin.math.abs(((a shr sh) and 0xff) - ((b shr sh) and 0xff)) < 28 }
+        render(relocated, "check-notices")
+        val image = screen()
+        val d = compose.density.density
+        val x = (16 + 50 + 26) * d
+        for ((segment, boarding) in listOf("u49" to "Dortmund Hacheney", "bus" to "Dortmund Hbf")) {
+            val row = compose.onNodeWithTag("notice-mark-$segment").fetchSemanticsNode().boundsInRoot
+            val centre = row.top + 30 * d
+            val stop = compose.onAllNodesWithText(boarding).fetchSemanticsNodes().last().boundsInRoot
+            assertTrue("$segment: the mark comes before the boarding point", centre < stop.top)
+            val line = image.getPixel(x.toInt(), (stop.top + 11 * d + 30 * d).toInt())
+            // The disc (left of the cut-out bar) is in the ride's colour, the bar itself shows the background.
+            assertTrue("$segment disc", near(image.getPixel((x - 6 * d).toInt(), centre.toInt()), line))
+            assertFalse("$segment bar", near(image.getPixel(x.toInt(), (centre - 2 * d).toInt()), line))
+        }
+        compose.onNodeWithText("1 Hinweis").assertExists()
+        compose.onNodeWithText("2 Hinweise").assertExists()
+        image.recycle()
     }
 }
