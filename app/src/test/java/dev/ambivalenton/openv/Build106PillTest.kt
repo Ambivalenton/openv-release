@@ -62,7 +62,9 @@ class Build106PillTest {
         assertTrue(navigationPillAside("search", connectionOpen = false, previewOpen = false, pinnedOpen = false, planEditing = true))
         assertFalse(navigationPillAside("results", connectionOpen = false, previewOpen = false, pinnedOpen = false, planEditing = false))
         assertFalse(navigationPillAside("overview", connectionOpen = false, previewOpen = true, pinnedOpen = true, planEditing = false))
-        assertFalse(navigationPillAside("settings", connectionOpen = false, previewOpen = false, pinnedOpen = false, planEditing = false))
+        // Build 107: the settings hide it, the page "App-Design" shows it (its colours are being chosen).
+        assertTrue(navigationPillAside("settings", connectionOpen = false, previewOpen = false, pinnedOpen = false, planEditing = false))
+        assertFalse(navigationPillAside("settings", connectionOpen = false, previewOpen = false, pinnedOpen = false, planEditing = false, designPage = true))
         assertFalse(navigationPillAside("departures", connectionOpen = false, previewOpen = false, pinnedOpen = false, planEditing = false))
     }
 
@@ -73,8 +75,12 @@ class Build106PillTest {
         compose.onNode(tab).performClick()
         compose.waitForIdle()
         compose.onNodeWithTag("expressive-pill-navigation").assertExists()
+        val plan = compose.onNodeWithTag("network-plan").fetchSemanticsNode().boundsInRoot
         compose.onNodeWithTag("network-edit").performClick()
         compose.waitUntil(5_000) { compose.onAllNodesWithTag("expressive-pill-navigation").fetchSemanticsNodes().isEmpty() }
+        // Build 107: the plan stays exactly where it was – its page keeps the pill's room while it is edited.
+        val editing = compose.onNodeWithTag("network-plan").fetchSemanticsNode().boundsInRoot
+        assertEquals("top", plan.top, editing.top, 1f); assertEquals("bottom", plan.bottom, editing.bottom, 1f)
         compose.onNodeWithTag("network-done").performClick()
         compose.waitUntil(5_000) { compose.onAllNodesWithTag("expressive-pill-navigation").fetchSemanticsNodes().isNotEmpty() }
         compose.onNode(hasText("Abfahrten") and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Tab)).performClick()

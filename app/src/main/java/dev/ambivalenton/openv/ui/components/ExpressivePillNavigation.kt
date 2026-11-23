@@ -67,10 +67,12 @@ data class PillDestination(val label: String,val icon: Int,val timeline:Boolean=
  * Build 106: where the navigation pill steps aside (springs down and out): an opened connection – in the
  * results, or previewed from the overview or the board – and the plan while it is edited. These views need
  * the whole height and have their own way back. A running journey ([pinnedOpen]) keeps the pill, and so do
- * the pages, the results and the settings (a tab tap leaves them at once).
+ * the pages and the results. Build 107: the settings too, except the page "App-Design" ([designPage]),
+ * where the pill shows the colours being chosen.
  */
-fun navigationPillAside(route:String,connectionOpen:Boolean,previewOpen:Boolean,pinnedOpen:Boolean,planEditing:Boolean):Boolean =
-    (route=="results" && connectionOpen) || (previewOpen && !pinnedOpen) || planEditing
+fun navigationPillAside(route:String,connectionOpen:Boolean,previewOpen:Boolean,pinnedOpen:Boolean,planEditing:Boolean,
+    designPage:Boolean=false):Boolean =
+    (route=="results" && connectionOpen) || (previewOpen && !pinnedOpen) || planEditing || (route=="settings" && !designPage)
 
 /** Geometry of the navigation pill, shared with layouts that keep a distance to it. The
  * visible pill is the box minus its inset on every side; the box sits [PillNavigationPadding] inside

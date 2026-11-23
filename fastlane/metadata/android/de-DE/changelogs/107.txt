@@ -1,4 +1,5 @@
 • Widgets neu gestaltet: farbige Favoriten-Kacheln mit Namen und Haltestelle, passend für jede Größe von 1×1 bis groß.
 • Abfahrten-Widget mit Linienfarben, Ziel, Abfahrtszeit, Gleis und Verspätung; Aktualisieren direkt im Widget.
 • Beide Widgets folgen dem App-Design im hellen und dunklen Modus.
-• Gewählte Widget-Farben bleiben jetzt gespeichert.
+• Gewählte Widget-Farben bleiben gespeichert.
+• Netzplan bleibt beim Bearbeiten an seiner Stelle; Navigationsleiste in den Einstellungen ausgeblendet.

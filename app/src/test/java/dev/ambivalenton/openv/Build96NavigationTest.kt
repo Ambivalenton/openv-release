@@ -81,11 +81,16 @@ class Build96NavigationTest {
         tab(name).assertIsSelected()
     }
 
+    /** Build 107: the settings hide the pill – except "Design & Darstellung" (App-Design), where a tab tap still opens its page at once. */
     @Test fun aTabTapFromTheSettingsOpensThatPageAtOnce() {
         start()
         for((name,expected) in listOf("Abfahrten" to 2,"Übersicht" to 0,"Suchen" to 1)) {
             compose.onNodeWithContentDescription("Einstellungen öffnen").performClick()
             compose.waitForIdle()
+            compose.waitUntil(3_000) {compose.onAllNodesWithTag("expressive-pill-navigation").fetchSemanticsNodes().isEmpty()}
+            compose.onNodeWithTag("settings-DESIGN").performScrollTo().performClick()
+            compose.waitForIdle()
+            compose.waitUntil(3_000) {compose.onAllNodesWithTag("expressive-pill-navigation").fetchSemanticsNodes().isNotEmpty()}
             tapAndCheck(name,expected)
         }
     }

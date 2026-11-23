@@ -894,12 +894,15 @@ private fun OpenVNavigation(
     // Build 106: the pill steps aside where a view needs the whole height and has its own way back –
     // an opened connection (results, overview, board) and the plan while it is edited. It stays on the
     // overview, the board, the results, a running journey and in the settings (a tab tap leaves them).
-    val pillAside=navigationPillAside(route,ui.selectedTripId!=null,overviewPreview!=null,isPinned,
-        planEditing && destinationRoute=="search" && homePager.currentPage==1)
+    val planEditingHere=planEditing && destinationRoute=="search" && homePager.currentPage==1
+    val pillAside=navigationPillAside(route,ui.selectedTripId!=null,overviewPreview!=null,isPinned,planEditingHere,
+        // "App-Design" is chosen on "Design & Darstellung" (and on its own page from the settings search).
+        designPage=settingsNavigation.page in setOf(dev.ambivalenton.openv.ui.screens.SettingsPage.DESIGN,dev.ambivalenton.openv.ui.screens.SettingsPage.APP_THEME))
     val pillShown=navVisible && !pillAside
     // Planermodus: the pinned journey floats where the pill would be.
     val hoverCard=planner && !needsIntroduction && !WindowInsets.isImeVisible && hasPinnedSession && !isPinned
-    val bottomClear=pillShown || hoverCard
+    // Build 107: while the plan is edited its page keeps the pill's room, so the plan does not move.
+    val bottomClear=pillShown || hoverCard || (navVisible && planEditingHere)
     val navDensity=LocalDensity.current
     var navHeight by remember {mutableStateOf(88.dp)}
     // Without the pill, content still keeps clear of the system's gesture bar.
