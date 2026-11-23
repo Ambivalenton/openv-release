@@ -43,21 +43,17 @@ class Sprint59UiTest {
         val file=File("../audit/build59/images/$name.png");file.parentFile!!.mkdirs()
         file.outputStream().use {bitmap.compress(Bitmap.CompressFormat.PNG,100,it)};bitmap.recycle()
     }
-    @Test fun theNetworkPlanGuideIsASeparateScrollableStepAndDoesNotRequestLocation() {
+    // Build 102: the last of three steps finishes the setup; nothing asks for the location by itself.
+    @Test fun theLastStepFinishesWithoutAskingForTheLocation() {
         var requests=0;var finished=0
-        var store by mutableStateOf(StoredState(onboardingDraft=OnboardingDraft(step=3,settings=AppSettings(quietMode=true))))
+        var store by mutableStateOf(StoredState(onboardingDraft=OnboardingDraft(step=2,settings=AppSettings(quietMode=true))))
         compose.setContent {CompositionLocalProvider(LocalDensity provides Density(1f,1.5f)) {
             OnboardingWizard(store,SetupPermissions(requestLocation={requests++}),
                 {change->store=store.copy(onboardingDraft=change(store.onboardingDraft!!));true},{finished++;true},{emptyList()})
         }}
-        compose.onNodeWithTag("onboarding-next").assertIsDisplayed().performClick()
-        compose.onNodeWithText("Dein Netzplan").assertIsDisplayed()
-        compose.onNodeWithTag("onboarding-network-plan").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithText("Unterwegs").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithText("In der Nähe eines Favoriten").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithTag("onboarding-next").assertIsDisplayed().performClick()
-        compose.onNodeWithText("Bereit für deine Wege").assertIsDisplayed()
-        compose.onNodeWithTag("onboarding-next").performClick()
+        compose.onNodeWithText("Dein Design").assertIsDisplayed()
+        compose.onNodeWithTag("onboarding-skip").assertDoesNotExist()
+        compose.onNodeWithTag("onboarding-next").assertTextEquals("Los geht’s").performClick()
         compose.runOnIdle {assertEquals(0,requests);assertEquals(1,finished)}
     }
 }

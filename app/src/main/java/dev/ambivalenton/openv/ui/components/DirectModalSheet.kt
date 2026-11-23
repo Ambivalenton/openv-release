@@ -101,21 +101,32 @@ private class DirectSheetWindow {
             val density=LocalDensity.current
             val height=with(density) {maxHeight.toPx()}
             val slop=LocalViewConfiguration.current.touchSlop
+            // Build 102: the keyboard makes the window shorter. The sheet keeps its upper edge (measured on
+            // the tallest window seen) and only its lower part gives way. Before, the motion was rebuilt
+            // with every height and the sheet slid in a second time when a field took the focus.
+            val tallestSeen=remember {floatArrayOf(0f)}
+            tallestSeen[0]=maxOf(tallestSeen[0],height)
+            val sheetHeight=(tallestSeen[0]*fraction).roundToInt().toFloat()
+            val sheetTop=tallestSeen[0]-sheetHeight
+            var entered by rememberSaveable(tag) {mutableStateOf(false)}
             // A motion rebuilt during the exit (size change, e.g. the keyboard closing) starts
             // hidden: never at the resting position for a frame before it finishes closing.
-            val motion=remember(height,density.density,fraction,quiet) {JourneySheetMotion((height*fraction).roundToInt().toFloat(),
-                with(density) {96.dp.toPx()},with(density) {900.dp.toPx()},slop,(!animateEntry || quiet) && !exitRequested,
+            val motion=remember(sheetHeight,density.density,quiet) {JourneySheetMotion(sheetHeight,
+                with(density) {96.dp.toPx()},with(density) {900.dp.toPx()},slop,(!animateEntry || quiet || entered) && !exitRequested,
                 onClosing={exitRequested=true},reduceMotion=quiet)}
             val scope=rememberCoroutineScope()
-            LaunchedEffect(motion) {if(exitRequested) motion.close(scope,complete) else if(animateEntry && !quiet) motion.show(scope)}
+            LaunchedEffect(motion) {
+                if(exitRequested) motion.close(scope,complete)
+                else {val first=!entered;entered=true;if(first && animateEntry && !quiet) motion.show(scope)}
+            }
             DisposableEffect(motion) {onDispose {motion.dispose()}}
             val dismiss:()->Unit={motion.close(scope,complete)}
             BackHandler(gesturesEnabled) {dismiss()}
             Box(Modifier.fillMaxSize().journeySheetWindowGestures(motion,gesturesEnabled && !motion.closing,
-                height*(1f-fraction),with(density) {headerHeight.toPx()},scrollTarget,complete)) {
+                sheetTop,with(density) {headerHeight.toPx()},scrollTarget,complete)) {
                 Box(Modifier.fillMaxSize().graphicsLayer {alpha=(1f-motion.offset/motion.height).coerceIn(0f,1f)}
                     .background(Color.Black.copy(alpha=scrim)).clickable(enabled=gesturesEnabled,onClick=dismiss))
-                Surface(Modifier.align(Alignment.BottomCenter).fillMaxWidth().fillMaxHeight(fraction)
+                Surface(Modifier.align(Alignment.TopCenter).padding(top=with(density) {sheetTop.toDp()}).fillMaxWidth().fillMaxHeight()
                     .graphicsLayer {translationY=motion.offset}
                     .testTag(tag).semantics {this[DirectSheetOffsetKey]=motion.offset},color=color,
                     shape=RoundedCornerShape(topStart=28.dp,topEnd=28.dp)) {

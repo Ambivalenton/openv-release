@@ -109,7 +109,7 @@ fun SharedDepartureBoard(state: StoredState, onStops: () -> Unit, onConfigure: (
         }
             }
             }
-        TransitSourceAttribution(Modifier.padding(horizontal=16.dp),compact=true)
+        // Build 102: the source stands once, under the screen title ("Fahrplandaten: VRR").
         // H11/M09: the comparison of each group named in words, and the list view of the same rows.
         BoardGroupActions(groups,::compare)
         DeparturesFooter(onStops, onConfigure)
@@ -186,7 +186,6 @@ internal const val INTEGRATED_BOARD_ROWS=6
                 Text(model.caption,Modifier.padding(top=6.dp),style=MaterialTheme.typography.labelSmall,
                     color=MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            TransitSourceAttribution(Modifier.padding(horizontal=16.dp),compact=true)
             BoardGroupActions(groups,onCompare)
             DeparturesFooter(onStops,onConfigure)
         }

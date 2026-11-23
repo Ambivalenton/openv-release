@@ -168,7 +168,7 @@ fun SettingsScreen(ui: AppUiState, vm: AppViewModel,navigation: SettingsNavigati
         scheduleConflict={windows->ui.store.scheduleConflict(editFavorite?.id,windows)},
         networkRole=editFavorite?.id?.let {id->ui.store.network.node(id)?.role},
         onNetworkRole=editFavorite?.id?.let {id->{role:NodeRole->vm.setNodeRole(id,role)}},
-        suggestions=remember(ui.store.history,ui.store.favorites,ui.store.boardStops,ui.store.departureBoard.stop) {ui.store.favoritePlaceSuggestions()},
+        suggestions=remember(ui.store.history,ui.store.favorites) {ui.store.favoritePlaceSuggestions()},
         otherFavorites=ui.store.favorites.filter {it.id!=editFavorite?.id},
         partnerFor={id->ui.store.connectionPartnerFor(id)},onConnect={a,b->vm.connectNodes(a,b)!=null})
     if(services) ServiceSettingsSheet(settings,{change->vm.settings(change);services=false},{services=false})

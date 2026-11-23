@@ -234,6 +234,8 @@ fun PlaceSearchField(
     favorites: List<Favorite> = LocalFavoritePlaces.current,
     /** A new value empties the typed text (the chosen place stays until another is picked). */
     clearText: Int = 0,
+    /** Build 102: false leaves out "Wähle einen Ort aus den Vorschlägen." where the results speak for themselves. */
+    chooseHint: Boolean = true,
 ) {
     val firstResult=remember {BringIntoViewRequester()}
     val suggestionsScroll=rememberScrollState()
@@ -371,7 +373,7 @@ fun PlaceSearchField(
             },
             // H03: free text alone is not a destination; the hint stays visible (also in minimalist mode).
             supportingText =
-                if (value == null && text.isNotBlank()) {
+                if (chooseHint && value == null && text.isNotBlank()) {
                     { Text(tr("Wähle einen Ort aus den Vorschlägen."), Modifier.testTag("place-choose-hint")) }
                 } else null,
             keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Search),

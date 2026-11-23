@@ -27,7 +27,9 @@ import dev.ambivalenton.openv.localization.tr
 @Composable fun PinnedJourneyCard(state:PinnedJourneyState,onOpen:()->Unit,onRemove:()->Unit,onBubble:(()->Unit)?=null,
     onCorrectAlighting:((alighted:Boolean)->Unit)?=null,modifier:Modifier=Modifier.fillMaxWidth(),
     testTag:String="pinned-journey-card",headerActions:(@Composable RowScope.()->Unit)?=null,
-    focusTransform:((JourneyFocus,Long)->JourneyFocus)?=null) {
+    focusTransform:((JourneyFocus,Long)->JourneyFocus)?=null,
+    /** Build 102: false where the screen title already names the source (Übersicht). */
+    showSource:Boolean=true) {
     val session=state.session?:return
     val now=rememberJourneyNow();val t=MaterialTheme.typography;val scheme=MaterialTheme.colorScheme
     // [focusTransform]: the bubble's mini card names the next change or destination (build 81).
@@ -51,7 +53,7 @@ import dev.ambivalenton.openv.localization.tr
             Row(Modifier.fillMaxWidth().heightIn(min=44.dp),verticalAlignment=Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     FittedText(session.favorite.label,style=t.labelLarge)
-                    TransitSourceAttribution(compact=true)
+                    if(showSource) TransitSourceAttribution(compact=true)
                 }
                 if(headerActions!=null)headerActions()
                 else if(walking!=null)FilledTonalIconButton({navigationError=if(openWalkingNavigation(context,walking,mode).isFailure)tr("Fußnavigation konnte nicht geöffnet werden.")else null},

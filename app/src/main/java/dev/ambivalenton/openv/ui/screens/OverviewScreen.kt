@@ -144,7 +144,7 @@ fun OverviewScreen(
     ) {
         // No rectangular backdrop behind the rounded card: the card draws its own shape and shadow.
         if (pinnedState?.session != null && !pinnedAsBubble) stickyHeader(key="pinned-card") {
-            PinnedJourneyCard(pinnedState,onPinnedOpen,onPinnedRemove,onPinnedBubble,onCorrectAlighting)
+            PinnedJourneyCard(pinnedState,onPinnedOpen,onPinnedRemove,onPinnedBubble,onCorrectAlighting,showSource=false)
         }
         // M03: an empty overview starts with the question and the main action, above the info text.
         if (ui.ready && !ui.loading && ui.error == null && ui.entries.isEmpty())

@@ -4,6 +4,15 @@ Alle nennenswerten Änderungen an Öpen-V. Versionen folgen [Semantic Versioning
 
 ## [Unveröffentlicht]
 
+## [1.0.2] (102) · 2026-11-23
+
+- Favorit hinzufügen: Das Blatt öffnet sich nicht mehr ein zweites Mal, wenn die Tastatur erscheint. Ursache war, dass das Blatt seine Bewegung bei jeder Änderung der Fensterhöhe neu anlegte; jetzt behält es seine Oberkante, nur der untere Teil weicht der Tastatur, und die Tastatur kommt erst, wenn das Blatt gelandet ist.
+- Favorit hinzufügen: Suchfeld direkt unter einem einzeiligen Kopf, Treffer gleich darunter und über der Tastatur. Beim Tippen treten Rollen und „Oft gesucht“ zur Seite; Frage-Überschrift und Hinweistext entfallen.
+- Vorschläge („Oft gesucht“) nur noch aus Zielen, die mindestens zweimal gesucht wurden – nie ein Favorit oder ein Ort im Umkreis von 150 m um einen Favoriten, keine Haltestellen der Anzeigetafel.
+- Ersteinrichtung in drei kurzen Schritten: Freigaben (Standort und Mitteilungen mit je einem „Erlauben“), erster Favorit, Design (sechs ausgewählte Designs als Kacheln, sofort angewendet). Übersicht-, Netzplan- und Zusammenfassungsseite entfallen.
+- Netzplan: Beim Öffnen der Bearbeitung bleibt der Plan auf derselben Höhe (die Werkzeugleiste belegt immer ihre offene Höhe). In der normalen Ansicht sind keine Rasterpunkte mehr zu sehen; beim Öffnen erscheinen erst Punkte, die zu Plus-Zeichen wachsen. Der Knopf „Favorit hinzufügen“ ist 10 % kleiner.
+- „Fahrplandaten: VRR“ steht unter dem Seitentitel; Anzeigetafel und angeheftete Reise auf der Übersicht wiederholen es nicht mehr.
+
 ## [1.0.1] (101) · 2026-11-23
 
 - Favoriten hinzufügen neu gestaltet – in der Ersteinrichtung und später gleich: drei ruhige Schritte statt einer vollen Seite. Erst der Ort (Suche, zuletzt gesuchte Ziele oder vorher „Zuhause“, „Arbeit“ … antippen), dann das Aussehen mit großem Live-Symbol, Name, Ortsart als große Kacheln und Farbe, dann ein „Gespeichert“-Moment mit dem nächsten Schritt („Mit „Zuhause“ verbinden“, „Noch einen Favoriten“, „Fertig“). Alle Symbole, Farben und Formen klappen direkt im Blatt auf, es öffnen sich keine weiteren Fenster; Übergänge federn, Symbol und Farbe springen bei jeder Änderung kurz an. Das Hinweisbanner über dem Netzplan entfällt.
@@ -23,6 +32,7 @@ Erste Version.
 - Fahrplandaten von VRR OpenService, Haltestellenverzeichnis für Deutschland offline mitgeliefert.
 - Test-App „Öpen-V · Vorschau“ (`dev.ambivalenton.openv.next`), die sich neben der Store-App installiert.
 
-[Unveröffentlicht]: https://github.com/Ambivalenton/openv-release/compare/v1.0.1...HEAD
+[Unveröffentlicht]: https://github.com/Ambivalenton/openv-release/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/Ambivalenton/openv-release/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/Ambivalenton/openv-release/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/Ambivalenton/openv-release/releases/tag/v1.0.0

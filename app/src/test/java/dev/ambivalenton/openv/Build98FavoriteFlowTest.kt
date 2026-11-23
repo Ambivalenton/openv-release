@@ -44,7 +44,7 @@ class Build98FavoriteFlowTest {
             CompositionLocalProvider(LocalFavoritePlaces provides listOf(home)) {
                 Surface(Modifier.fillMaxSize()) {
                     FavoriteEditDialog(null, "VRR", search, onSave, {},
-                        suggestions = listOf(FavoritePlaceSuggestion(uni, true)), otherFavorites = listOf(home))
+                        suggestions = listOf(FavoritePlaceSuggestion(uni, 3)), otherFavorites = listOf(home))
                 }
             }
         }

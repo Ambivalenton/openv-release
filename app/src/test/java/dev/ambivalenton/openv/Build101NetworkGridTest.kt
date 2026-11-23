@@ -81,7 +81,10 @@ class Build101NetworkGridTest {
             file.outputStream().use { edit.compress(Bitmap.CompressFormat.PNG, 100, it) }
             // Outside edit mode the plus is gone (at most the faint resting dot of the theme's sheet).
             val live = plan(theme, editing = false)
-            assertTrue("$name live arm", contrast(live.getPixel(cx + arm, cy), live.getPixel(cx + (pitch * .35f).toInt(), cy + (pitch * .35f).toInt())) < 1.1)
+            val livePaper = live.getPixel(cx + (pitch * .35f).toInt(), cy + (pitch * .35f).toInt())
+            assertTrue("$name live arm", contrast(live.getPixel(cx + arm, cy), livePaper) < 1.1)
+            // Build 102: no resting dot either – the live plan shows no grid at all.
+            assertTrue("$name live dot", contrast(live.getPixel(cx, cy), livePaper) < 1.05)
         }
     }
 }

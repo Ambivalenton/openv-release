@@ -43,7 +43,7 @@ class Sprint51OnboardingTest {
         compose.onNodeWithText(place.name).performScrollTo().performClick()
     }
     @Test fun nextAloneSavesASelectedAddressAndAdvancesWithoutAnExtraSaveButton() {
-        var store by mutableStateOf(StoredState(onboardingDraft=OnboardingDraft(step=2,settings=AppSettings(quietMode=true))))
+        var store by mutableStateOf(StoredState(onboardingDraft=OnboardingDraft(step=1,settings=AppSettings(quietMode=true))))
         compose.setContent {OnboardingWizard(store,SetupPermissions(),{change->store=store.copy(onboardingDraft=change(store.onboardingDraft!!));true},{true},{listOf(place)})}
         compose.onNodeWithTag("onboarding-next").assertIsNotEnabled()
         compose.onNodeWithTag("onboarding-add-favorite").assertDoesNotExist()
@@ -51,9 +51,9 @@ class Sprint51OnboardingTest {
         compose.runOnIdle {assertTrue(store.onboardingDraft!!.favorites.isEmpty())}
         capture("onboarding-favorite-next")
         compose.onNodeWithTag("onboarding-next").performClick()
-        compose.onNodeWithText("Deine Übersicht").assertExists()
+        compose.onNodeWithText("Dein Design").assertExists()
         compose.runOnIdle {
-            assertEquals(3,store.onboardingDraft!!.step)
+            assertEquals(2,store.onboardingDraft!!.step)
             assertEquals(place,store.onboardingDraft!!.favorites.single().location)
             assertEquals(place.name,store.onboardingDraft!!.favorites.single().label)
             assertFalse(store.onboardingDraft!!.offerMoreFavorites)
@@ -62,24 +62,24 @@ class Sprint51OnboardingTest {
     }
     @Test fun nextPreservesTheChosenIconAndEditedNameAndAFailedWriteDoesNotAdvance() {
         var accept by mutableStateOf(false)
-        var store by mutableStateOf(StoredState(onboardingDraft=OnboardingDraft(step=2,settings=AppSettings(quietMode=true))))
+        var store by mutableStateOf(StoredState(onboardingDraft=OnboardingDraft(step=1,settings=AppSettings(quietMode=true))))
         compose.setContent {OnboardingWizard(store,SetupPermissions(),{change->if(accept){store=store.copy(onboardingDraft=change(store.onboardingDraft!!));true}else false},{true},{listOf(place)})}
         choosePlace()
         compose.onNodeWithTag("onboarding-intent-HOME").performScrollTo().performClick()
         compose.onNodeWithTag("onboarding-favorite-name").performScrollTo().performTextReplacement("Mein Ruhepol")
         compose.onNodeWithTag("onboarding-next").performClick()
         compose.onNodeWithText("Die Auswahl konnte nicht gespeichert werden. Bitte erneut versuchen.").assertExists()
-        compose.runOnIdle {assertEquals(2,store.onboardingDraft!!.step);assertTrue(store.onboardingDraft!!.favorites.isEmpty());accept=true}
+        compose.runOnIdle {assertEquals(1,store.onboardingDraft!!.step);assertTrue(store.onboardingDraft!!.favorites.isEmpty());accept=true}
         compose.onNodeWithTag("onboarding-next").performClick()
         compose.runOnIdle {assertEquals("Mein Ruhepol",store.onboardingDraft!!.favorites.single().label);assertEquals(FavoriteIcon.HOME,store.onboardingDraft!!.favorites.single().icon)}
     }
     @Test fun skipAdvancesPastTheFavoriteWithoutFinishingOrOverwritingOtherSettings() {
         var finishes=0;val settings=AppSettings(appTheme=AppTheme.IRIS_PAPER,quietMode=true)
-        var store by mutableStateOf(StoredState(onboardingDraft=OnboardingDraft(step=2,settings=settings)))
+        var store by mutableStateOf(StoredState(onboardingDraft=OnboardingDraft(step=1,settings=settings)))
         compose.setContent {OnboardingWizard(store,SetupPermissions(),{change->store=store.copy(onboardingDraft=change(store.onboardingDraft!!));true},{finishes++;true},{emptyList()})}
         compose.onNodeWithTag("onboarding-next").assertIsNotEnabled()
         compose.onNodeWithTag("onboarding-skip").performClick()
-        compose.runOnIdle {assertEquals(3,store.onboardingDraft!!.step);assertTrue(store.onboardingDraft!!.favorites.isEmpty());assertEquals(settings,store.onboardingDraft!!.settings);assertEquals(0,finishes)}
+        compose.runOnIdle {assertEquals(2,store.onboardingDraft!!.step);assertTrue(store.onboardingDraft!!.favorites.isEmpty());assertEquals(settings,store.onboardingDraft!!.settings);assertEquals(0,finishes)}
     }
     @Test fun eachPresetFitsItsWholeExampleInsideTheSameFrameWithoutScrolling() {
         var preset by mutableStateOf(SentencePreset.COMPACT);var calls=0
@@ -120,19 +120,7 @@ class Sprint51OnboardingTest {
         compose.runOnIdle {favorite=Favorite(label="Test",location=place)}
         compose.onNodeWithText("Fiktives Beispiel · Reise nach Mordor").assertExists();assertEquals(0,calls)
     }
-    @Test fun wizardKeepsEveryPresetAndItsEntireExampleVisibleBelowTheButtons() {
-        var store by mutableStateOf(StoredState(onboardingDraft=OnboardingDraft(step=3,settings=AppSettings(quietMode=true))))
-        compose.setContent {OnboardingWizard(store,SetupPermissions(),{change->store=store.copy(onboardingDraft=change(store.onboardingDraft!!));true},{true},{emptyList()})}
-        for((preset,title) in listOf(SentencePreset.COMPACT to "Kompakt",SentencePreset.EVERYDAY to "Alltag",SentencePreset.DETAILED to "Alle Details")) {
-            compose.onNodeWithText(title).performClick()
-            compose.onNodeWithText("Kompakt").assertIsDisplayed();compose.onNodeWithText("Alltag").assertIsDisplayed();compose.onNodeWithText("Alle Details").assertIsDisplayed()
-            val text=compose.onNodeWithTag("onboarding-overview-text");text.assertIsDisplayed()
-            val layouts=mutableListOf<TextLayoutResult>();text.performSemanticsAction(SemanticsActions.GetTextLayoutResult){it(layouts)}
-            assertFalse(preset.name,layouts.single().hasVisualOverflow)
-            assertEquals(preset.name,layouts.single().size.height.toFloat(),text.fetchSemanticsNode().boundsInRoot.height,.5f)
-            capture("onboarding-wizard-${preset.name.lowercase()}")
-        }
-    }
+    // Build 102: the setup no longer has an overview step; the preview itself is checked above.
     @Test fun unavailableLiveJourneyFallsBackExplicitlyWithoutSendingFictionToTheService() {
         var calls=0;val favorite=Favorite(label="Mein Ziel",location=place)
         compose.setContent {OpenVTheme(AppSettings(quietMode=true)){OnboardingOverviewPreview(favorite,AppSettings(),

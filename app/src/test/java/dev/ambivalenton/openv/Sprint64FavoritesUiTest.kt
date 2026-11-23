@@ -77,16 +77,20 @@ class Sprint64FavoritesUiTest {
         capture("duplicate-favorites-overview")
     }
 
-    @Test fun setupExplainsDuplicatesManagementAndTheOverviewLongPress() {
-        var store by mutableStateOf(StoredState(onboardingDraft=OnboardingDraft(step=2,settings=AppSettings(quietMode=true))))
+    // Build 102: three short steps with one line each – no notes on duplicates, gestures or the overview.
+    @Test fun theSetupAsksOnlyForPermissionsAFirstFavoriteAndADesign() {
+        var store by mutableStateOf(StoredState(onboardingDraft=OnboardingDraft(step=0,settings=AppSettings(quietMode=true))))
         compose.setContent {OnboardingWizard(store,SetupPermissions(),{change->store=store.copy(onboardingDraft=change(store.onboardingDraft!!));true},{true},{emptyList()})}
-        compose.onNodeWithTag("onboarding-duplicate-favorites").performScrollTo().assertIsDisplayed()
-        compose.runOnIdle {store=store.copy(onboardingDraft=store.onboardingDraft!!.copy(step=3))}
-        compose.onNodeWithTag("onboarding-overview-actions").assertIsDisplayed()
-        compose.runOnIdle {store=store.copy(onboardingDraft=store.onboardingDraft!!.copy(step=4))}
-        compose.onNodeWithText("In der Nähe eines Favoriten").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithText("Wischen von einem Favoriten zum anderen",substring=true).performScrollTo().assertIsDisplayed()
-        capture("onboarding-management-guide")
-        compose.onNodeWithText("Im Drei-Punkte-Menü",substring=true).assertDoesNotExist()
+        compose.onNodeWithText("Freigaben").assertIsDisplayed()
+        compose.onNodeWithTag("onboarding-permission-location").assertIsDisplayed()
+        compose.onNodeWithTag("onboarding-permission-notifications").assertIsDisplayed()
+        compose.runOnIdle {store=store.copy(onboardingDraft=store.onboardingDraft!!.copy(step=1))}
+        compose.onNodeWithText("Dein erster Favorit").assertIsDisplayed()
+        compose.onNodeWithTag("onboarding-duplicate-favorites").assertDoesNotExist()
+        compose.runOnIdle {store=store.copy(onboardingDraft=store.onboardingDraft!!.copy(step=2))}
+        compose.onNodeWithText("Dein Design").assertIsDisplayed()
+        compose.onNodeWithTag("onboarding-designs").assertExists()
+        compose.onNodeWithText("Wischen von einem Favoriten zum anderen",substring=true).assertDoesNotExist()
+        capture("onboarding-three-steps")
     }
 }

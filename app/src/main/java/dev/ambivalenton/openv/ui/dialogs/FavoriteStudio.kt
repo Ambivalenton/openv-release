@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import dev.ambivalenton.openv.R
 import dev.ambivalenton.openv.data.model.*
 import dev.ambivalenton.openv.localization.tr
@@ -146,36 +147,26 @@ internal fun studioTransition(quiet: Boolean, forward: Boolean, landing: Boolean
     val quiet = studioQuiet()
     var typed by rememberSaveable { mutableStateOf("") }
     val focus = remember { FocusRequester() }
-    LaunchedEffect(Unit) { if (autoFocus) { delay(180); runCatching { focus.requestFocus() } } }
+    // The keyboard rises once the sheet has landed, not while it is still sliding in.
+    LaunchedEffect(Unit) { if (autoFocus) { delay(if (quiet) 0 else 360); runCatching { focus.requestFocus() } } }
     val role = draft.icon?.takeIf { draft.iconChosen }
+    // Build 102: the search comes first, right under the title, so its results stay above the keyboard.
+    // While typing only the results show; roles and frequent places step aside.
     Column(Modifier.fillMaxWidth().testTag("$tagPrefix-step-place"), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-            StudioBadge(draft, 52.dp, tag = "$tagPrefix-place-badge")
-            AnimatedContent(role, label = "favorite-place-question", transitionSpec = {
-                if (quiet) EnterTransition.None togetherWith ExitTransition.None
-                else (slideInVertically(spring(dampingRatio = .8f, stiffness = 420f)) { it / 2 } + fadeIn(tween(160))) togetherWith
-                    (slideOutVertically(tween(140)) { -it / 2 } + fadeOut(tween(110))) using SizeTransform(clip = false)
-            }) { chosen ->
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(if (chosen == null) tr("Welchen Ort möchtest du speichern?") else tr("Ort für „%1\$s“", draft.label.ifBlank { chosen.title }),
-                        Modifier.semantics { heading() }, style = MaterialTheme.typography.titleLarge)
-                    Text(tr("Suche eine Adresse oder Haltestelle."), style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
-        }
-        RoleChips(roles, role, onRole, tagPrefix, enabled)
-        PlaceSearchField(tr("Adresse oder Haltestelle"), null, providerKey, search, { picked -> if (picked?.routable == true) onPlace(picked) },
+        PlaceSearchField(if (role == null) tr("Adresse oder Haltestelle") else tr("Ort für „%1\$s“", draft.label.ifBlank { role.title }),
+            null, providerKey, search, { picked -> if (picked?.routable == true) onPlace(picked) },
             Modifier.fillMaxWidth().testTag("$tagPrefix-place-search"), enabled = enabled, expressive = true,
             // The other favourites are no suggestions for a new one.
-            favorites = emptyList(), focusRequester = focus, onTextChange = { typed = it })
-        if (suggestions.isNotEmpty()) CalmVisibility(typed.isBlank(),
-            enter = fadeIn(tween(180)) + expandVertically(spring(dampingRatio = .86f, stiffness = 380f)),
-            exit = fadeOut(tween(120)) + shrinkVertically(tween(160))) {
-            Column(Modifier.fillMaxWidth().testTag("$tagPrefix-suggestions"), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(tr("Vorschläge"), Modifier.padding(bottom = 4.dp), style = MaterialTheme.typography.titleSmall)
-                suggestions.forEachIndexed { index, suggestion ->
-                    SuggestionRow(suggestion, Modifier.staggeredRise(index, quiet).testTag("$tagPrefix-suggestion-$index"), enabled) { onPlace(suggestion.place) }
+            favorites = emptyList(), focusRequester = focus, onTextChange = { typed = it }, chooseHint = false)
+        CalmVisibility(typed.isBlank(), enter = fadeIn(tween(180)) + expandVertically(spring(dampingRatio = .86f, stiffness = 380f)),
+            exit = fadeOut(tween(110)) + shrinkVertically(tween(160))) {
+            Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
+                RoleChips(roles, role, onRole, tagPrefix, enabled)
+                if (suggestions.isNotEmpty()) Column(Modifier.fillMaxWidth().testTag("$tagPrefix-suggestions"), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(tr("Oft gesucht"), Modifier.padding(bottom = 4.dp), style = MaterialTheme.typography.titleSmall)
+                    suggestions.forEachIndexed { index, suggestion ->
+                        SuggestionRow(suggestion, Modifier.staggeredRise(index, quiet).testTag("$tagPrefix-suggestion-$index"), enabled) { onPlace(suggestion.place) }
+                    }
                 }
             }
         }
@@ -204,12 +195,12 @@ internal fun studioTransition(quiet: Boolean, forward: Boolean, landing: Boolean
         .heightIn(min = 56.dp).padding(horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Box(Modifier.size(40.dp).background(MaterialTheme.colorScheme.surfaceContainerHigh, CircleShape), contentAlignment = Alignment.Center) {
-            AppIcon(if (suggestion.recent) R.drawable.ic_clock else if (place.kind == LocationKind.STOP) R.drawable.ic_stop else R.drawable.ic_place,
+            AppIcon(if (place.kind == LocationKind.STOP) R.drawable.ic_stop else R.drawable.ic_place,
                 null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Column(Modifier.weight(1f)) {
             Text(place.name, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(if (suggestion.recent) tr("Zuletzt gesucht") else tr("In deiner Anzeigetafel"),
+            Text(tr("%1\$s-mal gesucht", suggestion.searches),
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         AppIcon(R.drawable.ic_add, null, Modifier.size(22.dp), tint = MaterialTheme.colorScheme.primary)
@@ -569,17 +560,19 @@ private fun placeLine(place: Location): String = listOfNotNull(place.name.takeIf
         BackHandler(phase == FavoriteStudioPhase.LOOK && searched) { go(FavoriteStudioPhase.PLACE) }
         Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)).imePadding()
             .testTag("favorite-studio")) {
-            Row(Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(start = 8.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            // Build 102: one slim line – the back arrow slides in only on the second beat.
+            Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(start = 8.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 val back = phase == FavoriteStudioPhase.LOOK && searched
-                Box(Modifier.width(48.dp)) {
-                    CalmVisibility(back, enter = fadeIn(tween(160)) + scaleIn(StudioPop, initialScale = .6f),
-                        exit = fadeOut(tween(100)) + scaleOut(tween(120), targetScale = .6f)) {
-                        IconButton({ go(FavoriteStudioPhase.PLACE) }, Modifier.testTag("favorite-studio-back")) { AppIcon(R.drawable.ic_back, tr("Zurück")) }
-                    }
+                CalmVisibility(back, enter = fadeIn(tween(160)) + expandHorizontally(spring(dampingRatio = .8f, stiffness = 420f)),
+                    exit = fadeOut(tween(100)) + shrinkHorizontally(tween(160))) {
+                    IconButton({ go(FavoriteStudioPhase.PLACE) }, Modifier.testTag("favorite-studio-back")) { AppIcon(R.drawable.ic_back, tr("Zurück")) }
                 }
-                FittedText(tr("Favorit hinzufügen"), Modifier.weight(1f).padding(start = 4.dp).semantics { heading() }, style = MaterialTheme.typography.titleLarge)
+                Text(tr("Favorit hinzufügen"), Modifier.weight(1f).padding(start = 16.dp, end = 8.dp).semantics { heading() },
+                    style = MaterialTheme.typography.titleLarge, maxLines = 1, softWrap = false,
+                    autoSize = androidx.compose.foundation.text.TextAutoSize.StepBased(minFontSize = 13.sp,
+                        maxFontSize = MaterialTheme.typography.titleLarge.fontSize, stepSize = .5.sp))
                 StudioStepDots(phase)
-                IconButton(dismiss, Modifier.padding(start = 8.dp).testTag("favorite-editor-close")) { AppIcon(R.drawable.ic_close, tr("Schließen")) }
+                IconButton(dismiss, Modifier.padding(start = 6.dp).testTag("favorite-editor-close")) { AppIcon(R.drawable.ic_close, tr("Schließen")) }
             }
             Column(Modifier.weight(1f).fillMaxWidth()
                 .verticalScroll(scroll, enabled = false, overscrollEffect = null)

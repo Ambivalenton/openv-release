@@ -62,6 +62,8 @@ internal object NetworkEditBarGeometry {
     val OPEN_HEIGHT = 60.dp
     val SLOT = 44.dp
     val BUTTON = 40.dp
+    /** Build 102: the plus of "Favorit hinzufügen" is a tenth smaller than its neighbours. */
+    val ADD_BUTTON = BUTTON * .9f
     /** Inset of the outer buttons from the bar's ends. */
     val INSET = (HEIGHT - BUTTON) / 2
     /** Room of the check at the right end (no box of its own). */
@@ -108,7 +110,8 @@ fun NetworkEditBar(
         label = "network-edit-morph",
     ) { if (it) 1f else 0f }
     val geometry = NetworkEditBarGeometry
-    androidx.compose.foundation.layout.BoxWithConstraints(modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
+    // Build 102: the bar always takes the open height, so opening it does not push the plan below down.
+    androidx.compose.foundation.layout.BoxWithConstraints(modifier.fillMaxWidth().height(geometry.OPEN_HEIGHT), contentAlignment = Alignment.CenterEnd) {
         val full = maxWidth
         val width = lerp(geometry.HEIGHT.value, full.value, progress).coerceAtLeast(geometry.BUTTON.value).dp
         val height = lerp(geometry.HEIGHT.value, geometry.OPEN_HEIGHT.value, progress.coerceIn(0f, 1f)).dp
@@ -156,11 +159,11 @@ fun NetworkEditBar(
                 ToolBox(rightGap = geometry.CHECK_AREA + boxWidth + geometry.BOX_GAP, boxWidth = leftWidth, reveal = stagger(progress, geometry.SETTINGS_START),
                     active = active, label = tr("Favoriten-Einstellungen"), tag = "network-settings", boxFill = boxFill, boxInk = boxInk,
                     fill = toolFill, icon = R.drawable.ic_settings, tint = toolInk, motion = IconTapMotion.NUDGE, onClick = onSettings,
-                    shape = null)
+                    shape = null, buttonSize = geometry.BUTTON)
                 ToolBox(rightGap = geometry.CHECK_AREA, boxWidth = middleWidth, reveal = stagger(progress, geometry.ADD_START),
                     active = active, label = tr("Favorit hinzufügen"), tag = "network-add", boxFill = boxFill, boxInk = boxInk,
                     fill = toolFill, icon = R.drawable.ic_add, tint = toolInk, motion = IconTapMotion.QUARTER_TURN, onClick = onAdd,
-                    shape = contrastingAddShape())
+                    shape = contrastingAddShape(), buttonSize = geometry.ADD_BUTTON)
                 ToolButton(
                     slotEnd = geometry.INSET, reveal = stagger(progress, geometry.CHECK_START), active = active,
                     label = tr("Fertig"), tag = "network-done", fill = scheme.primary,
@@ -188,11 +191,11 @@ private fun contrastingAddShape(): Shape {
 @Composable
 private fun BoxScope.ToolBox(
     rightGap: Dp, boxWidth: Dp, reveal: Float, active: Boolean, label: String, tag: String, boxFill: Color, boxInk: Color,
-    fill: Color, icon: Int, tint: Color, motion: IconTapMotion, onClick: () -> Unit, shape: Shape?,
+    fill: Color, icon: Int, tint: Color, motion: IconTapMotion, onClick: () -> Unit, shape: Shape?, buttonSize: Dp,
 ) {
     val tap = rememberIconTap(motion)
     val interaction = remember { MutableInteractionSource() }
-    val buttonShape = shape ?: themedPressShape(interaction, NetworkEditBarGeometry.BUTTON)
+    val buttonShape = shape ?: themedPressShape(interaction, buttonSize)
     val visible = reveal.coerceIn(0f, 1f)
     val boxHeight = NetworkEditBarGeometry.OPEN_HEIGHT - 8.dp
     Box(
@@ -209,10 +212,10 @@ private fun BoxScope.ToolBox(
                 .semantics(mergeDescendants = true) { contentDescription = label; role = Role.Button }.testTag(tag)
                 else Modifier.clearAndSetSemantics { }))
         // The button's centre sits on the centre of the box's rounded end.
-        val inset = (boxHeight - NetworkEditBarGeometry.BUTTON) / 2
+        val inset = (boxHeight - buttonSize) / 2
         androidx.compose.foundation.layout.Row(Modifier.align(Alignment.CenterStart).padding(start = inset, end = 8.dp),
             verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(NetworkEditBarGeometry.BUTTON)
+            Box(Modifier.size(buttonSize)
                 .graphicsLayer {
                     // Allows a little of the spring's overshoot without touching the neighbour.
                     val s = reveal.coerceIn(0f, 1.08f)
@@ -221,7 +224,7 @@ private fun BoxScope.ToolBox(
                 }
                 .shapeShadow(buttonShape, 4.dp)
                 .clip(buttonShape).background(fill).testTag("$tag-button"), contentAlignment = Alignment.Center) {
-                AppIcon(icon, null, Modifier.iconTap(tap), tint = tint)
+                AppIcon(icon, null, Modifier.size(24.dp * (buttonSize / NetworkEditBarGeometry.BUTTON)).iconTap(tap), tint = tint)
             }
             // Over two lines, centred: "Favoriten-" / "Einstellungen", "Favorit" / "hinzufügen".
             androidx.compose.material3.Text(twoLines(label),

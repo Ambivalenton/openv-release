@@ -56,17 +56,23 @@ class Build98LogicTest {
         assertEquals(red, suggestFavoriteAccent(listOf(Favorite(label = "C", location = stop("C", "c"))), listOf(red, green)))
     }
 
-    @Test fun suggestionsAreRecentDestinationsAndBoardStopsButNeverFavourites() {
+    // Build 102: only destinations searched by hand, at least twice; never a favourite or a place beside one.
+    @Test fun suggestionsAreFrequentSearchesButNeverFavouritesOrBoardStops() {
         val home = stop("Herne Bf", "h"); val uni = stop("Bochum Ruhr-Universität", "r", 51.44, 7.26)
         val zoo = stop("Gelsenkirchen Zoom", "z", 51.54, 7.06); val board = stop("Herne Archäologiemuseum", "m", 51.536, 7.22)
-        fun searched(place: Location, count: Long, at: Long) = SearchHistory(JourneyQuery(home, place, at), at, count)
+        val once = stop("Dortmund Hbf", "d", 51.517, 7.459)
+        // The favourite's stop under another ID, 60 m away (as a tap on the favourite may search it).
+        val besideHome = stop("Herne Bahnhof", "h2", 51.5004, 7.2)
+        fun searched(place: Location, count: Long, at: Long, from: Location = home) = SearchHistory(JourneyQuery(from, place, at), at, count)
         val store = StoredState(favorites = listOf(Favorite("h", "Zuhause", home)),
-            history = listOf(searched(zoo, 1, 2_000), searched(uni, 5, 1_000), searched(home, 9, 3_000)),
+            history = listOf(searched(zoo, 1, 2_000), searched(zoo, 1, 2_500, uni), searched(uni, 5, 1_000), searched(home, 9, 3_000),
+                searched(besideHome, 4, 3_100), searched(once, 1, 4_000)),
             boardStops = listOf(board, home))
         val suggestions = store.favoritePlaceSuggestions()
-        assertEquals(listOf("Bochum Ruhr-Universität", "Gelsenkirchen Zoom", "Herne Archäologiemuseum"), suggestions.map { it.place.name })
-        assertEquals(listOf(true, true, false), suggestions.map { it.recent })
-        assertEquals(2, store.favoritePlaceSuggestions(limit = 2).size)
+        // Zoom counts twice (from two starts), Dortmund only once; board stops and the favourite never.
+        assertEquals(listOf("Bochum Ruhr-Universität", "Gelsenkirchen Zoom"), suggestions.map { it.place.name })
+        assertEquals(listOf(5L, 2L), suggestions.map { it.searches })
+        assertEquals(1, store.favoritePlaceSuggestions(limit = 1).size)
     }
 
     @Test fun theFirstLineGoesHomeOrToTheNearestFavourite() {

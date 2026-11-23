@@ -248,7 +248,8 @@ fun NetworkPlan(
         if (!holdToEdit) { moving = null; moveTarget = null; undoGesture++ }
     }
     /** The grid fades in with edit mode (also when a hold switches to it) instead of popping up. */
-    val gridIn by animateFloatAsState(if (editing) 1f else 0f, if (quiet) snap() else tween(260), label = "network-grid")
+    // Long enough to see the dots before they become plus signs.
+    val gridIn by animateFloatAsState(if (editing) 1f else 0f, if (quiet) snap() else tween(if (editing) 460 else 300), label = "network-grid")
     val labelMeasurer = rememberTextMeasurer()
     // Words are hyphenated by the platform only where even the widest plate cannot hold them.
     val labelStyle = MaterialTheme.typography.labelSmall.let { it.copy(fontSize = it.fontSize * .9f, lineHeight = it.lineHeight * .9f,
@@ -545,18 +546,20 @@ fun NetworkPlan(
                 @Suppress("UNUSED_VARIABLE") val frame = ropeFrame // redraw on every rope frame
                 // The grid is faintly there on the Öpen-V sheet; in edit mode it is always clearly visible
                 // (build 74: it fades in, also when a hold on a favourite switches to edit mode).
-                if (gridIn > 0f || look.grid) {
-                    // Build 101: in edit mode every grid point is a small grey "+" (a tap on a free one adds a
-                    // favourite there). The resting dot grows its arms while the edit mode fades in.
-                    val arm = minOf(4.5.dp.toPx(), pitch * .13f) * gridIn
-                    val stroke = (1.6f + .2f * gridIn).dp.toPx()
+                if (gridIn > 0f) {
+                    // Build 101/102: in edit mode every grid point is a small grey "+" (a tap on a free one adds a
+                    // favourite there). Outside it the grid is gone. Opening, small dots appear first and then
+                    // grow their arms into the plus; closing runs the other way.
+                    val dots = (gridIn / .4f).coerceIn(0f, 1f)
+                    val arms = ((gridIn - .4f) / .6f).coerceIn(0f, 1f)
+                    val arm = minOf(4.5.dp.toPx(), pitch * .13f) * arms
+                    val stroke = (1.6f + .2f * arms).dp.toPx()
+                    val ink = scheme.onSurfaceVariant.copy(alpha = .46f * dots)
                     for (x in 0 until columns) for (y in 0 until rows) {
                         val p = GridPoint(x, y)
                         val c = geometry.center(p)
                         if (moving != null && p == moveTarget) { drawCircle(scheme.primary, pitch * .16f, c); continue }
-                        val resting = if (look.grid) .1f else 0f
-                        val ink = scheme.onSurfaceVariant.copy(alpha = resting + (.46f - resting) * gridIn)
-                        if (arm < .75f) drawCircle(ink, (1f + .6f * gridIn).dp.toPx(), c)
+                        if (arm < .75f) drawCircle(ink, (1f + .6f * dots).dp.toPx(), c)
                         else {
                             drawLine(ink, Offset(c.x - arm, c.y), Offset(c.x + arm, c.y), stroke, StrokeCap.Round)
                             drawLine(ink, Offset(c.x, c.y - arm), Offset(c.x, c.y + arm), stroke, StrokeCap.Round)

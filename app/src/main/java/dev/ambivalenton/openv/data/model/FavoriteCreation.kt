@@ -179,26 +179,33 @@ fun favoriteRoleChoices(existing: List<Favorite>): List<FavoriteIcon> {
     return roles.filter { it !in used } + roles.filter { it in used }
 }
 
-/** A suggestion of the add-favourite sheet with where it comes from. */
-data class FavoritePlaceSuggestion(val place: Location, val recent: Boolean)
+/** A suggestion of the add-favourite sheet: a destination searched [searches] times. */
+data class FavoritePlaceSuggestion(val place: Location, val searches: Long)
 
 /**
- * Places worth saving: the most searched and most recent destinations, then the current
- * board stop and the board's places – never one that already is a favourite. At most [limit].
+ * Build 102: only destinations the person searched themselves, at least [minSearches] times. A tap on a
+ * favourite also searches (and counts) a connection, so every destination that is a favourite or lies
+ * within [FAVORITE_SUGGESTION_RADIUS_METERS] of one is left out, and the board's stops are no suggestions.
  */
-fun StoredState.favoritePlaceSuggestions(limit: Int = 6): List<FavoritePlaceSuggestion> {
+fun StoredState.favoritePlaceSuggestions(limit: Int = 4, minSearches: Long = 2): List<FavoritePlaceSuggestion> {
     val taken = favorites.map { it.location }
-    fun fresh(place: Location) = place.routable && !place.isDevicePosition && taken.none { sameLocation(it, place) }
-    val recent = history.sortedWith(compareByDescending<SearchHistory> { it.count }.thenByDescending { it.searchedAt })
-        .map { it.query.destination }.filter(::fresh).map { FavoritePlaceSuggestion(it, true) }
-    val nearby = (listOfNotNull(departureBoard.stop) + boardStops).filter(::fresh).map { FavoritePlaceSuggestion(it, false) }
-    val result = mutableListOf<FavoritePlaceSuggestion>()
-    for (s in recent + nearby) {
-        if (result.size >= limit) break
-        if (result.none { sameLocation(it.place, s.place) }) result += s
+    fun isFavorite(place: Location) = taken.any { saved ->
+        sameLocation(saved, place) || saved.name.trim().equals(place.name.trim(), ignoreCase = true) ||
+            (distanceMeters(saved, place)?.let { it <= FAVORITE_SUGGESTION_RADIUS_METERS } == true)
     }
-    return result
+    return history.filter { it.query.destination.routable && !it.query.destination.isDevicePosition }
+        .groupBy { dev.ambivalenton.openv.data.preferences.historyLocationKey(it.query.destination, false) }
+        .values.map { group ->
+            val newest = group.maxBy { it.searchedAt }
+            Triple(newest.query.destination, group.sumOf { it.count.coerceAtLeast(1) }, newest.searchedAt)
+        }
+        .filter { (place, count, _) -> count >= minSearches && !isFavorite(place) }
+        .sortedWith(compareByDescending<Triple<Location, Long, Long>> { it.second }.thenByDescending { it.third })
+        .take(limit)
+        .map { (place, count, _) -> FavoritePlaceSuggestion(place, count) }
 }
+
+const val FAVORITE_SUGGESTION_RADIUS_METERS = 150.0
 
 /**
  * The favourite a new one most likely connects with: "Zuhause" first, otherwise the

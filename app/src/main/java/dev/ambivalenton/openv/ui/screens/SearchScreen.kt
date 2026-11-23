@@ -731,7 +731,7 @@ fun SearchScreen(
             networkRole=edit?.id?.let {id->ui.store.network.node(id)?.role},
             onNetworkRole=edit?.id?.let {id->{role:NodeRole->vm.setNodeRole(id,role)}},
             scheduleConflict={windows->ui.store.scheduleConflict(edit?.id,windows)},
-            suggestions=remember(ui.store.history,ui.store.favorites,ui.store.boardStops,ui.store.departureBoard.stop) {ui.store.favoritePlaceSuggestions()},
+            suggestions=remember(ui.store.history,ui.store.favorites) {ui.store.favoritePlaceSuggestions()},
             otherFavorites=ui.store.favorites.filter {it.id!=edit?.id},
             partnerFor={id->ui.store.connectionPartnerFor(id)},
             onConnect={a,b->vm.connectNodes(a,b)!=null},

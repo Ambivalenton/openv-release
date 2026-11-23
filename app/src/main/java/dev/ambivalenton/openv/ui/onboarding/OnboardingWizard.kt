@@ -24,6 +24,9 @@ import dev.ambivalenton.openv.ui.dialogs.staggeredRise
 import dev.ambivalenton.openv.ui.dialogs.studioQuiet
 import dev.ambivalenton.openv.ui.dialogs.studioTransition
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectableGroup
@@ -57,7 +60,6 @@ import kotlinx.coroutines.launch
     onFinish: suspend ()->Boolean,
     search: suspend (String)->List<Location>,
     onLocationGranted: ()->Unit,
-    example: suspend (Favorite,AppSettings)->Trip?={_,_->null},
     /** H01: straight to the first search (finishes the setup with the defaults, no permission asked). */
     onSearchNow: (()->Unit)?=null,
     /** Build 101: false lets the finished setup fade out over the app; [onExited] follows once it is gone. */
@@ -88,8 +90,8 @@ import kotlinx.coroutines.launch
                     else (fadeIn(tween(220,delayMillis=60))+scaleIn(spring(dampingRatio=.8f,stiffness=340f),initialScale=.92f)) togetherWith
                         (slideOutVertically(tween(220)) {it/5}+fadeOut(tween(160)))
                 }) {setup->
-                    if(setup) OnboardingWizard(store,permissions,onChange,onFinish,search,example,
-                        onBackToIntro=if(onSearchNow!=null) ({wizard=false}) else null,onSearchNow=onSearchNow,hosted=true)
+                    if(setup) OnboardingWizard(store,permissions,onChange,onFinish,search,
+                        onBackToIntro=if(onSearchNow!=null) ({wizard=false}) else null,hosted=true)
                     else FirstLaunchIntro(onSearch={onSearchNow?.invoke()},onSetup={wizard=true})
                 }
             }
@@ -128,18 +130,18 @@ import kotlinx.coroutines.launch
     }
 }
 
-/** Fixed chrome and a scrolling body keep small displays and large fonts usable. */
+/**
+ * Build 102: three short steps – Freigaben, erster Favorit, Design – with one line of text each.
+ * Fixed chrome and a scrolling body keep small displays and large fonts usable.
+ */
 @Composable fun OnboardingWizard(
     store: StoredState,
     permissions: SetupPermissions,
     onChange: suspend ((OnboardingDraft)->OnboardingDraft)->Boolean,
     onFinish: suspend ()->Boolean,
     search: suspend (String)->List<Location>,
-    example: suspend (Favorite,AppSettings)->Trip?={_,_->null},
     /** H01: Android back on the first step returns to the first view. */
     onBackToIntro: (()->Unit)?=null,
-    /** H01: "Zur Suche" ends the setup and opens the search. */
-    onSearchNow: (()->Unit)?=null,
     /** Build 101: inside the first-launch layer (full screen, own back handling) instead of a window of its own. */
     hosted: Boolean=false,
 ) {
@@ -148,11 +150,9 @@ import kotlinx.coroutines.launch
     val scope=rememberCoroutineScope()
     var writing by remember {mutableStateOf(false)}
     var error by rememberSaveable {mutableStateOf(false)}
-    var themePicker by rememberSaveable {mutableStateOf(false)}
-    var boardPicker by rememberSaveable {mutableStateOf(false)}
     // Import a backup from the first step instead of setting up again.
     var importSheet by rememberSaveable {mutableStateOf(false)}
-    // Build 101: the favourite being created (same beats as "Favorit hinzufügen": place, then its look).
+    // The favourite being created (same beats as "Favorit hinzufügen": place, then its look).
     var studio by rememberSaveable(stateSaver=favoriteDraftSaver) {mutableStateOf(FavoriteDraft())}
     var studioLook by rememberSaveable {mutableStateOf(false)}
     val busy=writing || permissions.busy
@@ -177,20 +177,17 @@ import kotlinx.coroutines.launch
         }
     }
     val back: ()->Unit={if(step>0 && !busy) change {it.copy(step=step-1)} else if(!busy) onBackToIntro?.invoke()}
+    val last=step==ONBOARDING_STEPS-1
     OpenVTheme(draft.settings) {
-        // Build 101: full screen instead of a window on the app; it stays clear of status bar, navigation
-        // bar, cut-outs and keyboard (build 67).
         val page: @Composable ()->Unit={
             Box(Modifier.fillMaxSize().appThemeBackground().testTag("first-launch-onboarding"),contentAlignment=Alignment.TopCenter) {
                 Column(Modifier.windowInsetsPadding(WindowInsets.safeDrawing).widthIn(max=640.dp).fillMaxSize()
                     .padding(horizontal=20.dp,vertical=16.dp)) {
-                    FittedText(tr("Willkommen bei Öpen-V"),style=MaterialTheme.typography.titleLarge)
-                    Text(tr("Schritt %1\$s von %2\$s",step+1,ONBOARDING_STEPS),Modifier.padding(top=6.dp),
-                        style=MaterialTheme.typography.labelMedium)
-                    Row(Modifier.fillMaxWidth().padding(vertical=12.dp).semantics(mergeDescendants=true) {
+                    // The current step stretches with a little spring; the bar is the only step counter.
+                    Row(Modifier.fillMaxWidth().padding(top=4.dp,bottom=20.dp).semantics(mergeDescendants=true) {
                         progressBarRangeInfo=ProgressBarRangeInfo((step+1).toFloat(),1f..ONBOARDING_STEPS.toFloat())
-                    },horizontalArrangement=Arrangement.spacedBy(6.dp)) {
-                        // Build 101: the current step stretches with a little spring.
+                        stateDescription=tr("Schritt %1\$s von %2\$s",step+1,ONBOARDING_STEPS)
+                    }.testTag("onboarding-progress"),horizontalArrangement=Arrangement.spacedBy(6.dp)) {
                         repeat(ONBOARDING_STEPS) {index->
                             val weight by animateFloatAsState(if(index==step) 2.4f else 1f,
                                 if(quiet) snap() else spring(dampingRatio=.6f,stiffness=420f),label="onboarding-progress-$index")
@@ -200,107 +197,43 @@ import kotlinx.coroutines.launch
                         }
                     }
                     AnimatedContent(step,modifier=Modifier.weight(1f),label="onboarding-step",
-                        transitionSpec={
-                            val direction=if(targetState>initialState) 1 else -1
-                            if(draft.settings.quietMode) (EnterTransition.None togetherWith ExitTransition.None) else (slideInHorizontally(spring(dampingRatio=.82f,stiffness=420f)){it/5*direction}+fadeIn(tween(180))) togetherWith
-                                (slideOutHorizontally(tween(180)){-it/8*direction}+fadeOut(tween(120)))
-                        }) {page->
-                        key(page) {
-                            BoxWithConstraints(Modifier.fillMaxSize()) {
-                            val fittedOverview=page==3 && maxHeight>=460.dp && LocalDensity.current.fontScale<=1.3f
-                            Column(Modifier.fillMaxSize().then(if(fittedOverview)Modifier else Modifier.verticalScroll(rememberScrollState())).testTag("onboarding-step-$page"),
-                                verticalArrangement=Arrangement.spacedBy(if(page==3)8.dp else 14.dp)) {
-                                FittedText(when(page) {
-                                    0->tr("Standort & Hinweise");1->tr("Dein Look");2->tr("Deine Favoriten")
-                                    3->tr("Deine Übersicht");4->tr("Dein Netzplan");else->tr("Bereit für deine Wege")
-                                },Modifier.semantics {heading()},style=MaterialTheme.typography.headlineSmall)
-                                when(page) {
-                                    0->PermissionSetupContent(permissions)
-                                    1->{
-                                        Text(tr("Wähle deinen Stil. Die Vorschau reagiert direkt auf deine Auswahl."))
-                                        AppThemeSelector(draft.settings) {if(!busy) themePicker=true}
-                                        BoardDesignSelector(store.copy(settings=draft.settings)) {if(!busy) boardPicker=true}
-                                    }
-                                    2->OnboardingFavorites(draft,store,studio,studioLook,search,busy,canAddFavorite,
-                                        onStudio={studio=it},onLook={studioLook=it},onAdd={addFavorite()})
-                                    3->{
-                                        // One short line and one row of choices: the example below keeps the room
-                                        // (build 67; the long explanations squeezed it before).
-                                        Text(tr("Wie ausführlich sollen die Texte sein?"),style=MaterialTheme.typography.bodyMedium)
-                                        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().testTag("onboarding-sentence-presets")) {
-                                            SentencePreset.entries.forEachIndexed {index,preset->
-                                                SegmentedButton(draft.settings.overview.sentencePreset()==preset,{
-                                                    change {it.copy(settings=it.settings.copy(overview=it.settings.overview.withSentencePreset(preset)))}
-                                                },SegmentedButtonDefaults.itemShape(index,SentencePreset.entries.size),icon={}) {
-                                                    Text(when(preset) {
-                                                        SentencePreset.COMPACT->tr("Kompakt")
-                                                        SentencePreset.EVERYDAY->tr("Alltag")
-                                                        SentencePreset.DETAILED->tr("Alle Details")
-                                                    },maxLines=1)
-                                                }
-                                            }
-                                        }
-                                        OnboardingOverviewPreview(draft.favorites.firstOrNull() ?: store.favorites.firstOrNull(),
-                                            draft.settings,permissions,example,modifier=if(fittedOverview)Modifier.weight(1f) else Modifier,fillHeight=fittedOverview)
-                                        Text(tr("Tippen öffnet die Fahrt, Halten sucht weitere Verbindungen."),
-                                            Modifier.testTag("onboarding-overview-actions"),style=MaterialTheme.typography.bodySmall,
-                                            color=MaterialTheme.colorScheme.onSurfaceVariant)
-                                    }
-                                    4->NetworkPlanGuide(draft.settings.networkHoldAction)
-                                    else->{
-                                        AppOutlinedCard(Modifier.fillMaxWidth().testTag("onboarding-long-press-gestures")) {
-                                            Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                                                Text(tr("Einmal länger drücken"),style=MaterialTheme.typography.titleMedium)
-                                                Text(tr("Halte einen Suchtreffer gedrückt, um ihn direkt als Favorit anzulegen."))
-                                                // M01: generated from the current hold action instead of a fixed promise.
-                                                Text(dev.ambivalenton.openv.ui.network.networkHoldHint(draft.settings.networkHoldAction)+" "+
-                                                    tr("Unter Suchen fügst du mit „Favorit hinzufügen“ weitere Favoriten hinzu; das Zahnrad beim Bearbeiten öffnet die Favoriten-Einstellungen."),
-                                                    Modifier.testTag("onboarding-hold-hint"))
-                                                Text(tr("Halte einen Verbindungstext in der Übersicht gedrückt, um mehrere passende Fahrten im Balkendiagramm zu suchen."))
-                                                Text(tr("Halte den Pin-Button einer Verbindung gedrückt, um sie für später vorzumerken. Der Reisebegleiter startet dabei nicht. Ein kurzer Tipp auf den Pin startet die Begleitung."))
-                                            }
-                                        }
-                                        AppThemeThumbnail(draft.settings)
-                                        Text(tr("App-Design: %1\$s",draft.settings.appTheme?.title ?: tr("Individuell / System")))
-                                        Text(tr("Anzeigetafel: %1\$s",draft.settings.board.design.title))
-                                        Text(tr("Neue Favoriten: %1\$s",draft.favorites.size))
-                                        draft.favorites.forEach {Text(it.label,style=MaterialTheme.typography.bodyMedium)}
-                                        Text(if(permissions.location==SetupLocationAccess.NONE) tr("Standort: später einrichten") else tr("Standortzugriff ist freigegeben"))
-                                        Text(if(permissions.notificationsEnabled) tr("Benachrichtigungen sind aktiviert") else tr("Benachrichtigungen: später einrichten"))
-                                        Text(tr("Du kannst all diese Einstellungen jederzeit später im Menü unter 'Einstellungen' anpassen."),
-                                            style=MaterialTheme.typography.bodyLarge)
-                                    }
+                        transitionSpec={studioTransition(quiet,targetState>initialState)}) {page->
+                        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).testTag("onboarding-step-$page"),
+                            verticalArrangement=Arrangement.spacedBy(16.dp)) {
+                            Text(when(page) {0->tr("Freigaben");1->tr("Dein erster Favorit");else->tr("Dein Design")},
+                                Modifier.semantics {heading()},style=MaterialTheme.typography.headlineMedium)
+                            when(page) {
+                                0->PermissionSetupContent(permissions)
+                                1->OnboardingFavorites(draft,store,studio,studioLook,search,busy,canAddFavorite,
+                                    onStudio={studio=it},onLook={studioLook=it},onAdd={addFavorite()})
+                                else->DesignChoices(draft.settings.appTheme,enabled=!busy) {theme->
+                                    change {it.copy(settings=it.settings.copy(appTheme=theme))}
                                 }
-                                Spacer(Modifier.height(8.dp))
                             }
-                            }
+                            Spacer(Modifier.height(8.dp))
                         }
                     }
                     if(error) Text(tr("Die Auswahl konnte nicht gespeichert werden. Bitte erneut versuchen."),
-                        Modifier.semantics {liveRegion=LiveRegionMode.Polite},color=MaterialTheme.colorScheme.error)
-                    HorizontalDivider(Modifier.padding(top=12.dp,bottom=8.dp))
-                    // H13: with long labels or large fonts the actions move into a second line.
-                    FlowRow(Modifier.fillMaxWidth(),itemVerticalAlignment=Alignment.CenterVertically,
-                        horizontalArrangement=Arrangement.spacedBy(8.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
-                        if(step>0) TextButton({change {it.copy(step=step-1)}},enabled=!busy) {Text(tr("Zurück"))}
-                        else ThemedOutlinedButton({importSheet=true},enabled=!busy,modifier=Modifier.testTag("onboarding-import")) {Text(tr("Sicherung importieren"))}
+                        Modifier.padding(top=8.dp).semantics {liveRegion=LiveRegionMode.Polite},color=MaterialTheme.colorScheme.error)
+                    // One row: back (or import on the first step), skip, next.
+                    Row(Modifier.fillMaxWidth().padding(top=12.dp),verticalAlignment=Alignment.CenterVertically,
+                        horizontalArrangement=Arrangement.spacedBy(4.dp)) {
+                        if(step>0) TextButton({change {it.copy(step=step-1)}},enabled=!busy,modifier=Modifier.heightIn(min=48.dp)) {Text(tr("Zurück"))}
+                        else TextButton({importSheet=true},enabled=!busy,modifier=Modifier.heightIn(min=48.dp).testTag("onboarding-import")) {
+                            Text(tr("Sicherung importieren"),maxLines=1)
+                        }
                         Spacer(Modifier.weight(1f))
+                        if(!last) TextButton({change {it.copy(step=step+1,offerMoreFavorites=false)}},enabled=!busy,
+                            modifier=Modifier.heightIn(min=48.dp).testTag("onboarding-skip")) {Text(tr("Überspringen"))}
                         ThemedButton({when {
                             // A chosen place is not lost: "Weiter" adds it and moves on in one write.
-                            step==2 && canAddFavorite->addFavorite {it.copy(step=3)}
-                            step<ONBOARDING_STEPS-1->change {it.copy(step=step+1)}
+                            step==1 && canAddFavorite->addFavorite {it.copy(step=2)}
+                            !last->change {it.copy(step=step+1)}
                             else->commit(onFinish)
-                        }},enabled=!busy && (step!=2 || canAddFavorite || draft.favorites.isNotEmpty()),modifier=Modifier.testTag("onboarding-next")) {
-                            Text(if(step<ONBOARDING_STEPS-1) tr("Weiter") else tr("Einrichtung abschließen"))
+                        }},enabled=!busy && (step!=1 || canAddFavorite || draft.favorites.isNotEmpty()),
+                            modifier=Modifier.heightIn(min=48.dp).testTag("onboarding-next")) {
+                            Text(if(last) tr("Los geht’s") else tr("Weiter"))
                         }
-                    }
-                    // H01: two clearly named ways out: skip only this step, or end the setup and search.
-                    Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically) {
-                        if(step<ONBOARDING_STEPS-1) TextButton({change {it.copy(step=step+1,offerMoreFavorites=false)}},enabled=!busy,
-                            modifier=Modifier.heightIn(min=48.dp).testTag("onboarding-skip")) {Text(tr("Schritt überspringen"))}
-                        else Spacer(Modifier.width(1.dp))
-                        TextButton({commit(onFinish) {onSearchNow?.invoke()}},enabled=!busy,
-                            modifier=Modifier.heightIn(min=48.dp).testTag("onboarding-to-search")) {Text(tr("Zur Suche"))}
                     }
                 }
             }
@@ -308,54 +241,111 @@ import kotlinx.coroutines.launch
         if(hosted) {BackHandler {back()};page()}
         else Dialog(onDismissRequest=back,properties=DialogProperties(usePlatformDefaultWidth=false,dismissOnClickOutside=false,
             decorFitsSystemWindows=false)) {page()}
-        run {
-            if(importSheet) OnboardingImportSheet {importSheet=false}
-            if(themePicker) AppThemePicker(draft.settings.appTheme,{theme->
-                change {it.copy(settings=it.settings.copy(appTheme=theme))};themePicker=false
-            },{themePicker=false},settings=draft.settings,update={transform->change {it.copy(settings=transform(it.settings))}})
-            if(boardPicker) BoardDesignPicker(store.copy(settings=draft.settings),{design->
-                change {it.copy(settings=it.settings.copy(board=it.settings.board.copy(design=design)))};boardPicker=false
-            },{boardPicker=false},update={transform->change {it.copy(settings=transform(it.settings))}})
+        if(importSheet) OnboardingImportSheet {importSheet=false}
+    }
+}
+
+/** Build 102: two lines, each with its own "Erlauben"; nothing is asked before a tap. */
+@Composable private fun PermissionSetupContent(p: SetupPermissions) {
+    Text(tr("Beides ist freiwillig und lässt sich jederzeit ändern."),style=MaterialTheme.typography.bodyLarge,
+        color=MaterialTheme.colorScheme.onSurfaceVariant)
+    PermissionRow(R.drawable.ic_gps,tr("Standort"),tr("Verbindungen ab deinem Standort"),
+        granted=p.location!=SetupLocationAccess.NONE && p.locationEnabled,
+        action=if(p.location!=SetupLocationAccess.NONE && !p.locationEnabled) tr("Einschalten") else tr("Erlauben"),
+        enabled=!p.busy,tag="onboarding-permission-location",onClick=p.requestLocation)
+    PermissionRow(R.drawable.ic_notifications,tr("Mitteilungen"),tr("Hinweise während der Fahrt"),
+        granted=p.notificationsEnabled,action=tr("Erlauben"),enabled=!p.busy,tag="onboarding-permission-notifications",
+        onClick=p.requestNotifications)
+}
+
+@Composable private fun PermissionRow(icon: Int,title: String,detail: String,granted: Boolean,action: String,enabled: Boolean,
+    tag: String,onClick: ()->Unit) {
+    val quiet=studioQuiet()
+    AppElevatedCard(Modifier.fillMaxWidth().testTag(tag)) {
+        Row(Modifier.fillMaxWidth().padding(horizontal=16.dp,vertical=14.dp),verticalAlignment=Alignment.CenterVertically,
+            horizontalArrangement=Arrangement.spacedBy(14.dp)) {
+            Box(Modifier.size(44.dp).background(MaterialTheme.colorScheme.primaryContainer,CircleShape),contentAlignment=Alignment.Center) {
+                AppIcon(icon,null,Modifier.size(22.dp),tint=MaterialTheme.colorScheme.onPrimaryContainer)
+            }
+            Column(Modifier.weight(1f)) {
+                Text(title,style=MaterialTheme.typography.titleMedium)
+                Text(detail,style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            AnimatedContent(granted,label="permission-$tag",transitionSpec={
+                if(quiet) EnterTransition.None togetherWith ExitTransition.None
+                else (scaleIn(StudioPop,initialScale=.6f)+fadeIn(tween(160))) togetherWith (scaleOut(tween(120),targetScale=.8f)+fadeOut(tween(100)))
+            }) {done->
+                if(done) Row(Modifier.heightIn(min=48.dp).semantics(mergeDescendants=true) {},verticalAlignment=Alignment.CenterVertically,
+                    horizontalArrangement=Arrangement.spacedBy(4.dp)) {
+                    AppIcon(R.drawable.ic_check,null,Modifier.size(20.dp),tint=MaterialTheme.colorScheme.primary)
+                    Text(tr("Erlaubt"),style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.primary)
+                }
+                else ThemedTonalButton(onClick,Modifier.heightIn(min=48.dp),enabled=enabled) {Text(action,maxLines=1)}
+            }
         }
     }
 }
 
-@Composable private fun PermissionSetupContent(p: SetupPermissions) {
-    Text(tr("Du entscheidest, was du freigibst. Du kannst jeden Schritt ohne Freigabe fortsetzen. Ohne Standort wählst du deinen Start selbst."))
-    AppElevatedCard(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-            FittedText(tr("Standort"),style=MaterialTheme.typography.titleMedium)
-            Text(tr("Mit deinem Standort hilft dir Öpen-V, dich unterwegs leichter zu orientieren. Du kannst deinen Start auch selbst eingeben."))
-            Text(when(p.location) {
-                SetupLocationAccess.NONE->tr("Noch nicht freigegeben")
-                SetupLocationAccess.APPROXIMATE->tr("Ungefährer Standort freigegeben")
-                SetupLocationAccess.PRECISE->tr("Präziser Standort freigegeben")
-            },style=MaterialTheme.typography.labelLarge)
-            Text(tr("Du entscheidest, wie genau du deinen Standort teilen möchtest. Das lässt sich später jederzeit ändern."),
-                style=MaterialTheme.typography.bodySmall)
-            if(!p.locationEnabled && p.location!=SetupLocationAccess.NONE) Text(tr("Der Gerätestandort ist ausgeschaltet."))
-            // H01: the permission is asked for only on this explicit action.
-            if(p.location==SetupLocationAccess.NONE || !p.locationEnabled) ThemedOutlinedButton(p.requestLocation,enabled=!p.busy) {
-                Text(if(p.location==SetupLocationAccess.NONE) tr("Meinen Standort nutzen") else tr("Standortdienste öffnen"))
+/** Build 102: a few designs of different moods instead of all; the whole setup changes with a tap. */
+internal val onboardingDesigns: List<AppTheme?> = listOf(null,AppTheme.CLASSIC_DARK,AppTheme.FOREST,AppTheme.SUNSET_POSTCARD,
+    AppTheme.BLUE_HOUR,AppTheme.SYNTHWAVE)
+
+@Composable private fun DesignChoices(selected: AppTheme?,enabled: Boolean,onSelect: (AppTheme?)->Unit) {
+    Text(tr("Weitere Designs findest du später in den Einstellungen."),style=MaterialTheme.typography.bodyLarge,
+        color=MaterialTheme.colorScheme.onSurfaceVariant)
+    val shown=if(selected in onboardingDesigns) onboardingDesigns else listOf(selected)+onboardingDesigns.dropLast(1)
+    Column(Modifier.fillMaxWidth().selectableGroup().testTag("onboarding-designs"),verticalArrangement=Arrangement.spacedBy(12.dp)) {
+        shown.chunked(2).forEach {row->
+            Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(12.dp)) {
+                row.forEach {theme->DesignTile(theme,theme==selected,enabled,Modifier.weight(1f)) {onSelect(theme)}}
+                if(row.size==1) Spacer(Modifier.weight(1f))
             }
         }
     }
-    AppElevatedCard(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-            FittedText(tr("Benachrichtigungen"),style=MaterialTheme.typography.titleMedium)
-            Text(tr("Erhalte unterwegs hilfreiche Hinweise, auch wenn du gerade nicht auf die App schaust."))
-            // H01: notifications are asked for when a journey companion starts, not here.
-            Text(if(p.notificationsEnabled) tr("Aktiviert") else tr("Öpen-V fragt danach, wenn du eine Reisebegleitung startest."),
-                style=MaterialTheme.typography.labelLarge)
+}
+
+/** A small live sample of a design: its background, a card, the accent and three capsule colours. */
+@Composable private fun DesignTile(theme: AppTheme?,chosen: Boolean,enabled: Boolean,modifier: Modifier,onClick: ()->Unit) {
+    val quiet=studioQuiet()
+    val scale by animateFloatAsState(if(chosen) 1.04f else 1f,if(quiet) snap() else StudioPop,label="design-${theme?.name}")
+    val ring by animateColorAsState(if(chosen) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
+        if(quiet) snap() else spring(stiffness=400f),label="design-ring-${theme?.name}")
+    val title=theme?.title ?: tr("Standard")
+    Column(modifier.graphicsLayer {scaleX=scale;scaleY=scale}.clip(MaterialTheme.shapes.large)
+        .selectable(chosen,enabled=enabled,role=Role.RadioButton,onClick=onClick).semantics {contentDescription=title}
+        .testTag("onboarding-design-${theme?.name ?: "STANDARD"}"),verticalArrangement=Arrangement.spacedBy(6.dp)) {
+        Box(Modifier.fillMaxWidth().height(104.dp).border(if(chosen) 3.dp else 1.dp,ring,MaterialTheme.shapes.large)
+            .padding(if(chosen) 3.dp else 1.dp).clip(MaterialTheme.shapes.large)) {
+            OpenVTheme(AppSettings(appTheme=theme,quietMode=true)) {
+                val scheme=MaterialTheme.colorScheme
+                Column(Modifier.fillMaxSize().appThemeBackground().padding(10.dp),verticalArrangement=Arrangement.SpaceBetween) {
+                    Row(Modifier.fillMaxWidth().background(scheme.secondaryContainer,MaterialTheme.shapes.small).padding(8.dp),
+                        verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                        Box(Modifier.size(18.dp).background(scheme.primary,CircleShape))
+                        Column(verticalArrangement=Arrangement.spacedBy(4.dp)) {
+                            Box(Modifier.width(54.dp).height(5.dp).background(scheme.onSecondaryContainer.copy(alpha=.7f),CircleShape))
+                            Box(Modifier.width(34.dp).height(5.dp).background(scheme.onSecondaryContainer.copy(alpha=.4f),CircleShape))
+                        }
+                    }
+                    Row(horizontalArrangement=Arrangement.spacedBy(6.dp)) {
+                        listOf(scheme.primary,scheme.tertiary,scheme.secondary).forEach {c->Box(Modifier.size(14.dp).background(c,CircleShape))}
+                    }
+                }
+            }
+            if(chosen) Box(Modifier.align(Alignment.TopEnd).padding(6.dp).size(24.dp).background(MaterialTheme.colorScheme.primary,CircleShape),
+                contentAlignment=Alignment.Center) {
+                AppIcon(R.drawable.ic_check,null,Modifier.size(16.dp),tint=MaterialTheme.colorScheme.onPrimary)
+            }
         }
+        Text(title,Modifier.padding(start=10.dp,end=10.dp,bottom=6.dp),style=MaterialTheme.typography.labelLarge,maxLines=1,
+            overflow=androidx.compose.ui.text.style.TextOverflow.Ellipsis)
     }
-    Text(tr("Alles ist freiwillig. Du kannst auch ohne Freigaben weitermachen und dich später in Ruhe entscheiden."),
-        style=MaterialTheme.typography.bodySmall)
 }
 
 /**
  * Build 101: the favourites step uses the beats of "Favorit hinzufügen": find the place (or say first what it is),
  * then its look, then "Hinzufügen". Added favourites pop into the row above; "Weiter" adds a chosen one, too.
+ * Build 102: one line of text, no further notes.
  */
 @Composable private fun OnboardingFavorites(
     draft: OnboardingDraft,store: StoredState,studio: FavoriteDraft,look: Boolean,
@@ -373,13 +363,14 @@ import kotlinx.coroutines.launch
         if(latestStudio.accentSeed==null) onStudio(latestStudio.copy(accentSeed=suggestFavoriteAccent(known,palette)))
     }
     val providerKey="${draft.settings.engine}:${draft.settings.geocodingEndpoint}"
-    Text(tr("Speichere die Orte, zu denen du oft fährst. Aus ihnen entsteht dein Netzplan."))
+    Text(tr("Ein Ort, zu dem du oft fährst – zum Beispiel Zuhause oder Arbeit."),style=MaterialTheme.typography.bodyLarge,
+        color=MaterialTheme.colorScheme.onSurfaceVariant)
     if(draft.favorites.isNotEmpty()) Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).testTag("onboarding-added"),
         horizontalArrangement=Arrangement.spacedBy(14.dp)) {
         draft.favorites.forEachIndexed {index,favorite-> key(favorite.id) {AddedFavorite(favorite,quiet,Modifier.testTag("onboarding-added-$index"))}}
     }
     AnimatedContent(look,label="onboarding-favorite-beat",transitionSpec={studioTransition(quiet,targetState)}) {lookStep->
-        if(!lookStep) FavoritePlaceStep(studio,providerKey,search,remember(store.history,store.boardStops) {store.favoritePlaceSuggestions(4)},
+        if(!lookStep) FavoritePlaceStep(studio,providerKey,search,remember(store.history,store.favorites) {store.favoritePlaceSuggestions()},
             favoriteRoleChoices(known),onRole={onStudio(studio.withIcon(it))},onPlace={onStudio(studio.withPlace(it));onLook(true)},
             autoFocus=false,tagPrefix="onboarding",enabled=!busy)
         else Column(verticalArrangement=Arrangement.spacedBy(14.dp)) {
@@ -393,8 +384,6 @@ import kotlinx.coroutines.launch
             }
         }
     }
-    Text(tr("Denselben Ort kannst du mehrfach speichern, etwa mit anderem Namen oder anderen Zeitregeln. Jeder Favorit bleibt einzeln bearbeitbar."),
-        Modifier.testTag("onboarding-duplicate-favorites"),style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
 /** A favourite added during the setup springs into the row. */

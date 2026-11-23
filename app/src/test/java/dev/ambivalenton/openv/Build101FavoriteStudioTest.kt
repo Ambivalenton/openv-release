@@ -7,6 +7,8 @@ import android.graphics.Canvas
 import android.view.inspector.WindowInspector
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Surface
@@ -76,12 +78,13 @@ class Build101FavoriteStudioTest {
     // ---- the sheet -----------------------------------------------------------------------------------
 
     private fun openSheet(saved: MutableList<Favorite>, partner: () -> Favorite? = { null }, connect: (String, String) -> Boolean = { _, _ -> true },
-        closed: () -> Unit = {}, initial: Location? = null) = compose.setContent {
-        OpenVTheme(AppSettings(appTheme = AppTheme.CONFETTI_STUDIO)) {
+        closed: () -> Unit = {}, initial: Location? = null, theme: AppTheme = AppTheme.CONFETTI_STUDIO,
+        window: androidx.compose.ui.unit.Dp? = null) = compose.setContent {
+        OpenVTheme(AppSettings(appTheme = theme)) {
             CompositionLocalProvider(LocalFavoritePlaces provides listOf(home)) {
-                Surface(Modifier.fillMaxSize()) {
+                Surface(if (window == null) Modifier.fillMaxSize() else Modifier.fillMaxWidth().height(window)) {
                     FavoriteEditDialog(null, "VRR", { listOf(zoo) }, { saved += it }, closed, initialLocation = initial,
-                        suggestions = listOf(FavoritePlaceSuggestion(uni, true)), otherFavorites = listOf(home),
+                        suggestions = listOf(FavoritePlaceSuggestion(uni, 3)), otherFavorites = listOf(home),
                         partnerFor = { partner() }, onConnect = connect)
                 }
             }
@@ -121,6 +124,22 @@ class Build101FavoriteStudioTest {
         compose.onNodeWithTag("favorite-step-place").assertExists()
         compose.onNodeWithTag("new-favorite-saved").assertDoesNotExist()
         assertEquals(1, saved.size)
+    }
+
+    /** Build 102: with the keyboard open (a short window) the results stand right under the field, in view. */
+    @Test fun typingShowsTheResultsRightUnderTheFieldAboveTheKeyboard() {
+        openSheet(mutableListOf(), theme = AppTheme.SPACE_TERMINAL, window = 430.dp)
+        compose.onNodeWithTag("favorite-roles").assertExists()
+        compose.onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("favorite-place-search"))).performTextInput("Zoom")
+        compose.waitUntil(5_000) { compose.onAllNodesWithText("Gelsenkirchen, Zoom Erlebniswelt").fetchSemanticsNodes().isNotEmpty() }
+        compose.waitForIdle()
+        // Roles and frequent places step aside while typing; no hint text pushes the results down.
+        compose.onNodeWithTag("favorite-roles").assertDoesNotExist()
+        compose.onNodeWithTag("place-choose-hint").assertDoesNotExist()
+        val result = compose.onNodeWithText("Gelsenkirchen, Zoom Erlebniswelt").fetchSemanticsNode().boundsInRoot
+        val window = with(compose.density) { 430.dp.toPx() }
+        assertTrue("the first result is above the keyboard: ${result.bottom} < $window", result.bottom < window)
+        capture("studio-typing-short-window")
     }
 
     @Test fun backReturnsToThePlaceAndKeepsTheChosenRole() {
@@ -180,7 +199,7 @@ class Build101FavoriteStudioTest {
     // ---- the first-launch setup ---------------------------------------------------------------------
 
     @Test fun theSetupAddsSeveralFavoritesAndNextKeepsAChosenOne() {
-        var store by mutableStateOf(StoredState(onboardingDraft = OnboardingDraft(step = 2, settings = AppSettings(appTheme = AppTheme.CONFETTI_STUDIO))))
+        var store by mutableStateOf(StoredState(onboardingDraft = OnboardingDraft(step = 1, settings = AppSettings(appTheme = AppTheme.CONFETTI_STUDIO))))
         compose.setContent { OnboardingWizard(store, SetupPermissions(), { change -> store = store.copy(onboardingDraft = change(store.onboardingDraft!!)); true }, { true }, { listOf(flat, zoo) }) }
         fun choose(text: String, name: String) {
             compose.onNode(hasSetTextAction() and hasText("Adresse oder Haltestelle")).performScrollTo().performTextInput(text)
@@ -203,7 +222,7 @@ class Build101FavoriteStudioTest {
         compose.onNodeWithTag("onboarding-next").performClick()
         compose.waitForIdle()
         compose.runOnIdle {
-            assertEquals(3, store.onboardingDraft!!.step)
+            assertEquals(2, store.onboardingDraft!!.step)
             assertEquals(listOf("Zuhause", "Zoom Erlebniswelt"), store.onboardingDraft!!.favorites.map { it.label })
         }
     }

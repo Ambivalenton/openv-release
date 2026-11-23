@@ -791,7 +791,6 @@ private fun OpenVNavigation(
         onFinish = vm::finishOnboarding,
         search = vm::findLocations,
         onLocationGranted = { vm.locationPermissionGranted(); overviewVm.refresh() },
-        example = vm::onboardingExample,
         // H01: one tap to the search form with start and destination, without permission or design choice.
         onSearchNow = {
             scope.launch {

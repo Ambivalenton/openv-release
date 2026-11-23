@@ -3,7 +3,8 @@ package dev.ambivalenton.openv.data.model
 
 import kotlinx.serialization.Serializable
 
-const val ONBOARDING_STEPS = 6
+/** Build 102: Freigaben, erster Favorit, Design. */
+const val ONBOARDING_STEPS = 3
 
 /** Saved separately from live preferences; completion commits all choices in one transaction. */
 @Serializable
