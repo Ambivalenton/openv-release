@@ -145,13 +145,28 @@ dependencies {
     testImplementation("androidx.compose.ui:ui-test-junit4")
 }
 
+// Robolectric's Android runtime (SDK 35, the level all tests use) is resolved by Gradle – cached and
+// retried like every other dependency – instead of being downloaded by Robolectric itself in each
+// test run, which failed whenever Maven Central throttled. Robolectric then runs offline on this copy.
+// The version belongs to Robolectric 4.16.1; update it together with Robolectric (DefaultSdkProvider).
+val robolectricRuntime: Configuration by configurations.creating { isTransitive = false }
+dependencies { robolectricRuntime("org.robolectric:android-all-instrumented:15-robolectric-13954326-i7") }
+val robolectricRuntimeDir = layout.buildDirectory.dir("robolectric-runtime")
+val syncRobolectricRuntime = tasks.register<Sync>("syncRobolectricRuntime") {
+    from(robolectricRuntime)
+    into(robolectricRuntimeDir)
+}
+
 tasks.withType<Test>().configureEach {
     listOf("http.proxyHost", "http.proxyPort", "https.proxyHost", "https.proxyPort", "javax.net.ssl.trustStore").forEach { key
         ->
         System.getProperty(key)?.let { systemProperty(key, it) }
     }
     systemProperty("http.nonProxyHosts", "localhost|127.*|[::1]")
-    systemProperty("robolectric.dependency.repo.url", "https://repo.maven.apache.org/maven2")
+    dependsOn(syncRobolectricRuntime)
+    inputs.files(syncRobolectricRuntime).withPropertyName("robolectricRuntime").withPathSensitivity(PathSensitivity.NAME_ONLY)
+    systemProperty("robolectric.offline", "true")
+    systemProperty("robolectric.dependency.dir", robolectricRuntimeDir.get().asFile.absolutePath)
 }
 
 // Verify actual class definitions in R8's executable output. Mapping files may omit unchanged

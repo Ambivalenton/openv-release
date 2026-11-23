@@ -58,7 +58,7 @@ Oberflächentexte sind deutsche Vorlagen in `tr("…")`; die englische Übersetz
 
 ## Tests
 
-Die Tests laufen auf der JVM mit [Robolectric](https://robolectric.org/) (native Grafik), auch die Compose-Oberflächen. Bildschirmaufnahmen einzelner Tests landen in `audit/` und gehören nicht ins Repository. Neue Funktionen bekommen einen Test, der das Verhalten prüft, nicht nur die Konfiguration.
+Die Tests laufen auf der JVM mit [Robolectric](https://robolectric.org/) (native Grafik), auch die Compose-Oberflächen. Die Android-Laufzeit für Robolectric (`android-all-instrumented`, SDK 35) löst Gradle wie jede andere Abhängigkeit auf und legt sie in `app/build/robolectric-runtime/` ab; Robolectric läuft offline darauf, statt sie bei jedem Lauf selbst von Maven Central zu laden. Bei einem Robolectric-Update die Version in `app/build.gradle.kts` mit anpassen. Bildschirmaufnahmen einzelner Tests landen in `audit/` und gehören nicht ins Repository. Neue Funktionen bekommen einen Test, der das Verhalten prüft, nicht nur die Konfiguration.
 
 ## Konventionen
 
