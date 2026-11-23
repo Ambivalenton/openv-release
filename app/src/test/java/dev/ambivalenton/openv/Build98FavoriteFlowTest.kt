@@ -16,7 +16,7 @@ import dev.ambivalenton.openv.data.model.*
 import dev.ambivalenton.openv.ui.components.LocalFavoritePlaces
 import dev.ambivalenton.openv.ui.components.PlaceSearchField
 import dev.ambivalenton.openv.ui.dialogs.FavoriteEditDialog
-import dev.ambivalenton.openv.ui.dialogs.NewFavoriteBanner
+import dev.ambivalenton.openv.ui.dialogs.FavoriteSavedStep
 import dev.ambivalenton.openv.ui.theme.OpenVTheme
 import org.junit.Assert.*
 import org.junit.Rule
@@ -74,7 +74,8 @@ class Build98FavoriteFlowTest {
     @Test fun aRoleChosenFirstKeepsItsName() {
         var saved: Favorite? = null
         open({ saved = it })
-        compose.onNodeWithTag("favorite-save").assertIsNotEnabled()
+        // Build 101: saving belongs to the second beat; the search comes first.
+        compose.onNodeWithTag("favorite-save").assertDoesNotExist()
         compose.onNodeWithTag("favorite-intent-WORK").performClick()
         compose.onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("favorite-place-search"))).performTextInput("Zoom")
         compose.waitUntil(5_000) { compose.onAllNodesWithText("Gelsenkirchen, Zoom Erlebniswelt").fetchSemanticsNodes().isNotEmpty() }
@@ -98,26 +99,31 @@ class Build98FavoriteFlowTest {
         compose.onNodeWithText("Eigene Farbe auswählen").assertExists()
     }
 
-    /** After saving: the next step is a line to "Zuhause"; the very first favourite asks for another. */
-    @Test fun theBannerOffersTheNextStep() {
+    /** Build 101: after saving, the saved moment offers the next step – a line to "Zuhause", another favourite, done. */
+    @Test fun theSavedMomentOffersTheNextStep() {
         val added = Favorite("a", "Arbeit", zoo, icon = FavoriteIcon.WORK)
         var connected: Favorite? = null
         var another = 0
-        var first by mutableStateOf(false)
+        var done = 0
+        var partner by mutableStateOf<Favorite?>(home)
+        var joined by mutableStateOf(false)
         compose.setContent {
             OpenVTheme(AppSettings(quietMode = true)) {
-                Column {
-                    if (!first) NewFavoriteBanner(added, home, false, { connected = it }, { another++ }, {})
-                    else NewFavoriteBanner(added, null, false, {}, { another++ }, {})
-                }
+                Column { FavoriteSavedStep(added, partner, joined, { connected = it; joined = true }, { another++ }, { done++ }) }
             }
         }
-        compose.onNodeWithText("„Arbeit“ ist jetzt in deinem Netzplan.").assertExists()
+        compose.onNodeWithText("„Arbeit“ ist gespeichert").assertExists()
         compose.onNodeWithTag("new-favorite-connect").assertTextContains("Mit „Zuhause“ verbinden", substring = true).performClick()
         compose.runOnIdle { assertEquals(home, connected) }
-        first = true
+        compose.onNodeWithText("Verbunden. Die Übersicht zeigt jetzt die Fahrt zwischen beiden.").assertExists()
+        compose.onNodeWithTag("new-favorite-connect").assertDoesNotExist()
         compose.onNodeWithTag("new-favorite-add-another").performClick()
-        compose.runOnIdle { assertEquals(1, another) }
+        compose.onNodeWithTag("new-favorite-done").performClick()
+        compose.runOnIdle { assertEquals(1, another); assertEquals(1, done) }
+        // Without a partner (the very first favourite) only "Noch einen Favoriten" and "Fertig" remain.
+        joined = false; partner = null
+        compose.onNodeWithTag("new-favorite-connect").assertDoesNotExist()
+        compose.onNodeWithTag("new-favorite-add-another").assertExists()
     }
 
     /** The pull gesture's request empties the field once per opening, also when the field is new. */

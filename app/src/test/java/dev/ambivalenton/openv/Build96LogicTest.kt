@@ -114,15 +114,18 @@ class Build96LogicTest {
         assertFalse(rideMeetsWalk(bus, walk(herne, market, now + 13 * min)))
     }
 
-    @Test fun capsuleColoursStayInTheThemesOwnColour() {
+    // Build 101: the accent stays on Übersicht, Suchen and Abfahrten change colour clearly.
+    @Test fun capsuleColoursChangeClearlyAndStartFromTheThemesOwnColour() {
         val base = Color(0xFFF2F2F2)
         val blues = listOf(Color(0xFF3355AA), Color(0xFF3456AB), Color(0xFF3355A9))
         val tones = destinationTones(3, base, DesignLanguage.MATERIAL, false, blues, blues)
         assertEquals(3, tones.map { it.fill }.distinct().size)
+        val hues = tones.map { Hct.fromInt(it.fill.toArgb()).hue }
         val source = Hct.fromInt(blues[0].toArgb()).hue
+        fun distance(a: Double, b: Double) = min(abs(a - b), 360 - abs(a - b))
+        assertTrue("Übersicht keeps the theme's blue: ${hues[0]}", distance(hues[0], source) <= 12.0)
+        hues.zipWithNext().forEach { (a, b) -> assertTrue("a big change from page to page: $a -> $b", distance(a, b) >= 60.0) }
         tones.forEach { tone ->
-            val hue = Hct.fromInt(tone.fill.toArgb()).hue
-            assertTrue("near the theme's blue: $hue", min(abs(hue - source), 360 - abs(hue - source)) <= 35.0)
             // Clearly visible on the bar.
             assertTrue(abs(Hct.fromInt(tone.fill.toArgb()).tone - Hct.fromInt(base.toArgb()).tone) >= 9.0)
         }

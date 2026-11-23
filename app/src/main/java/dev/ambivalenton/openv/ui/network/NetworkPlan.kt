@@ -545,12 +545,23 @@ fun NetworkPlan(
                 @Suppress("UNUSED_VARIABLE") val frame = ropeFrame // redraw on every rope frame
                 // The grid is faintly there on the Öpen-V sheet; in edit mode it is always clearly visible
                 // (build 74: it fades in, also when a hold on a favourite switches to edit mode).
-                if (gridIn > 0f || look.grid) for (x in 0 until columns) for (y in 0 until rows) {
-                    val p = GridPoint(x, y)
-                    val highlight = moving != null && p == moveTarget
-                    val resting = if (look.grid) .1f else 0f
-                    drawCircle(if (highlight) scheme.primary else scheme.onSurfaceVariant.copy(alpha = resting + (.32f - resting) * gridIn),
-                        if (highlight) pitch * .16f else (1f + .6f * gridIn).dp.toPx(), geometry.center(p))
+                if (gridIn > 0f || look.grid) {
+                    // Build 101: in edit mode every grid point is a small grey "+" (a tap on a free one adds a
+                    // favourite there). The resting dot grows its arms while the edit mode fades in.
+                    val arm = minOf(4.5.dp.toPx(), pitch * .13f) * gridIn
+                    val stroke = (1.6f + .2f * gridIn).dp.toPx()
+                    for (x in 0 until columns) for (y in 0 until rows) {
+                        val p = GridPoint(x, y)
+                        val c = geometry.center(p)
+                        if (moving != null && p == moveTarget) { drawCircle(scheme.primary, pitch * .16f, c); continue }
+                        val resting = if (look.grid) .1f else 0f
+                        val ink = scheme.onSurfaceVariant.copy(alpha = resting + (.46f - resting) * gridIn)
+                        if (arm < .75f) drawCircle(ink, (1f + .6f * gridIn).dp.toPx(), c)
+                        else {
+                            drawLine(ink, Offset(c.x - arm, c.y), Offset(c.x + arm, c.y), stroke, StrokeCap.Round)
+                            drawLine(ink, Offset(c.x, c.y - arm), Offset(c.x, c.y + arm), stroke, StrokeCap.Round)
+                        }
+                    }
                 }
                 // Lines run to the centre of their nodes; the opaque shapes drawn above end them.
                 run {

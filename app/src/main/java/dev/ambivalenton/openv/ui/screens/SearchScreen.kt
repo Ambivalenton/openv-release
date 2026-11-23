@@ -152,9 +152,6 @@ fun SearchScreen(
     var connectFrom by rememberSaveable {mutableStateOf<String?>(null)}
     var trayPick by rememberSaveable {mutableStateOf<String?>(null)}
     var addAt by remember {mutableStateOf<GridPoint?>(null)}
-    // The favourite just added (banner with the next step) and whether its line was drawn.
-    var justAdded by rememberSaveable {mutableStateOf<String?>(null)}
-    var justConnected by rememberSaveable {mutableStateOf(false)}
     var removedEdge by remember {mutableStateOf<Pair<NetworkEdge,Int>?>(null)}
     var deletingFavorite by remember {mutableStateOf<Favorite?>(null)}
     // M17: a tap between close targets on the plan asks which one is meant.
@@ -537,16 +534,6 @@ fun SearchScreen(
                         modifier = Modifier.fillMaxWidth())
             }
         }
-        justAdded?.let { id -> ui.store.favorites.firstOrNull { it.id == id } }?.let { added ->
-            item(key = "new-favorite") {
-                dev.ambivalenton.openv.ui.dialogs.NewFavoriteBanner(added,
-                    if (justConnected) null else ui.store.connectionPartnerFor(added.id), justConnected,
-                    onConnect = { partner -> if (vm.connectNodes(added.id, partner.id) != null) justConnected = true },
-                    onAddAnother = { justAdded = null; addAt = null; edit = null; addLocation = null; add = true },
-                    onDismiss = { justAdded = null },
-                    )
-            }
-        }
         if (ui.store.favorites.isEmpty())
             item(key = "first-favorite") {
                 ThemedTonalButton(
@@ -719,12 +706,18 @@ fun SearchScreen(
             "${settings.engine}:${settings.geocodingEndpoint}",
             vm::findLocations,
             {
-                if (addAt != null && edit == null) vm.favoriteAt(it, addAt) else vm.favorite(it)
-                if (edit == null) { justAdded = it.id; justConnected = false }
-                add = false
-                edit = null
-                addLocation = null
-                addAt = null
+                if (edit == null) {
+                    // Build 101: a new favourite is stored at once; the sheet stays for the saved moment
+                    // ("Noch einen Favoriten" places the next one freely, not on the same grid point).
+                    if (addAt != null) vm.favoriteAt(it, addAt) else vm.favorite(it)
+                    addAt = null
+                } else {
+                    vm.favorite(it)
+                    add = false
+                    edit = null
+                    addLocation = null
+                    addAt = null
+                }
             },
             {
                 add = false
@@ -740,6 +733,8 @@ fun SearchScreen(
             scheduleConflict={windows->ui.store.scheduleConflict(edit?.id,windows)},
             suggestions=remember(ui.store.history,ui.store.favorites,ui.store.boardStops,ui.store.departureBoard.stop) {ui.store.favoritePlaceSuggestions()},
             otherFavorites=ui.store.favorites.filter {it.id!=edit?.id},
+            partnerFor={id->ui.store.connectionPartnerFor(id)},
+            onConnect={a,b->vm.connectNodes(a,b)!=null},
         )
 
     targetChoice?.let { (nodes, lines) ->

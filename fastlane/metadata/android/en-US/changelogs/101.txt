@@ -1,0 +1,1 @@
+Adding favourites redesigned: three calm steps (place, look, saved) with a large live badge and no extra windows – in the first-launch setup and later. The first-launch setup appears again on first start. The navigation bar clearly changes colour for each page, matching the design. Editing the network plan shows free spots as grey plus signs.

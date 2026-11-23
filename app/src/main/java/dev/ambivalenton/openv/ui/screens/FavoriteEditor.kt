@@ -24,8 +24,10 @@ fun FavoriteEditor(
     scheduleConflict:((List<dev.ambivalenton.openv.data.model.HighlightRule>)->Favorite?)?=null,
     suggestions:List<dev.ambivalenton.openv.data.model.FavoritePlaceSuggestion> = emptyList(),
     otherFavorites:List<Favorite> = emptyList(),
+    partnerFor:(String)->Favorite? = {null},
+    onConnect:(String,String)->Boolean = {_,_->false},
 ) = dev.ambivalenton.openv.ui.dialogs.FavoriteEditDialog(existing, providerKey, search, onSave, onDismiss, initialLocation,showSchedules,
     onDelete=onDelete,networkRole=networkRole,onNetworkRole=onNetworkRole,scheduleConflict=scheduleConflict,
-    suggestions=suggestions,otherFavorites=otherFavorites)
+    suggestions=suggestions,otherFavorites=otherFavorites,partnerFor=partnerFor,onConnect=onConnect)
 
 fun minuteOfDay(input: String) = dev.ambivalenton.openv.ui.dialogs.minuteOfDay(input)

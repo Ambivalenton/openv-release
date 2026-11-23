@@ -164,12 +164,13 @@ fun SettingsScreen(ui: AppUiState, vm: AppViewModel,navigation: SettingsNavigati
     legalDocument?.let {document->LegalDocumentSheet(document) {legalDocument=null}}
     if(favoriteEditor) dev.ambivalenton.openv.ui.dialogs.FavoriteEditDialog(editFavorite,
         "${settings.engine}:${settings.geocodingEndpoint}",vm::findLocations,
-        {vm.favorite(it);favoriteEditor=false},{favoriteEditor=false},
+        {vm.favorite(it);if(editFavorite!=null) favoriteEditor=false},{favoriteEditor=false},
         scheduleConflict={windows->ui.store.scheduleConflict(editFavorite?.id,windows)},
         networkRole=editFavorite?.id?.let {id->ui.store.network.node(id)?.role},
         onNetworkRole=editFavorite?.id?.let {id->{role:NodeRole->vm.setNodeRole(id,role)}},
         suggestions=remember(ui.store.history,ui.store.favorites,ui.store.boardStops,ui.store.departureBoard.stop) {ui.store.favoritePlaceSuggestions()},
-        otherFavorites=ui.store.favorites.filter {it.id!=editFavorite?.id})
+        otherFavorites=ui.store.favorites.filter {it.id!=editFavorite?.id},
+        partnerFor={id->ui.store.connectionPartnerFor(id)},onConnect={a,b->vm.connectNodes(a,b)!=null})
     if(services) ServiceSettingsSheet(settings,{change->vm.settings(change);services=false},{services=false})
     if(provider) ProviderPicker(settings,{change->vm.settings(change);provider=false},{provider=false})
 }

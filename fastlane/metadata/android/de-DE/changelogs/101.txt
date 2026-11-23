@@ -1,0 +1,1 @@
+Favoriten hinzufügen neu gestaltet: in drei ruhigen Schritten (Ort, Aussehen, gespeichert) mit großem Live-Symbol, ohne Unterfenster – gleich in der Ersteinrichtung und später. Die Ersteinrichtung erscheint wieder beim ersten Start. Die Navigationsleiste wechselt je Seite deutlich die Farbe, passend zum Design. Im Netzplan-Bearbeiten zeigen graue Plus-Zeichen freie Plätze.

@@ -16,9 +16,15 @@ import dev.ambivalenton.openv.data.model.*
 import dev.ambivalenton.openv.rendering.isOperatingSystem
 import dev.ambivalenton.openv.ui.theme.LocalAppVisuals
 import dev.ambivalenton.openv.ui.theme.readableForeground
+import androidx.compose.ui.graphics.colorspace.ColorSpaces
+import kotlin.math.PI
 import kotlin.math.abs
+import kotlin.math.atan2
+import kotlin.math.cos
 import kotlin.math.floor
+import kotlin.math.hypot
 import kotlin.math.min
+import kotlin.math.sin
 
 /** Fill and ink of the selection capsule for one destination. */
 @Immutable data class CapsuleTone(val fill: Color, val ink: Color)
@@ -40,52 +46,43 @@ fun colorfulCapsuleTheme(theme: AppTheme?): Boolean {
 }
 
 /**
- * Picks [count] colours of the family that belong to the theme: the swatch nearest the
- * accent first, then the swatches nearest to the theme's own colours ([anchors]) that are still
- * clearly distinguishable. When the family has too few such swatches, harmonious neighbours of the
- * accent (a little hue, lighter or darker) fill up – never a far-off rainbow colour.
+ * Picks [count] colours for a colourful theme: the theme's accent first, then colours of the theme's own
+ * curated family and palette that lie clearly apart from it (build 101: at least [CAPSULE_HUE_STEP] degrees of
+ * hue, so every page change is a big colour change). Without such a colour the accent's harmony fills in.
  */
 internal fun capsuleHues(theme: AppTheme, accent: Color, count: Int, anchors: List<Color> = emptyList()): List<Color> {
     val swatches = appColorFamily(theme).colors.map { Color(it.color) }
-        .filter { Hct.fromInt(it.toArgb()).chroma > 18 }.ifEmpty { listOf(accent) }
-    val themeColors = (listOf(accent, Color(theme.accent), Color(theme.secondary)) + anchors)
-        .filter { Hct.fromInt(it.toArgb()).chroma > 12 }.ifEmpty { listOf(accent) }
-    fun hue(c: Color) = Hct.fromInt(c.toArgb()).hue
-    fun distance(a: Double, b: Double) = min(abs(a - b), 360 - abs(a - b))
-    fun nearTheme(c: Color) = themeColors.minOf { distance(hue(it), hue(c)) }
-    val ranked = swatches.sortedBy { nearTheme(it) }
-    val chosen = mutableListOf(swatches.minBy { distance(hue(it), hue(accent)) })
-    for (s in ranked) {
-        if (chosen.size >= count) break
-        if (s !in chosen && nearTheme(s) <= 75.0 && chosen.all { separated(it, s) }) chosen += s
-    }
-    return harmonious(chosen, count)
+    return vividCapsuleHues(accent, listOf(Color(theme.accent), Color(theme.secondary)) + anchors + swatches, count)
 }
 
-/** Two capsule colours read apart by hue or by brightness. */
-internal fun separated(a: Color, b: Color): Boolean {
-    val x = Hct.fromInt(a.toArgb()); val y = Hct.fromInt(b.toArgb())
-    val dh = min(abs(x.hue - y.hue), 360 - abs(x.hue - y.hue))
-    return dh >= 22 || abs(x.tone - y.tone) >= 12
-}
+/** Build 101: neighbouring capsules differ by at least this many degrees of hue. */
+internal const val CAPSULE_HUE_STEP = 70.0
+
+private fun hueDistance(a: Double, b: Double): Double = min(abs(a - b), 360 - abs(a - b))
 
 /**
- * Fills [colors] up to [count] and parts colours that lie too close together with
- * harmonious neighbours of the same colour: a small hue step together with a lighter or darker tone.
+ * Build 101: [count] capsule colours whose hues lie far apart, all belonging to the theme. The first is
+ * [accent]. Each further one is the theme colour among [candidates] (secondary, tertiary, the family's
+ * swatches …) that lies farthest from the colours chosen so far – if it lies at least [minStep] degrees
+ * away from each. Otherwise colour harmony with the accent fills in (triad ±120°, split complement ±150°,
+ * complement), with the accent's own strength and brightness. Before, roles that are the same colour in
+ * most themes (secondary = tertiary) only turned by 18°: red to a slightly different red.
  */
-internal fun harmonious(colors: List<Color>, count: Int): List<Color> {
-    val steps = listOf(18.0 to 12.0, -18.0 to -12.0, 30.0 to -8.0, -30.0 to 8.0, 0.0 to 22.0, 0.0 to -22.0, 45.0 to 0.0, -45.0 to 0.0)
-    val result = mutableListOf<Color>()
-    val wanted = List(count) { colors[it % colors.size] }
-    wanted.forEach { color ->
-        if (result.all { separated(it, color) }) { result += color; return@forEach }
-        val source = Hct.fromInt(color.toArgb())
-        val variant = steps.asSequence().map { (dh, dt) ->
-            Color(Hct.from((source.hue + dh + 360.0) % 360.0, source.chroma.coerceAtLeast(20.0), (source.tone + dt).coerceIn(22.0, 86.0)).toInt())
-        }.firstOrNull { candidate -> result.all { separated(it, candidate) } } ?: color
-        result += variant
+internal fun vividCapsuleHues(accent: Color, candidates: List<Color>, count: Int, minStep: Double = CAPSULE_HUE_STEP): List<Color> {
+    fun hct(c: Color) = Hct.fromInt(c.toArgb())
+    val source = hct(accent)
+    val pool = candidates.filter { hct(it).chroma > 16 }.distinct()
+    val chosen = mutableListOf(accent)
+    while (chosen.size < count) {
+        val hues = chosen.map { hct(it).hue }
+        fun gap(hue: Double) = hues.minOf { hueDistance(hue, it) }
+        val fromTheme = pool.filter { it !in chosen && gap(hct(it).hue) >= minStep }.maxByOrNull { gap(hct(it).hue) }
+        if (fromTheme != null) { chosen += fromTheme; continue }
+        val harmony = listOf(120.0, -120.0, 150.0, -150.0, 180.0, 90.0, -90.0).map { (source.hue + it + 360.0) % 360.0 }
+        val hue = harmony.firstOrNull { gap(it) >= minStep } ?: harmony.maxBy { gap(it) }
+        chosen += Color(Hct.from(hue, source.chroma.coerceIn(24.0, 72.0), source.tone.coerceIn(30.0, 80.0)).toInt())
     }
-    return result
+    return chosen
 }
 
 /** Per-destination capsule tones, or null when the theme keeps one capsule colour. [scheme]: the
@@ -110,31 +107,60 @@ internal fun harmonious(colors: List<Color>, count: Int): List<Color> {
 fun List<CapsuleTone>.at(position: Float): CapsuleTone {
     val p = position.coerceIn(0f, lastIndex.toFloat())
     val i = floor(p).toInt().coerceIn(0, lastIndex); val j = (i + 1).coerceAtMost(lastIndex); val t = p - i
-    return CapsuleTone(lerp(this[i].fill, this[j].fill, t), lerp(this[i].ink, this[j].ink, t))
+    return CapsuleTone(hueLerp(this[i].fill, this[j].fill, t), lerp(this[i].ink, this[j].ink, t))
+}
+
+/**
+ * Build 101: blends two colours around the colour wheel (OkLCh, the shorter way). With far-apart capsule
+ * colours a straight blend passed through a dull grey halfway; this one stays colourful all the way.
+ */
+internal fun hueLerp(a: Color, b: Color, t: Float): Color {
+    if (t <= 0f) return a
+    if (t >= 1f) return b
+    return runCatching {
+        val x = a.convert(ColorSpaces.Oklab); val y = b.convert(ColorSpaces.Oklab)
+        val cx = hypot(x.green, x.blue); val cy = hypot(y.green, y.blue)
+        // A nearly grey end keeps the other end's hue (no spin through unrelated colours).
+        val hx = if (cx < .02f) atan2(y.blue, y.green) else atan2(x.blue, x.green)
+        val hy = if (cy < .02f) hx else atan2(y.blue, y.green)
+        var d = hy - hx
+        if (d > PI.toFloat()) d -= 2 * PI.toFloat()
+        if (d < -PI.toFloat()) d += 2 * PI.toFloat()
+        val h = hx + d * t; val c = cx + (cy - cx) * t; val l = x.red + (y.red - x.red) * t
+        Color((l).coerceIn(0f, 1f), (c * cos(h)).coerceIn(-.5f, .5f), (c * sin(h)).coerceIn(-.5f, .5f),
+            a.alpha + (b.alpha - a.alpha) * t, ColorSpaces.Oklab).convert(ColorSpaces.Srgb)
+    }.getOrElse { lerp(a, b, t) }
 }
 
 private fun Color.luminanceValue(): Float = androidx.core.graphics.ColorUtils.calculateLuminance(toArgb()).toFloat()
 
 /**
- * 2.7: every theme gives Übersicht, Suchen and Abfahrten their own capsule colour. The tones come
- * from the active palette (primary, tertiary and secondary roles, so personal themes follow their
- * own colours). Roles that lie too close together are parted by harmonious neighbours of
- * the same colour (a little hue, lighter or darker), so the capsules always belong to the theme. Monochrome
+ * 2.7: every theme gives Übersicht, Suchen and Abfahrten their own capsule colour. Build 101: the
+ * accent stays on Übersicht; Suchen and Abfahrten take the theme's own colours that lie far enough apart
+ * (palette roles and the theme's curated swatches, so personal themes follow their own colours), otherwise
+ * the accent's colour harmony – every change of page is a clearly visible change of colour. Monochrome
  * themes and the black-and-white mode use three grey steps. The design language keeps its kind of
  * capsule: solid, faintly tinted or softly blended. Each ink is checked against its own fill.
  */
 @Composable fun rememberDestinationTones(count: Int, shell: Color, language: DesignLanguage, grey: Boolean,
     scheme: ColorScheme = MaterialTheme.colorScheme): List<CapsuleTone>? {
-    return remember(count, shell, language, grey, scheme.primary, scheme.secondary, scheme.tertiary, scheme.background,
+    val theme = LocalAppVisuals.current.theme
+    return remember(count, shell, language, grey, theme, scheme.primary, scheme.secondary, scheme.tertiary, scheme.background,
         scheme.primaryContainer, scheme.secondaryContainer, scheme.tertiaryContainer) {
         if (count < 2) null else destinationTones(count, shell.compositeOver(scheme.background), language, grey,
             listOf(scheme.primary, scheme.tertiary, scheme.secondary),
-            listOf(scheme.primaryContainer, scheme.tertiaryContainer, scheme.secondaryContainer))
+            listOf(scheme.primaryContainer, scheme.tertiaryContainer, scheme.secondaryContainer),
+            themeSwatches(theme))
     }
 }
 
+/** The theme's own curated colours (none for personal and system themes). */
+internal fun themeSwatches(theme: AppTheme?): List<Color> =
+    if (theme == null || theme.isOperatingSystem) emptyList()
+    else listOf(Color(theme.accent), Color(theme.secondary)) + appColorFamily(theme).colors.map { Color(it.color) }
+
 internal fun destinationTones(count: Int, base: Color, language: DesignLanguage, grey: Boolean,
-    accents: List<Color>, containers: List<Color>): List<CapsuleTone> {
+    accents: List<Color>, containers: List<Color>, swatches: List<Color> = emptyList()): List<CapsuleTone> {
     val dark = base.luminanceValue() < .45f
     val greyscale = grey || accents.all { Hct.fromInt(it.toArgb()).chroma < 10 }
     fun readable(seed: Color, fill: Color) =
@@ -144,7 +170,8 @@ internal fun destinationTones(count: Int, base: Color, language: DesignLanguage,
         val fill = lerp(base, if (dark) Color.White else Color.Black, .14f + .13f * i)
         CapsuleTone(fill, readable(if (dark) Color.White else Color.Black, fill))
     }
-    val hues = distinctHues(List(count) { accents[it % accents.size] })
+    // Build 101: Übersicht keeps the accent; Suchen and Abfahrten get clearly different hues of the theme.
+    val hues = vividCapsuleHues(accents.first(), accents.drop(1) + swatches, count)
     return hues.mapIndexed { i, hue ->
         val fill = when (language) {
             DesignLanguage.BRUTAL, DesignLanguage.PIXEL, DesignLanguage.SWISS -> hue
@@ -162,8 +189,6 @@ internal fun destinationTones(count: Int, base: Color, language: DesignLanguage,
     }
 }
 
-/** Keeps neighbouring capsule colours apart. With harmonious neighbours of the theme colour, never 40° turns. */
-internal fun distinctHues(colors: List<Color>): List<Color> = harmonious(colors, colors.size)
 
 /** A capsule in [hue]'s colour, 15 tone steps away from the bar, moderately saturated. */
 internal fun tonalCapsule(base: Color, hue: Color, dark: Boolean, index: Int): Color {
@@ -171,7 +196,7 @@ internal fun tonalCapsule(base: Color, hue: Color, dark: Boolean, index: Int): C
     val source = Hct.fromInt(hue.toArgb())
     val step = listOf(0.0, 5.0, -5.0)[index % 3]
     val tone = if (dark) (bar + 16.0 + step).coerceIn(24.0, 60.0) else (bar - 15.0 + step).coerceIn(45.0, 86.0)
-    return Color(Hct.from(source.hue, source.chroma.coerceIn(14.0, 44.0), tone).toInt())
+    return Color(Hct.from(source.hue, source.chroma.coerceIn(24.0, 48.0), tone).toInt())
 }
 
 /**

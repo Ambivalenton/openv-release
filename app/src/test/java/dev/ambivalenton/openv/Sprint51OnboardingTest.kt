@@ -65,7 +65,7 @@ class Sprint51OnboardingTest {
         var store by mutableStateOf(StoredState(onboardingDraft=OnboardingDraft(step=2,settings=AppSettings(quietMode=true))))
         compose.setContent {OnboardingWizard(store,SetupPermissions(),{change->if(accept){store=store.copy(onboardingDraft=change(store.onboardingDraft!!));true}else false},{true},{listOf(place)})}
         choosePlace()
-        compose.onNodeWithTag("onboarding-icon-HOME").performScrollTo().performClick()
+        compose.onNodeWithTag("onboarding-intent-HOME").performScrollTo().performClick()
         compose.onNodeWithTag("onboarding-favorite-name").performScrollTo().performTextReplacement("Mein Ruhepol")
         compose.onNodeWithTag("onboarding-next").performClick()
         compose.onNodeWithText("Die Auswahl konnte nicht gespeichert werden. Bitte erneut versuchen.").assertExists()

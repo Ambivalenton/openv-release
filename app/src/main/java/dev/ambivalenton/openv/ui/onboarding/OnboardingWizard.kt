@@ -5,9 +5,24 @@ import dev.ambivalenton.openv.ui.components.ThemedButton
 import dev.ambivalenton.openv.ui.components.ThemedOutlinedButton
 
 import dev.ambivalenton.openv.ui.components.CalmVisibility
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.toArgb
+import dev.ambivalenton.openv.ui.dialogs.FavoriteLookStep
+import dev.ambivalenton.openv.ui.dialogs.FavoritePlaceStep
+import dev.ambivalenton.openv.ui.dialogs.StudioPop
+import dev.ambivalenton.openv.ui.dialogs.favoriteDraftSaver
+import dev.ambivalenton.openv.ui.dialogs.staggeredRise
+import dev.ambivalenton.openv.ui.dialogs.studioQuiet
+import dev.ambivalenton.openv.ui.dialogs.studioTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -45,39 +60,68 @@ import kotlinx.coroutines.launch
     example: suspend (Favorite,AppSettings)->Trip?={_,_->null},
     /** H01: straight to the first search (finishes the setup with the defaults, no permission asked). */
     onSearchNow: (()->Unit)?=null,
+    /** Build 101: false lets the finished setup fade out over the app; [onExited] follows once it is gone. */
+    visible: Boolean=true,
+    onExited: ()->Unit={},
 ) {
     val permissions=rememberOnboardingPermissions(onLocationGranted)
     // H01: the first view says what the app is for; the setup wizard is optional.
     var wizard by rememberSaveable {mutableStateOf(store.onboardingDraft!=null || onSearchNow==null)}
-    if(!wizard && onSearchNow!=null) FirstLaunchIntro(onSearch=onSearchNow,onSetup={wizard=true})
-    else OnboardingWizard(store,permissions,onChange,onFinish,search,example,
-        onBackToIntro=if(onSearchNow!=null) ({wizard=false}) else null,onSearchNow=onSearchNow)
+    val quiet=studioQuiet()
+    val shown=remember {MutableTransitionState(false)}
+    shown.targetState=visible
+    val exited by rememberUpdatedState(onExited)
+    LaunchedEffect(shown) {snapshotFlow {shown.isIdle && !shown.currentState && !shown.targetState}.collect {gone->if(gone) exited()}}
+    // Build 101: the whole first launch is one layer of the app's overlay host, above the app and its
+    // navigation. Since build 96 the first view was composed below the app's opaque main screen: it could be
+    // neither seen nor tapped, so the setup never finished (no tutorial, no navigation pill, no GPS start).
+    Dialog(onDismissRequest={},properties=DialogProperties(usePlatformDefaultWidth=false,dismissOnBackPress=false,
+        dismissOnClickOutside=false,decorFitsSystemWindows=false),behindNavigation=true,drawScrim=false) {
+        AnimatedVisibility(shown,Modifier.fillMaxSize(),
+            enter=if(quiet) EnterTransition.None else fadeIn(tween(200)),
+            exit=if(quiet) ExitTransition.None else fadeOut(tween(320,delayMillis=40))+scaleOut(tween(380),targetScale=1.05f)) {
+            Box(Modifier.fillMaxSize().appThemeBackground().testTag("first-launch")) {
+                AnimatedContent(wizard || onSearchNow==null,Modifier.fillMaxSize(),label="first-launch",transitionSpec={
+                    if(quiet) EnterTransition.None togetherWith ExitTransition.None
+                    else if(targetState) (slideInVertically(spring(dampingRatio=.8f,stiffness=340f)) {it/5}+fadeIn(tween(220,delayMillis=60))+
+                        scaleIn(spring(dampingRatio=.8f,stiffness=340f),initialScale=.94f)) togetherWith (fadeOut(tween(160))+scaleOut(tween(220),targetScale=.92f))
+                    else (fadeIn(tween(220,delayMillis=60))+scaleIn(spring(dampingRatio=.8f,stiffness=340f),initialScale=.92f)) togetherWith
+                        (slideOutVertically(tween(220)) {it/5}+fadeOut(tween(160)))
+                }) {setup->
+                    if(setup) OnboardingWizard(store,permissions,onChange,onFinish,search,example,
+                        onBackToIntro=if(onSearchNow!=null) ({wizard=false}) else null,onSearchNow=onSearchNow,hosted=true)
+                    else FirstLaunchIntro(onSearch={onSearchNow?.invoke()},onSetup={wizard=true})
+                }
+            }
+        }
+    }
 }
 
 /**
  * H01: the first view. Purpose and main action are clear at once: "Verbindung suchen" opens the search
  * with start and destination (one tap, no permission, no design choice). Setting the app up and
  * importing a backup are offered beside it. Location is asked for at "Meinen Standort nutzen",
- * notifications when a journey companion starts.
+ * notifications when a journey companion starts. Build 101: the lines rise in one after another.
  */
 @Composable fun FirstLaunchIntro(onSearch: ()->Unit, onSetup: ()->Unit) {
     var importSheet by rememberSaveable {mutableStateOf(false)}
     var busy by remember {mutableStateOf(false)}
+    val quiet=studioQuiet()
     Box(Modifier.fillMaxSize().appThemeBackground().testTag("first-launch-intro")) {
         Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing).verticalScroll(rememberScrollState())
             .padding(horizontal=24.dp,vertical=28.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
             Spacer(Modifier.weight(1f))
-            Text(tr("Öpen-V"),style=MaterialTheme.typography.titleMedium,color=MaterialTheme.colorScheme.primary)
-            Text(tr("Finde deine nächste Bus- oder Bahnverbindung."),Modifier.semantics {heading()}.testTag("intro-purpose"),
+            Text(tr("Öpen-V"),Modifier.staggeredRise(0,quiet),style=MaterialTheme.typography.titleMedium,color=MaterialTheme.colorScheme.primary)
+            Text(tr("Finde deine nächste Bus- oder Bahnverbindung."),Modifier.staggeredRise(1,quiet).semantics {heading()}.testTag("intro-purpose"),
                 style=MaterialTheme.typography.headlineMedium)
             Text(tr("Kostenlos, ohne Werbung und ohne Konto. Standort und Benachrichtigungen fragt Öpen-V erst, wenn du sie brauchst."),
-                style=MaterialTheme.typography.bodyLarge,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                Modifier.staggeredRise(2,quiet),style=MaterialTheme.typography.bodyLarge,color=MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(8.dp))
-            ThemedButton({if(!busy){busy=true;onSearch()}},Modifier.fillMaxWidth().heightIn(min=56.dp).testTag("intro-search")) {
+            ThemedButton({if(!busy){busy=true;onSearch()}},Modifier.staggeredRise(3,quiet).fillMaxWidth().heightIn(min=56.dp).testTag("intro-search")) {
                 Text(tr("Verbindung suchen"),style=MaterialTheme.typography.titleMedium)
             }
-            ThemedOutlinedButton(onSetup,Modifier.fillMaxWidth().heightIn(min=52.dp).testTag("intro-setup")) {Text(tr("App einrichten"))}
-            TextButton({importSheet=true},Modifier.fillMaxWidth().heightIn(min=48.dp).testTag("intro-import")) {Text(tr("Sicherung importieren"))}
+            ThemedOutlinedButton(onSetup,Modifier.staggeredRise(4,quiet).fillMaxWidth().heightIn(min=52.dp).testTag("intro-setup")) {Text(tr("App einrichten"))}
+            TextButton({importSheet=true},Modifier.staggeredRise(5,quiet).fillMaxWidth().heightIn(min=48.dp).testTag("intro-import")) {Text(tr("Sicherung importieren"))}
             Spacer(Modifier.weight(.4f))
         }
         if(importSheet) OnboardingImportSheet {importSheet=false}
@@ -96,6 +140,8 @@ import kotlinx.coroutines.launch
     onBackToIntro: (()->Unit)?=null,
     /** H01: "Zur Suche" ends the setup and opens the search. */
     onSearchNow: (()->Unit)?=null,
+    /** Build 101: inside the first-launch layer (full screen, own back handling) instead of a window of its own. */
+    hosted: Boolean=false,
 ) {
     val draft=store.onboardingDraft ?: OnboardingDraft(settings=store.settings)
     val step=draft.step.coerceIn(0,ONBOARDING_STEPS-1)
@@ -106,12 +152,12 @@ import kotlinx.coroutines.launch
     var boardPicker by rememberSaveable {mutableStateOf(false)}
     // Import a backup from the first step instead of setting up again.
     var importSheet by rememberSaveable {mutableStateOf(false)}
-    var favoriteLabel by rememberSaveable {mutableStateOf("")}
-    var favoriteLocation by rememberSaveable(stateSaver=locationSaver) {mutableStateOf<Location?>(null)}
-    var favoriteIcon by rememberSaveable {mutableStateOf<FavoriteIcon?>(null)}
-    var suggestedName by rememberSaveable {mutableStateOf(true)}
+    // Build 101: the favourite being created (same beats as "Favorit hinzufügen": place, then its look).
+    var studio by rememberSaveable(stateSaver=favoriteDraftSaver) {mutableStateOf(FavoriteDraft())}
+    var studioLook by rememberSaveable {mutableStateOf(false)}
     val busy=writing || permissions.busy
-    val canSaveFavorite=favoriteLocation?.routable==true && draft.favorites.size+store.favorites.size<40
+    val canAddFavorite=studioLook && studio.ready && draft.favorites.size+store.favorites.size<40
+    val quiet=studioQuiet()
     fun commit(action: suspend ()->Boolean,afterSuccess: ()->Unit={}) {
         if(busy) return
         writing=true;error=false
@@ -123,25 +169,34 @@ import kotlinx.coroutines.launch
         }
     }
     fun change(action: (OnboardingDraft)->OnboardingDraft) = commit({onChange(action)})
+    /** Adds the favourite being created; [then] may move on in the same write (Weiter). */
+    fun addFavorite(then: (OnboardingDraft)->OnboardingDraft={it}) {
+        val favorite=studio.favorite()
+        commit({onChange {then(it.copy(favorites=it.favorites+favorite,offerMoreFavorites=false))}}) {
+            studio=FavoriteDraft();studioLook=false
+        }
+    }
+    val back: ()->Unit={if(step>0 && !busy) change {it.copy(step=step-1)} else if(!busy) onBackToIntro?.invoke()}
     OpenVTheme(draft.settings) {
-        Dialog(onDismissRequest={if(step>0 && !busy) change {it.copy(step=step-1)} else if(!busy) onBackToIntro?.invoke()},
-            properties=DialogProperties(usePlatformDefaultWidth=false,dismissOnClickOutside=false)) {
-            // The window stays clear of status bar, navigation bar, cut-outs and keyboard (build 67):
-            // before, the system navigation bar could lie over the lower buttons.
-            Surface(Modifier.windowInsetsPadding(WindowInsets.safeDrawing).widthIn(max=600.dp).fillMaxWidth(.96f).fillMaxHeight(.97f)
-                .testTag("first-launch-onboarding"),shape=MaterialTheme.shapes.extraLarge,
-                tonalElevation=6.dp) {
-                Column(Modifier.appThemeBackground().padding(horizontal=20.dp,vertical=16.dp)) {
+        // Build 101: full screen instead of a window on the app; it stays clear of status bar, navigation
+        // bar, cut-outs and keyboard (build 67).
+        val page: @Composable ()->Unit={
+            Box(Modifier.fillMaxSize().appThemeBackground().testTag("first-launch-onboarding"),contentAlignment=Alignment.TopCenter) {
+                Column(Modifier.windowInsetsPadding(WindowInsets.safeDrawing).widthIn(max=640.dp).fillMaxSize()
+                    .padding(horizontal=20.dp,vertical=16.dp)) {
                     FittedText(tr("Willkommen bei Öpen-V"),style=MaterialTheme.typography.titleLarge)
                     Text(tr("Schritt %1\$s von %2\$s",step+1,ONBOARDING_STEPS),Modifier.padding(top=6.dp),
                         style=MaterialTheme.typography.labelMedium)
                     Row(Modifier.fillMaxWidth().padding(vertical=12.dp).semantics(mergeDescendants=true) {
                         progressBarRangeInfo=ProgressBarRangeInfo((step+1).toFloat(),1f..ONBOARDING_STEPS.toFloat())
                     },horizontalArrangement=Arrangement.spacedBy(6.dp)) {
+                        // Build 101: the current step stretches with a little spring.
                         repeat(ONBOARDING_STEPS) {index->
-                            Box(Modifier.weight(if(index==step) 2f else 1f).height(6.dp)
-                                .background(if(index<=step) MaterialTheme.colorScheme.primary else
-                                    MaterialTheme.colorScheme.outlineVariant,CircleShape))
+                            val weight by animateFloatAsState(if(index==step) 2.4f else 1f,
+                                if(quiet) snap() else spring(dampingRatio=.6f,stiffness=420f),label="onboarding-progress-$index")
+                            val color by animateColorAsState(if(index<=step) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
+                                if(quiet) snap() else spring(stiffness=380f),label="onboarding-progress-color-$index")
+                            Box(Modifier.weight(weight).height(6.dp).background(color,CircleShape))
                         }
                     }
                     AnimatedContent(step,modifier=Modifier.weight(1f),label="onboarding-step",
@@ -156,7 +211,7 @@ import kotlinx.coroutines.launch
                             Column(Modifier.fillMaxSize().then(if(fittedOverview)Modifier else Modifier.verticalScroll(rememberScrollState())).testTag("onboarding-step-$page"),
                                 verticalArrangement=Arrangement.spacedBy(if(page==3)8.dp else 14.dp)) {
                                 FittedText(when(page) {
-                                    0->tr("Standort & Hinweise");1->tr("Dein Look");2->tr("Favoriten")
+                                    0->tr("Standort & Hinweise");1->tr("Dein Look");2->tr("Deine Favoriten")
                                     3->tr("Deine Übersicht");4->tr("Dein Netzplan");else->tr("Bereit für deine Wege")
                                 },Modifier.semantics {heading()},style=MaterialTheme.typography.headlineSmall)
                                 when(page) {
@@ -166,12 +221,8 @@ import kotlinx.coroutines.launch
                                         AppThemeSelector(draft.settings) {if(!busy) themePicker=true}
                                         BoardDesignSelector(store.copy(settings=draft.settings)) {if(!busy) boardPicker=true}
                                     }
-                                    2->OnboardingFavorites(draft,search,busy,favoriteLocation,favoriteIcon,favoriteLabel,suggestedName,
-                                        onLocation={favoriteLocation=it},onIcon={choice->
-                                            val suggested=suggestedName || favoriteLabel.isBlank()
-                                            favoriteLabel=favoriteNameAfterIconChoice(favoriteLabel,suggestedName,choice.title)
-                                            suggestedName=suggested;favoriteIcon=choice
-                                        },onNameEdited={favoriteLabel=it;suggestedName=false})
+                                    2->OnboardingFavorites(draft,store,studio,studioLook,search,busy,canAddFavorite,
+                                        onStudio={studio=it},onLook={studioLook=it},onAdd={addFavorite()})
                                     3->{
                                         // One short line and one row of choices: the example below keeps the room
                                         // (build 67; the long explanations squeezed it before).
@@ -235,17 +286,11 @@ import kotlinx.coroutines.launch
                         else ThemedOutlinedButton({importSheet=true},enabled=!busy,modifier=Modifier.testTag("onboarding-import")) {Text(tr("Sicherung importieren"))}
                         Spacer(Modifier.weight(1f))
                         ThemedButton({when {
-                            step==2->{
-                                val selected=favoriteLocation ?: return@ThemedButton
-                                val favorite=Favorite(label=favoriteLabel.trim().ifBlank {selected.name}.take(80),
-                                    location=selected,icon=favoriteIcon ?: FavoriteIcon.PLACE)
-                                commit({onChange {it.copy(step=3,favorites=it.favorites+favorite,offerMoreFavorites=false)}}) {
-                                    favoriteLabel="";favoriteLocation=null;favoriteIcon=null;suggestedName=true
-                                }
-                            }
+                            // A chosen place is not lost: "Weiter" adds it and moves on in one write.
+                            step==2 && canAddFavorite->addFavorite {it.copy(step=3)}
                             step<ONBOARDING_STEPS-1->change {it.copy(step=step+1)}
                             else->commit(onFinish)
-                        }},enabled=!busy && (step!=2 || canSaveFavorite),modifier=Modifier.testTag("onboarding-next")) {
+                        }},enabled=!busy && (step!=2 || canAddFavorite || draft.favorites.isNotEmpty()),modifier=Modifier.testTag("onboarding-next")) {
                             Text(if(step<ONBOARDING_STEPS-1) tr("Weiter") else tr("Einrichtung abschließen"))
                         }
                     }
@@ -259,6 +304,11 @@ import kotlinx.coroutines.launch
                     }
                 }
             }
+        }
+        if(hosted) {BackHandler {back()};page()}
+        else Dialog(onDismissRequest=back,properties=DialogProperties(usePlatformDefaultWidth=false,dismissOnClickOutside=false,
+            decorFitsSystemWindows=false)) {page()}
+        run {
             if(importSheet) OnboardingImportSheet {importSheet=false}
             if(themePicker) AppThemePicker(draft.settings.appTheme,{theme->
                 change {it.copy(settings=it.settings.copy(appTheme=theme))};themePicker=false
@@ -303,24 +353,57 @@ import kotlinx.coroutines.launch
         style=MaterialTheme.typography.bodySmall)
 }
 
-@OptIn(ExperimentalLayoutApi::class)
+/**
+ * Build 101: the favourites step uses the beats of "Favorit hinzufügen": find the place (or say first what it is),
+ * then its look, then "Hinzufügen". Added favourites pop into the row above; "Weiter" adds a chosen one, too.
+ */
 @Composable private fun OnboardingFavorites(
-    draft: OnboardingDraft,search: suspend (String)->List<Location>,busy: Boolean,
-    location:Location?,icon:FavoriteIcon?,label:String,nameIsSuggested:Boolean,
-    onLocation:(Location?)->Unit,onIcon:(FavoriteIcon)->Unit,onNameEdited:(String)->Unit,
+    draft: OnboardingDraft,store: StoredState,studio: FavoriteDraft,look: Boolean,
+    search: suspend (String)->List<Location>,busy: Boolean,canAdd: Boolean,
+    onStudio: (FavoriteDraft)->Unit,onLook: (Boolean)->Unit,onAdd: ()->Unit,
 ) {
-    draft.favorites.forEach {favorite->
-        Row(Modifier.fillMaxWidth().padding(vertical=6.dp),verticalAlignment=Alignment.CenterVertically) {
-            AppIcon(favorite.icon.resource(),null)
-            FittedText(favorite.label,Modifier.padding(start=12.dp),style=MaterialTheme.typography.titleSmall)
+    val quiet=studioQuiet()
+    val known=store.favorites+draft.favorites
+    val settings=dev.ambivalenton.openv.ui.theme.LocalAppSettings.current
+    val themeAccent=MaterialTheme.colorScheme.primary.toArgb().toLong() and 0xffffffffL
+    val palette=remember(settings.appTheme,settings.appThemeColors,themeAccent) {
+        dev.ambivalenton.openv.ui.theme.favoriteThemeColors(settings,themeAccent).map {it.color}}
+    val latestStudio by rememberUpdatedState(studio)
+    LaunchedEffect(studio.accentSeed==null,known.size) {
+        if(latestStudio.accentSeed==null) onStudio(latestStudio.copy(accentSeed=suggestFavoriteAccent(known,palette)))
+    }
+    val providerKey="${draft.settings.engine}:${draft.settings.geocodingEndpoint}"
+    Text(tr("Speichere die Orte, zu denen du oft fährst. Aus ihnen entsteht dein Netzplan."))
+    if(draft.favorites.isNotEmpty()) Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).testTag("onboarding-added"),
+        horizontalArrangement=Arrangement.spacedBy(14.dp)) {
+        draft.favorites.forEachIndexed {index,favorite-> key(favorite.id) {AddedFavorite(favorite,quiet,Modifier.testTag("onboarding-added-$index"))}}
+    }
+    AnimatedContent(look,label="onboarding-favorite-beat",transitionSpec={studioTransition(quiet,targetState)}) {lookStep->
+        if(!lookStep) FavoritePlaceStep(studio,providerKey,search,remember(store.history,store.boardStops) {store.favoritePlaceSuggestions(4)},
+            favoriteRoleChoices(known),onRole={onStudio(studio.withIcon(it))},onPlace={onStudio(studio.withPlace(it));onLook(true)},
+            autoFocus=false,tagPrefix="onboarding",enabled=!busy)
+        else Column(verticalArrangement=Arrangement.spacedBy(14.dp)) {
+            FavoriteLookStep(studio,known,onIcon={onStudio(studio.withIcon(it))},onName={onStudio(studio.withName(it))},
+                onColor={onStudio(studio.copy(accentSeed=it))},onShape={onStudio(studio.copy(shape=it))},
+                onChangePlace={onLook(false)},tagPrefix="onboarding",enabled=!busy)
+            ThemedTonalButton(onAdd,Modifier.fillMaxWidth().heightIn(min=52.dp).testTag("onboarding-add-favorite"),enabled=canAdd && !busy) {
+                AppIcon(R.drawable.ic_add,null,Modifier.size(20.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(tr("Hinzufügen"))
+            }
         }
     }
-    key(draft.favorites.size) {
-        ProgressiveFavoriteFields(location,icon,label,nameIsSuggested,
-            "${draft.settings.engine}:${draft.settings.geocodingEndpoint}",search,
-            onLocation=onLocation,onIcon=onIcon,onNameEdited=onNameEdited,tagPrefix="onboarding",enabled=!busy)
+    Text(tr("Denselben Ort kannst du mehrfach speichern, etwa mit anderem Namen oder anderen Zeitregeln. Jeder Favorit bleibt einzeln bearbeitbar."),
+        Modifier.testTag("onboarding-duplicate-favorites"),style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+}
+
+/** A favourite added during the setup springs into the row. */
+@Composable private fun AddedFavorite(favorite: Favorite,quiet: Boolean,modifier: Modifier) {
+    val appear=remember {Animatable(if(quiet) 1f else 0f)}
+    LaunchedEffect(Unit) {if(!quiet) appear.animateTo(1f,StudioPop)}
+    Column(modifier.width(72.dp).graphicsLayer {scaleX=appear.value;scaleY=appear.value;alpha=appear.value.coerceIn(0f,1f)},
+        horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(4.dp)) {
+        FavoriteBadge(favorite,size=48.dp,shadow=true)
+        Text(favorite.label,style=MaterialTheme.typography.labelMedium,maxLines=1,overflow=androidx.compose.ui.text.style.TextOverflow.Ellipsis)
     }
-    Text(tr("Mit Weiter speicherst du den ausgewählten Ort. Symbol und Name kannst du vorher anpassen oder später ändern. Ohne Favorit kannst du diesen Schritt überspringen."),style=MaterialTheme.typography.bodySmall)
-    Text(tr("Du kannst denselben Ort mehrfach speichern, zum Beispiel mit verschiedenen Namen, Farben oder Zeitregeln. Jeder Favorit bleibt einzeln bearbeitbar."),
-        Modifier.testTag("onboarding-duplicate-favorites"),style=MaterialTheme.typography.bodySmall)
 }

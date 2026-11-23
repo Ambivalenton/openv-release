@@ -122,6 +122,63 @@ private fun hueOf(argb: Long): Float {
     return (h + 360f) % 360f
 }
 
+/**
+ * Build 101: a favourite while it is being created, in one place for the sheet and the first-launch setup.
+ * Every step keeps what the person chose themselves: a symbol tapped first ("Arbeit") stays and names
+ * the favourite, a typed name is never replaced by a suggestion, and changing the place only updates
+ * what is still a suggestion.
+ */
+@kotlinx.serialization.Serializable
+data class FavoriteDraft(
+    val location: Location? = null,
+    val icon: FavoriteIcon? = null,
+    val label: String = "",
+    val nameIsSuggested: Boolean = true,
+    val iconChosen: Boolean = false,
+    val accentSeed: Long? = null,
+    val shape: IconStyle = IconStyle.SQUIRCLE,
+) {
+    /** A place is enough: name and symbol are suggested at once. */
+    val ready: Boolean get() = location?.routable == true && label.isNotBlank()
+
+    fun withPlace(place: Location?): FavoriteDraft {
+        if (place?.routable != true) return copy(location = place)
+        val suggested = nameIsSuggested || label.isBlank()
+        val symbol = if (iconChosen && icon != null) icon else guessFavoriteIcon(place)
+        val name = when {
+            !suggested -> label
+            iconChosen && icon != null -> favoriteNameFor(icon, place)
+            else -> smartFavoriteName(place)
+        }
+        return copy(location = place, icon = symbol, label = name, nameIsSuggested = suggested)
+    }
+
+    /** [choice] null takes a symbol tapped before back; the place suggests one again. */
+    fun withIcon(choice: FavoriteIcon?): FavoriteDraft {
+        val suggested = nameIsSuggested || label.isBlank()
+        if (choice == null) {
+            val place = location?.takeIf { it.routable }
+            return copy(icon = place?.let(::guessFavoriteIcon), iconChosen = false,
+                label = if (suggested) place?.let(::smartFavoriteName).orEmpty() else label, nameIsSuggested = suggested)
+        }
+        return copy(icon = choice, iconChosen = true, label = if (suggested) favoriteNameFor(choice, location) else label,
+            nameIsSuggested = suggested)
+    }
+
+    fun withName(text: String): FavoriteDraft = copy(label = text.take(80), nameIsSuggested = false)
+
+    fun favorite(id: String = newId()): Favorite = Favorite(id = id, label = label.trim().take(80),
+        location = requireNotNull(location), icon = icon ?: FavoriteIcon.PLACE, accentSeed = accentSeed, shape = shape)
+}
+
+/** The roles a place can be asked for first ("Wo ist Arbeit?"); ones already used go to the end. */
+fun favoriteRoleChoices(existing: List<Favorite>): List<FavoriteIcon> {
+    val roles = listOf(FavoriteIcon.HOME, FavoriteIcon.WORK, FavoriteIcon.SCHOOL, FavoriteIcon.FRIENDS,
+        FavoriteIcon.PARENTS, FavoriteIcon.PARTNER, FavoriteIcon.FITNESS_CENTER, FavoriteIcon.SHOPPING_BAG)
+    val used = existing.map { it.icon }.toSet()
+    return roles.filter { it !in used } + roles.filter { it in used }
+}
+
 /** A suggestion of the add-favourite sheet with where it comes from. */
 data class FavoritePlaceSuggestion(val place: Location, val recent: Boolean)
 

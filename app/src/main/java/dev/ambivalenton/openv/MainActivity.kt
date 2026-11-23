@@ -780,7 +780,12 @@ private fun OpenVNavigation(
             }
     }
     CompositionLocalProvider(LocalAppOverlay provides overlays, LocalJourneyNotices provides noticeActions) {
-    if (needsIntroduction) FirstLaunchOnboarding(
+    // Build 101: after the setup is finished it stays a moment longer and fades out over the app.
+    var introductionShown by remember { mutableStateOf(false) }
+    LaunchedEffect(needsIntroduction) { if (needsIntroduction) introductionShown = true }
+    if (needsIntroduction || introductionShown) FirstLaunchOnboarding(
+        visible = needsIntroduction,
+        onExited = { introductionShown = false },
         store = ui.store,
         onChange = vm::updateOnboarding,
         onFinish = vm::finishOnboarding,

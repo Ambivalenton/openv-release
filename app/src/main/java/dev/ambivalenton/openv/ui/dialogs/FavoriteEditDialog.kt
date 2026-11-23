@@ -91,7 +91,16 @@ fun FavoriteEditDialog(
     suggestions:List<FavoritePlaceSuggestion> = emptyList(),
     /** The other favourites (their colours keep the new one apart). */
     otherFavorites:List<Favorite> = emptyList(),
+    /** Build 101: the favourite a newly saved one most likely connects with (read from the current store). */
+    partnerFor:(String)->Favorite? = {null},
+    /** Build 101: draws the line between two favourites; false when it is not allowed. */
+    onConnect:(String,String)->Boolean = {_,_->false},
 ) {
+    // Build 101: a new favourite is created in three calm beats (FavoriteStudio); the editor below edits existing ones.
+    if(existing==null) {
+        FavoriteCreatorSheet(providerKey,search,onSave,onDismiss,initialLocation,suggestions,otherFavorites,partnerFor,onConnect)
+        return
+    }
     var role by rememberSaveable(existing?.id) {mutableStateOf(networkRole ?: NodeRole.AUTO)}
     // M02: a place handed over (e.g. from a search hit) is enough to save: name and neutral symbol are suggested.
     var label by rememberSaveable(existing?.id) { mutableStateOf(existing?.label ?: initialLocation?.takeIf { it.routable }?.let(::smartFavoriteName).orEmpty()) }
@@ -102,8 +111,7 @@ fun FavoriteEditDialog(
     var icon by
         rememberSaveable(existing?.id) {
             mutableStateOf<FavoriteIcon?>(
-                existing?.icon?.let { if (it == FavoriteIcon.HEART) FavoriteIcon.FAVORITE else it }
-                    ?: initialLocation?.takeIf { existing == null && it.routable }?.let(::guessFavoriteIcon)
+                existing.icon.let { if (it == FavoriteIcon.HEART) FavoriteIcon.FAVORITE else it }
             )
         }
     var extras by rememberSaveable {mutableStateOf(false)}
@@ -114,21 +122,10 @@ fun FavoriteEditDialog(
     var transportFilter by rememberSaveable(existing?.id,stateSaver=transportSaver) {
         mutableStateOf(existing?.transportFilter ?: FavoriteTransport.entries.toSet())
     }
-    var nameIsSuggested by rememberSaveable(existing?.id) {mutableStateOf(existing==null)}
+    var nameIsSuggested by rememberSaveable(existing.id) {mutableStateOf(false)}
     var shape by rememberSaveable(existing?.id) { mutableStateOf(existing?.shape ?: IconStyle.SQUIRCLE) }
     var accentSeed by rememberSaveable(existing?.id) { mutableStateOf(existing?.accentSeed) }
-    // What the person chose themselves is never replaced by a suggestion.
-    var iconChosen by rememberSaveable(existing?.id) { mutableStateOf(false) }
-    var colorChosen by rememberSaveable(existing?.id) { mutableStateOf(false) }
-    var moreOpen by rememberSaveable(existing?.id) { mutableStateOf(false) }
-    // "Mehr" at the colour dots opens the options with the full colour choice already unfolded.
-    val colorSection = rememberSaveable(existing?.id) { mutableStateOf(false) }
-    val themeAccent = MaterialTheme.colorScheme.primary.toArgb().toLong() and 0xffffffffL
-    val appSettings = dev.ambivalenton.openv.ui.theme.LocalAppSettings.current
-    val palette = remember(appSettings.appTheme, appSettings.appThemeColors, themeAccent) {
-        dev.ambivalenton.openv.ui.theme.favoriteThemeColors(appSettings, themeAccent).map { it.color } }
-    // A new favourite starts in the colour that stands apart most from the others.
-    LaunchedEffect(Unit) { if (existing == null && accentSeed == null) accentSeed = suggestFavoriteAccent(otherFavorites, palette) }
+    val colorSection = rememberSaveable(existing.id) { mutableStateOf(false) }
     var colorPicker by rememberSaveable { mutableStateOf(false) }
     var highlighted by rememberSaveable(existing?.id) { mutableStateOf(existing?.rule != null) }
     var highlight by
@@ -163,7 +160,7 @@ fun FavoriteEditDialog(
         FirstUseTutorialHost(null,Modifier.fillMaxSize(),modal=true) {
         Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)).imePadding()) {
             Row(Modifier.fillMaxWidth().heightIn(min=64.dp).padding(start=24.dp,end=8.dp),verticalAlignment=Alignment.CenterVertically) {
-                FittedText(if(existing==null) tr("Favorit hinzufügen") else tr("Favorit bearbeiten"),
+                FittedText(tr("Favorit bearbeiten"),
                     Modifier.weight(1f),style=MaterialTheme.typography.titleLarge)
                 IconButton(dismiss,Modifier.testTag("favorite-editor-close")) {AppIcon(R.drawable.ic_close,tr("Schließen"))}
             }
@@ -178,40 +175,14 @@ fun FavoriteEditDialog(
                         +WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()),
             verticalArrangement=Arrangement.spacedBy(14.dp),
         ) {
-            if(existing==null) FavoriteCreatorBody(location,icon,label,nameIsSuggested,accentSeed,shape,providerKey,search,suggestions,otherFavorites,
-                onLocation={picked->
-                    location=picked
-                    if(picked?.routable==true) {
-                        if(!iconChosen) icon=guessFavoriteIcon(picked)
-                        if(nameIsSuggested || label.isBlank()) {
-                            label=icon?.takeIf {iconChosen}?.let {favoriteNameFor(it,picked)} ?: smartFavoriteName(picked);nameIsSuggested=true
-                        }
-                    }
-                },
-                onIcon={choice->
-                    icon=choice;iconChosen=true
-                    if(nameIsSuggested || label.isBlank()) {label=favoriteNameFor(choice,location);nameIsSuggested=true}
-                },
-                onName={label=it;nameIsSuggested=false},
-                onColor={accentSeed=it;colorChosen=true},
-                onMoreOptions={moreOpen=true;colorSection.value=true},
-                autoFocus=initialLocation==null)
-            else ProgressiveFavoriteFields(location,icon,label,nameIsSuggested,providerKey,search,
-                onLocation={picked->
-                    location=picked
-                    // M02: the chosen place is enough to save: a neutral symbol and the place's name
-                    // are suggested at once; "Name und Symbol ändern" stays optional.
-                    if(existing==null && picked?.routable==true) {
-                        if(icon==null) icon=FavoriteIcon.PLACE
-                        if(nameIsSuggested || label.isBlank()) {label=suggestedFavoriteName(picked);nameIsSuggested=true}
-                    }
-                },detailsCollapsible=existing==null,onIcon={choice->
+            ProgressiveFavoriteFields(location,icon,label,nameIsSuggested,providerKey,search,
+                onLocation={picked->location=picked},onIcon={choice->
                     val suggested=nameIsSuggested || label.isBlank()
                     label=favoriteNameAfterIconChoice(label,nameIsSuggested,choice.title)
                     nameIsSuggested=suggested
                     icon=choice
                 },onNameEdited={label=it;nameIsSuggested=false})
-            CalmVisibility(if(existing==null) location?.routable==true else favoriteCreationStage(location,icon)==FavoriteCreationStage.NAME) {
+            CalmVisibility(favoriteCreationStage(location,icon)==FavoriteCreationStage.NAME) {
             Column(verticalArrangement=Arrangement.spacedBy(14.dp)) {
             @Composable fun moreOptions() {
             Section(tr("Form")) {
@@ -327,11 +298,8 @@ fun FavoriteEditDialog(
             }
             }
             }
-            // For a new favourite everything beyond place, kind and colour waits behind one disclosure.
-            if(existing==null) SettingsDisclosure(tr("Weitere Optionen"),"favorite-more-options",expanded=moreOpen,onExpandedChange={moreOpen=it}) {
-                Column(verticalArrangement=Arrangement.spacedBy(14.dp)) {moreOptions()}
-            } else moreOptions()
-            if(existing!=null && onDelete!=null) TextButton(onDelete,Modifier.testTag("favorite-delete")) {
+            moreOptions()
+            if(onDelete!=null) TextButton(onDelete,Modifier.testTag("favorite-delete")) {
                 AppIcon(R.drawable.ic_delete,null,tint=MaterialTheme.colorScheme.error)
                 Spacer(Modifier.width(8.dp))
                 Text(tr("Favorit löschen"),color=MaterialTheme.colorScheme.error)
@@ -340,13 +308,13 @@ fun FavoriteEditDialog(
             }
             }
         }
-        if(existing==null || favoriteCreationStage(location,icon)==FavoriteCreationStage.NAME) {
+        if(favoriteCreationStage(location,icon)==FavoriteCreationStage.NAME) {
             Box(Modifier.fillMaxWidth().padding(start=24.dp,end=24.dp,top=8.dp,bottom=14.dp+LocalNavigationClearance.current)) {
             ThemedButton(
                 onClick = {
                     location?.let {
                         val updated=Favorite(
-                                id = existing?.id ?: newId(),
+                                id = existing.id,
                                 label = label.trim(),
                                 location = it,
                                 icon = icon ?: FavoriteIcon.PLACE,
@@ -366,7 +334,7 @@ fun FavoriteEditDialog(
                 enabled = label.isNotBlank() && icon!=null && location?.routable == true && valid,
                 modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("favorite-save"),
             ) {
-                Text(if (existing == null) tr("Favorit speichern") else tr("Speichern"))
+                Text(tr("Speichern"))
             }
             }
         }
