@@ -1689,7 +1689,6 @@ internal val englishStrings: Map<String, String> = buildMap {
     put("Linien, Stationen und Fahrzeuge im Favoriten-Netzplan", "Lines, stations and vehicles in the favourites network map")
     put("Linien-UI", "Line UI")
     put("Linien-UI, Bento-Kacheln, E-Ink und tonale Flächen: Struktur statt Dekor.", "Line UI, bento tiles, e-ink and tonal planes: structure instead of decoration.")
-    put("Linienfarbe", "Line colour")
     put("Liniennamen / Liniennummern", "Line names / numbers")
     put("Linienplan", "Route map")
     put("Links: %1\$s", "Left: %1\$s")

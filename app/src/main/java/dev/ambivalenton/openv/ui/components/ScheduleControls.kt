@@ -79,21 +79,35 @@ private val ScheduleGap = 8.dp
     var rowWidth by remember { mutableIntStateOf(0) }
     val density = LocalDensity.current
     val quiet = LocalAppSettings.current.reduceMotion
-    // The row and the capsule inside the pill each follow their own spring: coming back, the row
-    // shoots in with a small overshoot and the softer capsule swings on a little further, then settles.
+    // The row follows its spring: coming back, it shoots in with a small overshoot. Build 105: the capsule
+    // inside the pill is not glued to it but hangs on two soft springs (one per end) that feel the row's
+    // acceleration – it lags and stretches, swings on when the row brakes, swings back and settles.
     val rowX = remember { Animatable(0f) }
-    val capsuleX = remember { Animatable(0f) }
+    val sway = remember { CapsuleSwayState() }
     LaunchedEffect(modeAway, rowWidth, quiet) {
         val target = if (modeAway) -(rowWidth + with(density) { 32.dp.toPx() }) else 0f
-        if (quiet || rowWidth == 0) { rowX.snapTo(target); capsuleX.snapTo(target); return@LaunchedEffect }
-        launch { rowX.animateTo(target, if (modeAway) spring(dampingRatio = .8f, stiffness = 340f) else spring(dampingRatio = .58f, stiffness = 260f)) }
-        launch { capsuleX.animateTo(target, if (modeAway) spring(dampingRatio = .8f, stiffness = 300f) else spring(dampingRatio = .32f, stiffness = 150f)) }
+        if (quiet || rowWidth == 0) { rowX.snapTo(target); sway.reset(); return@LaunchedEffect }
+        val damping = if (modeAway) .8f else .58f
+        val stiffness = if (modeAway) 340f else 260f
+        launch { rowX.animateTo(target, spring(dampingRatio = damping, stiffness = stiffness)) }
+        val perDp = density.density
+        var last = withFrameNanos { it }
+        while (true) {
+            val now = withFrameNanos { it }
+            val dt = ((now - last) / 1e9f).coerceIn(0f, 1f / 30f); last = now
+            val x = (rowX.value - target) / perDp; val v = rowX.velocity / perDp
+            // The row's own spring gives its acceleration exactly (dp/s²).
+            val a = -stiffness * x - 2f * damping * kotlin.math.sqrt(stiffness) * v
+            sway.physics.step(dt, v, a)
+            sway.publish()
+            if (!rowX.isRunning && rowX.value == target && sway.physics.resting) { sway.reset(); break }
+        }
     }
     Column(modifier.fillMaxWidth()) {
         // The frame is drawn above the area that slides out from underneath it.
         Box(Modifier.zIndex(1f).onSizeChanged { frameHeight = it.height }) { SplitDateTimePicker(timeMillis, onTime) }
         Layout(content = {
-            TimeModeSwitch(mode, onMode, capsuleDrift = { capsuleX.value - rowX.value })
+            TimeModeSwitch(mode, onMode, capsuleSway = sway)
             NowExtension(timeMillis != null, onNow, { frameHeight }, { tabLeft })
         }, modifier = Modifier.fillMaxWidth().zIndex(0f).onSizeChanged { rowWidth = it.width }
             .graphicsLayer { translationX = rowX.value }
@@ -120,8 +134,8 @@ private val ScheduleGap = 8.dp
  * larger system fonts or narrow screens), and the pill grows in height with the system font.
  */
 @Composable fun TimeModeSwitch(mode: TimeMode, onMode: (TimeMode) -> Unit, modifier: Modifier = Modifier,
-    /** Build 104: how far (px) the capsule swings on its own while the pill moves. */
-    capsuleDrift: () -> Float = { 0f }) {
+    /** Build 105: how the capsule's two ends swing on their own while the pill moves. */
+    capsuleSway: CapsuleSwayState? = null) {
     val options = listOf(TimeMode.DEPARTURE to tr("Abfahrt"), TimeMode.ARRIVAL to tr("Ankunft"))
     val base = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold)
     val measurer = rememberTextMeasurer()
@@ -151,7 +165,7 @@ private val ScheduleGap = 8.dp
         }
         val text = with(density) { (lineHeight * fit.scale).toDp() }
         val height = if (text + ModePillInset * 2 + 14.dp > ModePillHeight) text + ModePillInset * 2 + 14.dp else ModePillHeight
-        TimeModeSwitchBody(options, mode, onMode, if (fit.scale < 1f) scaledLabel(base, fit.scale) else base, fit.padding, height, capsuleDrift)
+        TimeModeSwitchBody(options, mode, onMode, if (fit.scale < 1f) scaledLabel(base, fit.scale) else base, fit.padding, height, capsuleSway)
     }
 }
 
@@ -175,7 +189,7 @@ private val TimeModeMinPadding = 6.dp
 
 @Composable private fun TimeModeSwitchBody(options: List<Pair<TimeMode, String>>, mode: TimeMode, onMode: (TimeMode) -> Unit,
     labelStyle: androidx.compose.ui.text.TextStyle, labelPadding: Float, pillHeight: androidx.compose.ui.unit.Dp,
-    capsuleDrift: () -> Float = { 0f }) {
+    capsuleSway: CapsuleSwayState? = null) {
     val index = if (mode == TimeMode.ARRIVAL) 1 else 0
     val visuals = LocalAppVisuals.current
     val quiet = LocalAppSettings.current.reduceMotion
@@ -230,10 +244,18 @@ private val TimeModeMinPadding = 6.dp
         val squash = if (quiet) 0f else shell.landing.value
         val cw = (slot * (1 + stretch + squash * .6f)).coerceIn(slot * .7f, inner.width)
         val ch = (inner.height * (1 - stretch * .14f + squash * .4f)).coerceAtMost(inner.height)
-        // Build 104: the capsule's own swing, at most a third of a slot beyond its place.
-        val drift = capsuleDrift().coerceIn(-slot * .34f, slot * .34f)
-        val cx = (inner.left + slot * ((head + tail) / 2 + .5f) + drift).coerceIn(inner.left + cw / 2, inner.right - cw / 2)
-        val capsuleRect = Rect(cx - cw / 2, size.height / 2 - ch / 2, cx + cw / 2, size.height / 2 + ch / 2)
+        val cx = (inner.left + slot * ((head + tail) / 2 + .5f)).coerceIn(inner.left + cw / 2, inner.right - cw / 2)
+        // Build 105: each end swings on its own (soft limit, no hard stop). Swung against the pill's edge, the
+        // capsule is squashed there instead of stopping like a block; stretched, it gets a little slimmer.
+        val reach = slot * .34f
+        val swayLeft = capsuleSway?.let { softLimit(it.left.dp.toPx(), reach) } ?: 0f
+        val swayRight = capsuleSway?.let { softLimit(it.right.dp.toPx(), reach) } ?: 0f
+        var left = (cx - cw / 2 + swayLeft).coerceAtLeast(inner.left)
+        var right = (cx + cw / 2 + swayRight).coerceAtMost(inner.right)
+        if (right - left < slot * .62f) { val mid = ((left + right) / 2).coerceIn(inner.left + slot * .31f, inner.right - slot * .31f); left = mid - slot * .31f; right = mid + slot * .31f }
+        val elongation = ((right - left) / cw - 1f)
+        val swayHeight = (ch * (1f - .22f * elongation.coerceAtLeast(0f))).coerceIn(inner.height * .7f, inner.height)
+        val capsuleRect = Rect(left, size.height / 2 - swayHeight / 2, right, size.height / 2 + swayHeight / 2)
         val amount = if (quiet) 0f else shell.amount.value.coerceIn(-.42f, 1.15f) * 3.5.dp.toPx()
         val outline = themedPillPath(shellShape, Rect(0f, 0f, size.width, size.height), density, direction,
             capsuleRect.center.x, maxOf(slot, cw * 1.1f), amount, roundness = roundness)
@@ -257,6 +279,54 @@ private val TimeModeMinPadding = 6.dp
         layout(slot * 2 + 2 * inset, height) { placeables.forEachIndexed { i, p -> p.place(inset + i * slot, inset) } }
     }
 }
+
+/** Soft limit: follows [value] closely near zero and approaches ±[reach] without ever hitting a wall. */
+private fun softLimit(value: Float, reach: Float): Float = if (reach <= 0f) 0f else reach * kotlin.math.tanh(value / reach)
+
+/** The capsule's swing for drawing: both ends in dp, published once per frame. */
+@Stable class CapsuleSwayState {
+    internal val physics = CapsuleSway()
+    var left by mutableFloatStateOf(0f); private set
+    var right by mutableFloatStateOf(0f); private set
+    internal fun publish() { left = physics.left; right = physics.right }
+    internal fun reset() { physics.reset(); publish() }
+}
+
+/**
+ * Build 105 · the capsule inside "Abfahrt/Ankunft" as a little liquid drop. Each end hangs on its own damped
+ * spring and feels the row's acceleration (inertia): the end in the direction of travel is the stiffer one,
+ * so the capsule stretches while it is pulled along, swings on when the row brakes, swings back and settles
+ * in a few softer swings. In dp; pure, so the motion is checked in a unit test.
+ */
+internal class CapsuleSway {
+    var left = 0f; private set
+    var right = 0f; private set
+    private var leftVelocity = 0f
+    private var rightVelocity = 0f
+    val resting: Boolean get() = abs(left) < .05f && abs(right) < .05f && abs(leftVelocity) < .5f && abs(rightVelocity) < .5f
+    fun reset() { left = 0f; right = 0f; leftVelocity = 0f; rightVelocity = 0f }
+    /** Advances by [dt] s while the row moves with [velocity] (dp/s) and [acceleration] (dp/s²). */
+    fun step(dt: Float, velocity: Float, acceleration: Float) {
+        var remaining = dt
+        val rightLeads = velocity >= 0f
+        while (remaining > 0f) {
+            val h = minOf(remaining, 1f / 600f); remaining -= h
+            rightVelocity += pull(right, rightVelocity, rightLeads, acceleration) * h; right += rightVelocity * h
+            leftVelocity += pull(left, leftVelocity, !rightLeads, acceleration) * h; left += leftVelocity * h
+        }
+    }
+    private fun pull(at: Float, velocity: Float, leads: Boolean, acceleration: Float): Float {
+        val k = if (leads) SWAY_LEAD_STIFFNESS else SWAY_TRAIL_STIFFNESS
+        val z = if (leads) SWAY_LEAD_DAMPING else SWAY_TRAIL_DAMPING
+        return -k * at - 2f * z * kotlin.math.sqrt(k) * velocity - SWAY_INERTIA * acceleration
+    }
+}
+private const val SWAY_LEAD_STIFFNESS = 240f
+private const val SWAY_LEAD_DAMPING = .30f
+private const val SWAY_TRAIL_STIFFNESS = 110f
+private const val SWAY_TRAIL_DAMPING = .34f
+/** How strongly the row's acceleration pulls on the capsule (a fraction of its mass). */
+private const val SWAY_INERTIA = .13f
 
 /**
  * The "Jetzt" area. It is not a second frame: it sits underneath the date/time frame and springs

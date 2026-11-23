@@ -4,6 +4,14 @@ Alle nennenswerten Änderungen an Öpen-V. Versionen folgen [Semantic Versioning
 
 ## [Unveröffentlicht]
 
+## [1.0.5] (105) · 2026-11-23
+
+- Zeitstrahl der Verbindungsdetails: Linien enden genau an ihren Haltepunkten. Bisher malte jede Zeile ihr Stück Linie bis an ihren eigenen Rand – die Hinweis-Zeile vor einem Halt zog die Linie der Fahrt über den Einstiegspunkt hinaus, die Ankunftszeile ließ sie unter dem Ausstiegspunkt weiterlaufen (mit grauem Stummel vor einem Fußweg). Jetzt wird die Schiene einmal für die ganze Reise von Punkt zu Punkt gezeichnet; Fußspuren füllen genau den Weg zwischen ihren beiden Punkten.
+- Neu gestaltet: Jede Fahrt steht als ruhiger Block in einem Hauch ihrer Linienfarbe; Start und Ziel der Reise haben einen eigenen Ring, Zwischenhalte sitzen wie auf einem Liniennetzplan als kleine Punkte auf der Linie. Umstiege stehen als kleine Uhr-Kapsel („8 Min. Umstieg“), eine ersetzte Fahrplanzeit ist durchgestrichen.
+- Bewegung: Beim Öffnen einer Verbindung zeichnet sich die Schiene von oben ein, die Punkte springen kurz auf, die Zeilen gleiten an ihren Platz. Aufgeklappte Zwischenhalte erscheinen Halt für Halt federnd; Pfeil und Beschriftung von „Zwischenhalte anzeigen“ und „Hinweise“ wechseln mit einer Feder. Im Ruhemodus bleibt alles still.
+- „Abfahrt/Ankunft“: Die Kapsel schwingt beim Hereinschießen wie ein kleiner Tropfen – sie hängt zurück und dehnt sich, schwingt beim Abbremsen weiter, wieder zurück und kommt weich zur Ruhe. An der Kante der Pille wird sie gestaucht, statt hart anzuschlagen.
+- Tests: Robolectrics Android-Laufzeit kommt über Gradle (mit Cache) statt bei jedem Lauf von Maven Central; gedrosselte Downloads ließen zuvor ganze CI-Läufe scheitern.
+
 ## [1.0.4] (104) · 2026-11-23
 
 - Netzplan bearbeiten: Der ausgeklappte Bereich ist doppelt so hoch. Oben stehen die drei Gesten als schlichter Text mit Trennlinien (ohne eigene Fläche, damit sie nicht wie weitere Knöpfe wirken) – „Halten und schieben“ verschiebt, „Ziehen“ verbindet eine Linie, „Tippen“ öffnet die Einstellungen des Favoriten –, darunter wie bisher „Favoriten-Einstellungen“, „Favorit hinzufügen“ und Fertig. Der Netzplan bleibt an seinem Platz; der Bereich wächst nach oben.
@@ -47,7 +55,8 @@ Erste Version.
 - Fahrplandaten von VRR OpenService, Haltestellenverzeichnis für Deutschland offline mitgeliefert.
 - Test-App „Öpen-V · Vorschau“ (`dev.ambivalenton.openv.next`), die sich neben der Store-App installiert.
 
-[Unveröffentlicht]: https://github.com/Ambivalenton/openv-release/compare/v1.0.4...HEAD
+[Unveröffentlicht]: https://github.com/Ambivalenton/openv-release/compare/v1.0.5...HEAD
+[1.0.5]: https://github.com/Ambivalenton/openv-release/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/Ambivalenton/openv-release/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/Ambivalenton/openv-release/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/Ambivalenton/openv-release/compare/v1.0.1...v1.0.2

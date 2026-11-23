@@ -1,0 +1,1 @@
+Connection details redesigned: lines end exactly at their stops, footprints fill the way between them. Each ride is a calm block in its line colour, the rail draws itself in with a spring when opened, and intermediate stops pop onto the line one by one. The "Departure/Arrival" capsule settles more fluidly.
