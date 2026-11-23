@@ -504,15 +504,17 @@ class AppViewModel(
             pendingSelection?.let {id->if(window.trips.any {it.id==id}){pendingSelection=null;mutable.update {it.selectConnection(id)}}}
         }
         withContext((if(force || cached!=null) FreshTransitResponse else kotlin.coroutines.EmptyCoroutineContext) + transitRequestBudget(32)) {
-            // Phase 1: a small first page is usable immediately.
-            publish(pager.initial(),loading=pager.seededFromSnapshot)
+            // Phase 1: a small first page is usable immediately. Build 103: bars of the pre-search on the searched
+            // side already are that page; asking for it again only delayed the next batches.
+            if(prefetched!=null && pager.primaryCount()>0) publish(pager.snapshot(),loading=true)
+            else publish(pager.initial(),loading=pager.seededFromSnapshot)
             // K01: every saved bar that is still boardable is confirmed individually or keeps its stand.
             if(pager.seededFromSnapshot) pager.refreshSeed(System.currentTimeMillis()) {window,_->publish(window,loading=true)}
             if(batchPager===pager)mutable.update {it.copy(trips=it.trips.copy(loading=false),
                 refreshAttemptAt=if(refreshing) System.currentTimeMillis() else it.refreshAttemptAt)}
             yield()
-            // Phases 2 and 3 complete the context in the background: earlier connections first
-            //, then later ones. Each direction keeps its own loading, error and end state.
+            // Phase 2 completes the context in the background: three more on the searched side, then three on
+            // the other side. Each direction keeps its own loading, error and end state; more follow by scrolling.
             pager.completeWaves({batchPager===pager}) {direction,count->
                 updatePaging(direction,historyToken,loading=true,clearError=true)
                 try {publish(pager.load(direction,count))}

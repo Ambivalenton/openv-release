@@ -343,21 +343,38 @@ fun TripCard(trip: Trip, initiallyExpanded: Boolean = false, onToggle: (() -> Un
     }
 }
 
-/** Partial failures keep loaded bars; each direction shows its own retry and a clear end state. */
+/** One line under the chart; [past]/[future] name what its retry loads again. */
+internal data class PagingLine(val text:String,val retry:Boolean,val past:Boolean,val future:Boolean)
+
+/**
+ * Partial failures keep loaded bars. Build 103: one message at a time – none while the search's own error
+ * card is shown (its retry repeats everything), one shared line when both directions failed. End notes
+ * ("Keine früheren Verbindungen gefunden.") only with hints switched on and without a failure.
+ */
+internal fun pagingStatusLines(searchFailed:Boolean,pastError:String?,futureError:String?,canLoadPast:Boolean,pastLoading:Boolean,
+    canLoadFuture:Boolean,futureLoading:Boolean,hints:Boolean):List<PagingLine> = buildList {
+    if(searchFailed) return@buildList
+    when {
+        pastError!=null && futureError!=null -> add(PagingLine(tr("Weitere Verbindungen konnten nicht geladen werden."),true,true,true))
+        pastError!=null -> add(PagingLine(tr("Frühere Verbindungen: %1\$s",pastError),true,true,false))
+        futureError!=null -> add(PagingLine(tr("Spätere Verbindungen: %1\$s",futureError),true,false,true))
+        hints -> {
+            if(!canLoadPast && !pastLoading) add(PagingLine(tr("Keine früheren Verbindungen gefunden."),false,true,false))
+            if(!canLoadFuture && !futureLoading) add(PagingLine(tr("Keine späteren Verbindungen gefunden."),false,false,true))
+        }
+    }
+}
+
 @Composable
 private fun ConnectionPagingStatus(ui:AppUiState,onPast:()->Unit,onFuture:()->Unit) {
-    val lines=buildList {
-        ui.pastError?.let {add(Triple(tr("Frühere Verbindungen: %1\$s",it),true,onPast))}
-        ui.futureError?.let {add(Triple(tr("Spätere Verbindungen: %1\$s",it),true,onFuture))}
-        if(ui.pastError==null && !ui.canLoadPast && !ui.pastLoading)add(Triple(tr("Keine früheren Verbindungen gefunden."),false,onPast))
-        if(ui.futureError==null && !ui.canLoadFuture && !ui.futureLoading)add(Triple(tr("Keine späteren Verbindungen gefunden."),false,onFuture))
-    }.let {all->if(dev.ambivalenton.openv.ui.components.hintsShown) all else all.filter {it.second}}
+    val lines=pagingStatusLines(ui.trips.error!=null,ui.pastError,ui.futureError,ui.canLoadPast,ui.pastLoading,
+        ui.canLoadFuture,ui.futureLoading,dev.ambivalenton.openv.ui.components.hintsShown)
     if(lines.isEmpty())return
     Column(Modifier.padding(horizontal=20.dp).testTag("connection-paging-status")) {
-        lines.forEach {(text,retry,action)->
+        lines.forEach {line->
             Row(verticalAlignment=Alignment.CenterVertically) {
-                Text(text,Modifier.weight(1f),style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
-                if(retry)TextButton(action) {Text(tr("Erneut versuchen"))}
+                Text(line.text,Modifier.weight(1f),style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                if(line.retry)TextButton({if(line.past)onPast();if(line.future)onFuture()}) {Text(tr("Erneut versuchen"))}
             }
         }
     }

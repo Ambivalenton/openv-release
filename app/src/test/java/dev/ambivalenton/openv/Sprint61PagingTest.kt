@@ -25,19 +25,19 @@ class Sprint61PagingTest {
         override suspend fun nearby(latitude:Double,longitude:Double,radiusMeters:Int)=emptyList<Location>()
         override suspend fun departures(stop:Location)=emptyList<Departure>()
     }
-    // The binding sequence is 3 future, then 6 future/3 past, then 9 future/6 past.
-    @Test fun threeFutureThenSixAndThreeThenNineAndSixThenThreePerEdge()=runTest {
+    // Build 103: 3 future first, then the target of 5 future/3 past, then three per edge.
+    @Test fun threeFutureThenThreeMoreAndThreePastThenThreePerEdge()=runTest {
         val p=Provider();val pager=JourneyBatchPager(p,JourneyQuery(a,b,now))
         val initial=pager.initial();assertEquals(3,initial.trips.size);assertEquals(1,p.requested.size)
         assertEquals(3,p.requested.first().pageSize);assertTrue(initial.trips.all {it.startTime>=now})
-        assertEquals(3,pager.missing(CONNECTION_WAVES[1],ConnectionDirection.LATER))
+        assertEquals(2,pager.missing(CONNECTION_WAVES[1],ConnectionDirection.LATER))
         assertEquals(3,pager.missing(CONNECTION_WAVES[1],ConnectionDirection.EARLIER))
         pager.future(3);pager.past(3)
         assertEquals(6,pager.primaryCount());assertEquals(3,pager.secondaryCount())
         pager.future(3);pager.past(3)
         assertEquals(9,pager.primaryCount());assertEquals(6,pager.secondaryCount())
-        assertEquals(0,pager.missing(CONNECTION_WAVES.last(),ConnectionDirection.LATER))
-        assertEquals(0,pager.missing(CONNECTION_WAVES.last(),ConnectionDirection.EARLIER))
+        assertTrue(pager.missing(CONNECTION_WAVES.last(),ConnectionDirection.LATER)<=0)
+        assertTrue(pager.missing(CONNECTION_WAVES.last(),ConnectionDirection.EARLIER)<=0)
         val beforeRequests=p.requested.size
         val future=pager.future(3);assertEquals(18,future.trips.size)
         assertEquals(beforeRequests+1,p.requested.size)
@@ -88,9 +88,9 @@ class Sprint61PagingTest {
     @Test fun reopeningAPagedCacheDoesNotAutomaticallyFetchAnotherSixOlderBars()=runTest {
         val p=Provider();val seed=(-6 until 6).map {trip(now+it*120_000)}
         val reopened=JourneyBatchPager(p,JourneyQuery(a,b,now),seed)
-        assertEquals(0,reopened.missing(CONNECTION_WAVES.last(),ConnectionDirection.EARLIER))
-        assertEquals(3,reopened.missing(CONNECTION_WAVES.last(),ConnectionDirection.LATER))
-        assertEquals(6,JourneyBatchPager(p,JourneyQuery(a,b,now)).missing(CONNECTION_WAVES.last(),ConnectionDirection.EARLIER))
+        assertTrue(reopened.missing(CONNECTION_WAVES.last(),ConnectionDirection.EARLIER)<=0)
+        assertTrue(reopened.missing(CONNECTION_WAVES.last(),ConnectionDirection.LATER)<=0)
+        assertEquals(3,JourneyBatchPager(p,JourneyQuery(a,b,now)).missing(CONNECTION_WAVES.last(),ConnectionDirection.EARLIER))
         assertEquals(12,reopened.initial().trips.size);assertEquals(1,p.requested.size)
     }
     @Test fun liveUpdatesKeepStableBarIdsAndDoNotRevealExtraFutureConnections()=runTest {

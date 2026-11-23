@@ -8,30 +8,27 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 /**
- * Loading plan of the comparison chart. Configurable starting values, not measured optima:
- * a first small page renders quickly, two background waves complete the context, and further
- * batches follow only when the user scrolls towards an edge.
+ * Loading plan of the comparison chart (build 103, as the publisher asked for it):
+ *  1. While the destination is entered, the pre-search finds the two next connections on the searched
+ *     side and the nearest one on the other side ([prefetchFirstConnections]).
+ *  2. After "Suchen": three more on the searched side, then three on the other side – one batch each.
+ *  3. Afterwards three more at a time, only in the direction the chart is scrolled.
+ * Without a pre-search the first page holds three connections on the searched side.
  *
  * "Primary" connections lie on the searched side of the reference: departing at/after it in
  * departure mode, arriving at/before it in arrival mode. "Secondary" connections lie on the other
- * side. The counts are connections (bars), never favourites or favourite pairs.
+ * side. The counts are connections (bars), never favourites or favourite pairs. The second wave is a
+ * target: a side that already holds that many (a reopened or refreshed search) is not extended.
  */
 data class ConnectionWave(val primary:Int,val secondary:Int)
-val CONNECTION_WAVES=listOf(ConnectionWave(3,0),ConnectionWave(6,3),ConnectionWave(9,6))
-/**
- * Order of the directions within each background wave. Earlier connections come first, so
- * a departure search shows the last few missed connections before it looks further (possibly hours)
- * ahead: three coming, three earlier, three coming, three earlier. An arrival search keeps its order,
- * its searched side already lies earlier.
- */
-val CONNECTION_WAVE_ORDER=listOf(ConnectionDirection.EARLIER,ConnectionDirection.LATER)
+val CONNECTION_WAVES=listOf(ConnectionWave(3,0),ConnectionWave(5,3))
 
-/** Phases 2 and 3 after the first page: one [step] per wave and direction that still misses bars. */
+/** Phase 2 after the first bars: one batch on the searched side, then one on the other side. */
 suspend fun JourneyBatchPager.completeWaves(active:()->Boolean,step:suspend (ConnectionDirection,Int)->Unit) {
-    for(wave in CONNECTION_WAVES.drop(1)) for(direction in CONNECTION_WAVE_ORDER) {
-        val missing=missing(wave,direction)
-        if(missing<=0 || exhausted(direction) || !active())continue
-        step(direction,minOf(missing,CONNECTION_EDGE_BATCH))
+    val target=CONNECTION_WAVES.last()
+    for(direction in listOf(primaryDirection,secondaryDirection)) {
+        if(missing(target,direction)<=0 || exhausted(direction) || !active())continue
+        step(direction,CONNECTION_EDGE_BATCH)
     }
 }
 /** Connections added per edge batch in scroll direction. */
@@ -198,9 +195,15 @@ class JourneyBatchPager(private val provider:TransitRepository,val query:Journey
         if(problem==null)lastFailure=null
         snapshot(problem)
     }
+    /** Typical gap between two loaded departures (median); null with fewer than two bars. */
+    private fun cadence():Long? {
+        val gaps=rows.values.map {it.startTime}.distinct().sorted().zipWithNext {a,b->b-a}.filter {it>0}.sorted()
+        return gaps.getOrNull(gaps.size/2)
+    }
     suspend fun past(count:Int=CONNECTION_EDGE_BATCH):JourneyWindow=lock.withLock {
         val before=rows.values.minOfOrNull {it.startTime} ?: query.time
-        val previous=provider.fetchHistoricalConnections(query,before,count,rows.keys).also {succeeded()}
+        // Build 103: the known rhythm of the line sizes the first look back, usually one request instead of three.
+        val previous=provider.fetchHistoricalConnections(query,before,count,rows.keys,cadence()).also {succeeded()}
             .filter {valid(it) && historicalIdentity(it) !in rows}
         previous.forEach(::accept)
         // A short or repeated answer ends this direction instead of retrying on every scroll.
@@ -209,7 +212,13 @@ class JourneyBatchPager(private val provider:TransitRepository,val query:Journey
     }
     suspend fun future(count:Int=CONNECTION_EDGE_BATCH):JourneyWindow=lock.withLock {
         val wanted=count.coerceIn(1,6);var added=0
-        var anchor=Math.floorDiv(rows.values.maxOfOrNull {it.queryStart(query.ignoreWalking)} ?: query.time,60_000)*60_000
+        // Build 103: an arrival search without bars must not take its arrival time as a departure time – that
+        // skipped every connection arriving soon after it and left a gap of hours in the chart. It continues
+        // after the latest connection that still arrives in time.
+        val start=rows.values.maxOfOrNull {it.queryStart(query.ignoreWalking)} ?: if(forward) query.time else
+            (provider.journeyPage(query.copy(pageSize=1)).trips.maxOfOrNull {it.queryStart(query.ignoreWalking)}?.also {succeeded()}
+                ?: (query.time-STRICT_STOP_WINDOW_MILLIS))
+        var anchor=Math.floorDiv(start,60_000)*60_000
         // Bounded retries handle overlapping minute pages and providers ignoring product filters.
         for(attempt in 0 until 6) {
             currentCoroutineContext().ensureActive()

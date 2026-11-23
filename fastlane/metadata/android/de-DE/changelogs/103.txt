@@ -1,0 +1,1 @@
+Verbindungssuche wieder schnell: Schon bei der Zielwahl werden die nächsten zwei und die letzte Verbindung gesucht, nach „Suchen“ folgen drei spätere und drei frühere, danach je drei beim Wischen. Bei „Ankunft“ fehlen keine Verbindungen mehr zwischen den Balken. Bei Suchfehlern erscheint nur noch eine Meldung.

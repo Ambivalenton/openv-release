@@ -44,22 +44,35 @@ data class PrefetchedJourneys(
 }
 
 /**
- * The first connection on the searched side (departing at/after the time, or arriving at/before it)
- * and the nearest one on the other side, requested in parallel. A failure on the other side still
- * leaves one bar; a failure on the searched side fails the pre-search.
+ * The next two connections on the searched side (departing at/after the time, or arriving at/before it)
+ * and the nearest one on the other side. A failure on the other side still leaves the first bars; a
+ * failure on the searched side fails the pre-search.
+ *
+ * Departure search: both sides at once; the look back assumes a common urban rhythm
+ * ([PREFETCH_CADENCE_HINT_MILLIS]). Arrival search (build 103): the later side continues after the
+ * connections found first. Started from the arrival time itself it found the departures after that time
+ * and the chart then had a gap of hours between both sides.
  */
 suspend fun TransitRepository.prefetchFirstConnections(query: JourneyQuery): List<Trip> = coroutineScope {
-    // The next two connections and the one before them.
     val searched = JourneyBatchPager(this@prefetchFirstConnections, query, initialCount = 2)
-    val other = JourneyBatchPager(this@prefetchFirstConnections, query)
+    if (query.timeMode == TimeMode.ARRIVAL) {
+        val first = searched.initial().trips
+        val later = try { searched.load(searched.secondaryDirection, 1).trips }
+            catch (e: CancellationException) { throw e }
+            catch (_: Exception) { first }
+        return@coroutineScope mergeDuplicateConnections(later, query.ignoreWalking).sortedBy { it.startTime }
+    }
     val otherSide = async {
-        try { other.load(other.secondaryDirection, 1).trips }
+        try { fetchHistoricalConnections(query, query.time, 1, cadenceHint = PREFETCH_CADENCE_HINT_MILLIS) }
         catch (e: CancellationException) { throw e }
         catch (_: Exception) { emptyList() }
     }
     val first = searched.initial().trips
     mergeDuplicateConnections(first + otherSide.await(), query.ignoreWalking).sortedBy { it.startTime }
 }
+
+/** A common urban rhythm; the pre-search looks back twice as far for the one earlier connection. */
+const val PREFETCH_CADENCE_HINT_MILLIS = 15 * 60_000L
 
 /** The settings that shape a search request; a pre-search counts only while they are unchanged. */
 fun AppSettings.searchRouting(): List<Any?> =

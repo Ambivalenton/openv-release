@@ -123,7 +123,7 @@ class Build65IdentityPagingTest {
     }
 
     @Test fun theLoadingPlanIsCentralAndCountsConnections() {
-        assertEquals(listOf(ConnectionWave(3,0),ConnectionWave(6,3),ConnectionWave(9,6)),CONNECTION_WAVES)
+        assertEquals(listOf(ConnectionWave(3,0),ConnectionWave(5,3)),CONNECTION_WAVES)
         assertEquals(3,CONNECTION_EDGE_BATCH);assertEquals(.8f,CONNECTION_EDGE_PREFETCH_FRACTION)
     }
 

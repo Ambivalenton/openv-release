@@ -43,33 +43,28 @@ class Build99Test {
         return pager to steps
     }
 
-    @Test fun aDepartureSearchLoadsEarlierConnectionsBeforeLookingFurtherAhead()=runTest {
+    // Build 103 (publisher's plan): after the first bars three more on the searched side, then three on the other.
+    @Test fun aDepartureSearchLoadsThreeLaterThenThreeEarlier()=runTest {
         val (pager,steps)=steps(TimeMode.DEPARTURE)
-        // The first page holds the next three connections; the very next request goes back in time.
-        assertEquals(ConnectionDirection.EARLIER,steps.first().direction)
-        assertEquals(3,steps.first().laterBefore)
-        // No further future connection is requested before three earlier ones are there.
-        val firstLater=steps.first {it.direction==ConnectionDirection.LATER}
-        assertTrue("Later connections before three earlier ones: $steps",firstLater.earlierBefore>=3)
-        // The overall plan is unchanged: nine on the searched side, six on the other.
-        assertEquals(9,pager.primaryCount());assertEquals(6,pager.secondaryCount())
-        assertEquals(listOf(ConnectionWave(3,0),ConnectionWave(6,3),ConnectionWave(9,6)),CONNECTION_WAVES)
+        assertEquals(listOf(ConnectionDirection.LATER,ConnectionDirection.EARLIER),steps.map {it.direction})
+        assertEquals(3,steps.first().laterBefore);assertEquals(0,steps.first().earlierBefore)
+        assertEquals(6,pager.primaryCount());assertEquals(3,pager.secondaryCount())
+        assertEquals(listOf(ConnectionWave(3,0),ConnectionWave(5,3)),CONNECTION_WAVES)
     }
 
     @Test fun anArrivalSearchKeepsItsSearchedSideFirst()=runTest {
         val (pager,steps)=steps(TimeMode.ARRIVAL)
-        // Arriving by a time: the searched side already lies earlier and stays first.
+        // Arriving by a time: the searched side lies earlier and comes first.
         assertEquals(ConnectionDirection.EARLIER,pager.primaryDirection)
         assertEquals(ConnectionDirection.EARLIER,steps.first().direction)
     }
 
-    @Test fun aSeededPreSearchOnlyCompletesTheEarlierSide()=runTest {
-        // Build 88 pre-search: one bar before and one after the time are already there.
-        val pager=JourneyBatchPager(Provider(),JourneyQuery(a,b,now),listOf(trip(now-480_000),trip(now+120_000)))
-        pager.initial()
+    @Test fun aSeededPreSearchGetsThreeMoreOnEachSide()=runTest {
+        // Pre-search: one bar before and two after the time are already there.
+        val pager=JourneyBatchPager(Provider(),JourneyQuery(a,b,now),listOf(trip(now-480_000),trip(now+120_000),trip(now+720_000)))
         val steps=mutableListOf<Pair<ConnectionDirection,Int>>()
         pager.completeWaves({true}) {direction,count->steps+=direction to count;pager.load(direction,count)}
-        assertEquals(ConnectionDirection.EARLIER to 2,steps.first())
+        assertEquals(listOf(ConnectionDirection.LATER to 3,ConnectionDirection.EARLIER to 3),steps)
     }
 
     @Test fun aReplacedSearchStopsTheWaves()=runTest {

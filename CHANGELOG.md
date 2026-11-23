@@ -4,6 +4,14 @@ Alle nennenswerten Änderungen an Öpen-V. Versionen folgen [Semantic Versioning
 
 ## [Unveröffentlicht]
 
+## [1.0.3] (103) · 2026-11-23
+
+- Balkendiagramm bei „Ankunft“: keine Lücke mehr zwischen den Balken. Die Vorab-Suche holte die nächste spätere Verbindung ab der Ankunftszeit als Abfahrtszeit; das Diagramm lud dann „später“ erst ab dort weiter, und alle Fahrten dazwischen fehlten. Jetzt schließt die spätere Seite an die letzte noch rechtzeitig ankommende Verbindung an.
+- Ladefolge der Verbindungssuche: Schon bei der Zielwahl werden die nächsten zwei Verbindungen und die letzte davor gesucht. Nach „Suchen“ stehen sie sofort da, ohne erneute Anfrage; dann folgen drei spätere und danach drei frühere, anschließend je drei in Wischrichtung. Vorher lud die Suche automatisch 15 Verbindungen in fünf Wellen und fragte die erste Seite trotz Vorab-Suche noch einmal ab.
+- Frühere Verbindungen: Das erste Zeitfenster richtet sich nach dem Takt der schon geladenen Verbindungen – meist eine Anfrage statt drei (10, 30, 90 Minuten zurück).
+- Gemessen mit simuliertem Dienst (800 ms je Anfrage, 20-Minuten-Takt): Vorab-Suche 0,8 s statt 1,6 s; Balken nach „Suchen“ sofort statt nach 0,8 s; Hintergrund fertig nach 1,6 s mit 2 Anfragen statt nach 8,0 s mit 10.
+- Fehler bei der Suche: nur noch eine Meldung. Neben der Fehlerkarte der Suche stehen keine weiteren Zeilen; scheitern frühere und spätere Verbindungen zugleich, gibt es eine gemeinsame Zeile mit einem „Erneut versuchen“.
+
 ## [1.0.2] (102) · 2026-11-23
 
 - Favorit hinzufügen: Das Blatt öffnet sich nicht mehr ein zweites Mal, wenn die Tastatur erscheint. Ursache war, dass das Blatt seine Bewegung bei jeder Änderung der Fensterhöhe neu anlegte; jetzt behält es seine Oberkante, nur der untere Teil weicht der Tastatur, und die Tastatur kommt erst, wenn das Blatt gelandet ist.
@@ -32,7 +40,8 @@ Erste Version.
 - Fahrplandaten von VRR OpenService, Haltestellenverzeichnis für Deutschland offline mitgeliefert.
 - Test-App „Öpen-V · Vorschau“ (`dev.ambivalenton.openv.next`), die sich neben der Store-App installiert.
 
-[Unveröffentlicht]: https://github.com/Ambivalenton/openv-release/compare/v1.0.2...HEAD
+[Unveröffentlicht]: https://github.com/Ambivalenton/openv-release/compare/v1.0.3...HEAD
+[1.0.3]: https://github.com/Ambivalenton/openv-release/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/Ambivalenton/openv-release/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/Ambivalenton/openv-release/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/Ambivalenton/openv-release/releases/tag/v1.0.0

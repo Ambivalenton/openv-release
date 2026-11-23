@@ -15,11 +15,16 @@ fun historicalIdentity(trip:Trip):String = connectionIdentity(trip)
  * Departure queries retain earlier journeys whose arrival overlaps the visible first departure.
  */
 suspend fun TransitRepository.fetchHistoricalConnections(query:JourneyQuery,before:Long,limit:Int=3,
-    excluded:Set<String> = emptySet()):List<Trip> {
+    excluded:Set<String> = emptySet(),
+    /** Build 103: the usual gap between departures, when known. The first look back then reaches about
+     * [limit] connections in one request instead of widening 10 → 30 → 90 minutes one request at a time. */
+    cadenceHint:Long?=null):List<Trip> {
     val wanted=limit.coerceIn(1,6)
     val collected=linkedMapOf<String,Trip>()
     fun rows()=collected.values.sortedByDescending {it.startTime}.take(wanted).sortedBy {it.startTime}
-    val horizons=longArrayOf(10,30,90,180,360,720,1440)
+    val first=cadenceHint?.takeIf {it>0}?.let {(it*(wanted+1)/60_000L).coerceIn(10L,180L)}
+    val horizons=if(first==null) longArrayOf(10,30,90,180,360,720,1440)
+        else (listOf(first)+listOf(30L,90L,180L,360L,720L,1440L).filter {it>first}).toLongArray()
     var horizon=0;var anchor=before-horizons[0]*60_000L;var cursor:String?=null
     val seen=mutableSetOf<String>()
     val complete=withTimeoutOrNull(12_000) {

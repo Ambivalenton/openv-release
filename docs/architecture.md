@@ -53,21 +53,21 @@ sequenceDiagram
     participant N as NetworkClient
     participant S as VRR OpenService
     U->>VM: Ziel wählen
-    VM->>R: Vorab-Suche (höchstens 8 Abrufe)
+    VM->>R: Vorab-Suche: nächste zwei und die letzte davor
     U->>VM: Suchen
-    VM->>P: erste Seite: 3 kommende Verbindungen
+    VM-->>U: Balken der Vorab-Suche sofort (ohne neue Anfrage)
+    VM->>P: drei spätere, dann drei frühere
     P->>R: journeyPage
     R->>N: Trip-Request
     N->>S: höchstens 3 parallel, identische gebündelt
     S-->>N: JSON (bei 429/503: Pause nach Retry-After)
     N-->>VM: Fahrten
-    VM-->>U: Balkendiagramm sofort bedienbar
-    loop Hintergrundwellen
-        VM->>P: zuerst frühere, dann spätere Verbindungen
+    loop beim Wischen
+        VM->>P: je drei in Wischrichtung
     end
 ```
 
-Die Ladefolge ist in `JourneyBatchPager.kt` festgelegt (`CONNECTION_WAVES`, `CONNECTION_WAVE_ORDER`): drei kommende, drei vergangene, drei kommende, drei vergangene, drei kommende; danach je drei in Wischrichtung. Antworten einer älteren Suche verändern den aktuellen Zustand nie (`historyGeneration`).
+Die Ladefolge ist in `JourneyBatchPager.kt` festgelegt (`CONNECTION_WAVES`, `completeWaves`): Vorab-Suche bei der Zielwahl mit den nächsten zwei Verbindungen auf der gesuchten Seite und der nächsten auf der anderen; nach „Suchen“ drei weitere auf der gesuchten Seite, dann drei auf der anderen; danach je drei in Wischrichtung. Ohne Vorab-Suche ist die erste Seite drei Verbindungen auf der gesuchten Seite. Bei „Ankunft“ schließt die spätere Seite an die letzte noch rechtzeitig ankommende Verbindung an. Frühere Verbindungen schauen so weit zurück, wie der Takt der geladenen Verbindungen nahelegt (`fetchHistoricalConnections`, `cadenceHint`). Antworten einer älteren Suche verändern den aktuellen Zustand nie (`historyGeneration`).
 
 ## Wichtige Bausteine
 

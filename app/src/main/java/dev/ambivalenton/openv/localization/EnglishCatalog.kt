@@ -2812,6 +2812,7 @@ internal val englishStrings: Map<String, String> = buildMap {
     put("Weitere Spuren", "Other tracks")
     put("Weitere Symbole anzeigen", "Show more icons")
     put("Weitere Verbindungen bitte bei Bedarf nachladen.", "Load more journeys when you need them.")
+    put("Weitere Verbindungen konnten nicht geladen werden.", "More connections could not be loaded.")
     put("Weitere Verbindungen konnten nicht geladen werden. %1\$s", "More connections could not be loaded. %1\$s")
     put("Weitere Verbindungen konnten nicht geladen werden. Bitte erneut versuchen.", "More connections could not be loaded. Please try again.")
     put("Weitere Verbindungen laden", "Load more connections")

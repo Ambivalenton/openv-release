@@ -1,0 +1,1 @@
+Connection search is fast again: the next two connections and the previous one are searched while you choose the destination; after "Search" three later and three earlier ones follow, then three at a time as you swipe. Arrival searches no longer leave connections out between the bars. A failed search shows a single message.
