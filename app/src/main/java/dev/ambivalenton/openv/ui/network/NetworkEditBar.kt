@@ -181,7 +181,7 @@ fun NetworkEditBar(
                 val middleWidth = boxWidth
                 val leftWidth = boxWidth
                 // Build 104: the gestures of the edit mode in three short cells across the whole bar.
-                GestureBand(stagger(progress, geometry.SETTINGS_START), boxFill, boxInk)
+                GestureBand(stagger(progress, geometry.SETTINGS_START), onContainer)
                 // While a favourite is moved, the tools step back (shrink, sink, fade) and the delete zone springs in.
                 val away = zoneIn.coerceIn(0f, 1f)
                 val toolsHidden = Modifier.graphicsLayer {
@@ -340,9 +340,10 @@ class NetworkDeleteZone {
     var over by androidx.compose.runtime.mutableStateOf(false)
 }
 
-/** The three gestures of the edit mode, each a word and what it does, on the band above the tools. */
+/** The three gestures of the edit mode, each a word and what it does, above the tools. Plain text with thin
+ * separators on the bar itself – no box of its own, so it does not read as further buttons. */
 @Composable
-private fun BoxScope.GestureBand(reveal: Float, fill: Color, ink: Color) {
+private fun BoxScope.GestureBand(reveal: Float, ink: Color) {
     val geometry = NetworkEditBarGeometry
     val cells = listOf(tr("Halten und schieben") to tr("Favorit verschieben"), tr("Ziehen") to tr("Linie verbinden"),
         tr("Tippen") to tr("Favorit einstellen"))
@@ -350,7 +351,6 @@ private fun BoxScope.GestureBand(reveal: Float, fill: Color, ink: Color) {
         Modifier.align(Alignment.TopStart).padding(start = geometry.INSET, end = geometry.INSET, top = geometry.INSET)
             .fillMaxWidth().height(geometry.INFO_HEIGHT - geometry.INSET)
             .graphicsLayer { alpha = (reveal * 1.6f).coerceIn(0f, 1f); translationY = (1f - reveal.coerceIn(0f, 1f)) * 8.dp.toPx() }
-            .clip(appCorner((geometry.INFO_HEIGHT - geometry.INSET) / 2)).background(fill)
             .semantics(mergeDescendants = true) {}.testTag("network-gesture-band"),
         verticalAlignment = Alignment.CenterVertically,
     ) {
