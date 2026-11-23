@@ -93,10 +93,10 @@ class Build98FavoriteFlowTest {
         open({})
         compose.onNodeWithTag("favorite-suggestion-0").performClick()
         compose.waitForIdle()
-        compose.onAllNodesWithText("Eigene Farbe auswählen").assertCountEquals(0)
+        compose.onAllNodesWithText("Eigene Farbe wählen").assertCountEquals(0)
         compose.onNodeWithTag("favorite-color-more").performClick()
         compose.waitForIdle()
-        compose.onNodeWithText("Eigene Farbe auswählen").assertExists()
+        compose.onNodeWithText("Eigene Farbe wählen").assertExists()
     }
 
     /** Build 101: after saving, the saved moment offers the next step – a line to "Zuhause", another favourite, done. */

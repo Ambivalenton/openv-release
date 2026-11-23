@@ -130,8 +130,7 @@ fun ColorPickerSheet(
                     }
                 }
             }
-            ColorSelectionButton(tr("Eigene Farbe wählen"), manualColor ?: (MaterialTheme.colorScheme.primary.toArgb().toLong() and 0xffffffffL),
-                { advanced = true },Modifier.testTag("color-picker-advanced"))
+            CustomColorEntry(manualColor, { advanced = true }, Modifier.testTag("color-picker-advanced"))
             history?.let { colors ->
                 Section(tr("Gespeicherte Farben")) {
                     if (colors.recent.isNotEmpty()) {
@@ -183,6 +182,7 @@ fun ColorPickerSheet(
             },
             { advanced = false },
             previewContent,
+            recentColors = history?.recent.orEmpty(),
         )
 }
 
@@ -226,6 +226,7 @@ fun ColorSelectionButton(
     }
 }
 
+/** Build 108 · the colour studio ([ColorStudioDialog]); kept under this name for every caller. */
 @Composable
 internal fun AdvancedColorDialog(
     seed: Long,
@@ -235,106 +236,7 @@ internal fun AdvancedColorDialog(
     previewContent: (@Composable (Long?) -> Unit)? = null,
     themeAccentColor:Long?=null,
     recentColors:List<Long> = emptyList(),
-) {
-    var working by rememberSaveable(seed) { mutableLongStateOf(seed) }
-    val initialHsv =
-        remember(seed) { FloatArray(3).also { NativeColor.colorToHSV(seed.toInt(), it) } }
-    var hue by rememberSaveable(seed) { mutableFloatStateOf(initialHsv[0]) }
-    var saturation by rememberSaveable(seed) { mutableFloatStateOf(initialHsv[1]) }
-    var value by rememberSaveable(seed) { mutableFloatStateOf(initialHsv[2]) }
-    var alpha by rememberSaveable(seed) { mutableFloatStateOf((seed ushr 24 and 255) / 255f) }
-    var sourceHue by rememberSaveable(seed) { mutableDoubleStateOf(Hct.fromInt(seed.toInt()).hue) }
-    var sourceChroma by
-        rememberSaveable(seed) { mutableDoubleStateOf(Hct.fromInt(seed.toInt()).chroma) }
-    fun choose(color: Long, source: Boolean = true) {
-        working = if (allowAlpha) color else color or 0xff000000L
-        val hsv = FloatArray(3).also { NativeColor.colorToHSV(working.toInt(), it) }
-        hue = hsv[0]
-        saturation = hsv[1]
-        value = hsv[2]
-        alpha = (working ushr 24 and 255) / 255f
-        if (source)
-            Hct.fromInt(working.toInt()).let {
-                sourceHue = it.hue
-                sourceChroma = it.chroma
-            }
-    }
-    fun change(h: Float = hue, s: Float = saturation, v: Float = value, a: Float = alpha) {
-        choose(
-            NativeColor.HSVToColor((a * 255).roundToInt(), floatArrayOf(h, s, v)).toLong() and
-                0xffffffffL
-        )
-        hue = h
-        saturation = s
-        value = v
-    }
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false),
-    ) {
-        ReleaseDialogWindowOnDispose()
-        Surface(
-            Modifier.fillMaxWidth().padding(16.dp).heightIn(max = 760.dp).testTag("advanced-color-dialog"),
-            shape = MaterialTheme.shapes.large,
-        ) {
-            Box(Modifier.fillMaxWidth()) {
-            Column(
-                Modifier.imePadding().verticalScroll(rememberScrollState()).padding(start=20.dp,end=20.dp,top=20.dp,bottom=104.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
-                    FittedText(tr("Eigene Farbe"),Modifier.weight(1f),style=MaterialTheme.typography.headlineSmall)
-                    IconButton(onDismiss) {AppIcon(R.drawable.ic_close,tr("Farbauswahl schließen"))}
-                }
-                previewContent?.invoke(working)
-                themeAccentColor?.let {accent->
-                    ThemedTonalButton({choose(accent)},Modifier.fillMaxWidth().testTag("picker-theme-accent")) {
-                        Text(tr("Akzentfarbe des App-Designs wählen"))
-                    }
-                }
-                if(recentColors.isNotEmpty()) {
-                    FittedText(tr("Zuletzt gewählt"),style=MaterialTheme.typography.titleSmall)
-                    FlowRow(Modifier.testTag("picker-recent-colors")) {
-                        recentColors.distinct().take(12).forEach {color->
-                            ColorSwatch(color,colorHex(color,false),working==color) {choose(color)}
-                        }
-                    }
-                }
-                Text(tr("Tippen zum Wählen · Gedrückt halten zum Ziehen · Daneben scrollen"),style=MaterialTheme.typography.bodySmall)
-                ColorWheel(hue, saturation, value) { h, s -> change(h = h, s = s) }
-                Text(
-                    tr("Tonalität · %1\$s", Hct.fromInt(working.toInt()).tone.roundToInt().coerceIn(10, 90)),
-                    style = MaterialTheme.typography.labelLarge,
-                )
-                Slider(
-                    Hct.fromInt(working.toInt()).tone.toFloat().coerceIn(10f, 90f),
-                    {
-                        choose(
-                            toneColor(sourceHue, sourceChroma, it.toDouble()) and
-                                0xffffffL or
-                                ((alpha * 255).roundToInt().toLong() shl 24),
-                            false,
-                        )
-                    },
-                    valueRange = 10f..90f,
-                    modifier =
-                        Modifier.semantics {
-                            contentDescription = tr("Tonalität, gleicher Farbton, Tone 10 bis 90")
-                        },
-                )
-                PickerSlider(tr("Farbton"), hue, 0f..359.99f) { change(h = it) }
-                PickerSlider(tr("Sättigung"), saturation, 0f..1f) { change(s = it) }
-                PickerSlider(tr("Helligkeit"), value, 0f..1f) { change(v = it) }
-                if (allowAlpha) PickerSlider(tr("Deckkraft"), alpha, 0f..1f) { change(a = it) }
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    TextButton(onDismiss) { Text(tr("Abbrechen")) }
-                }
-            }
-            ColorApplyFab(working,{onConfirm(working)},Modifier.align(Alignment.BottomEnd).padding(20.dp).testTag("advanced-color-apply"))
-            }
-        }
-    }
-}
+) = ColorStudioDialog(seed, allowAlpha, onConfirm, onDismiss, previewContent, themeAccentColor, recentColors)
 
 @Composable internal fun ColorApplyFab(color:Long?,onClick:()->Unit,modifier:Modifier=Modifier) {
     val fill=color?.let {Color(it)} ?: MaterialTheme.colorScheme.primary
@@ -366,86 +268,5 @@ internal fun ColorSwatch(color: Long, label: String, selected: Boolean, modifier
                 drawPath(p,contrast,style=androidx.compose.ui.graphics.drawscope.Stroke(2.8.dp.toPx(),cap=StrokeCap.Round,join=StrokeJoin.Round))
             }
         }
-    }
-}
-
-@Composable
-private fun PickerSlider(
-    label: String,
-    value: Float,
-    range: ClosedFloatingPointRange<Float>,
-    onChange: (Float) -> Unit,
-) {
-    Column {
-        Text(
-            tr("%1\$s · %2\$s%3\$s", label, (if (range.endInclusive > 1f) value else value * 100).roundToInt(), if (range.endInclusive > 1f) "°" else "%"),
-            style = MaterialTheme.typography.labelLarge,
-        )
-        Slider(
-            value,
-            onChange,
-            valueRange = range,
-            modifier = Modifier.semantics { contentDescription = label },
-        )
-    }
-}
-
-@Composable
-private fun ColorWheel(
-    hue: Float,
-    saturation: Float,
-    value: Float,
-    onChange: (Float, Float) -> Unit,
-) {
-    val callback by rememberUpdatedState(onChange)
-    val ring = remember { (0..6).map { Color.hsv((it * 60f).coerceAtMost(359.99f), 1f, 1f) } }
-    Canvas(
-        Modifier.fillMaxWidth()
-            .height(220.dp).testTag("color-wheel")
-            .semantics {
-                stateDescription=tr("Farbton %1\$s Grad, Sättigung %2\$s Prozent",hue.roundToInt(),(saturation*100).roundToInt())
-                contentDescription =
-                    tr("Farbrad; alternativ Farbton und Sättigung mit den Schiebereglern einstellen")
-            }
-            .pointerInput(Unit) {
-                fun update(p: Offset) {
-                    val dx = p.x - size.width / 2f
-                    val dy = p.y - size.height / 2f
-                    val h = ((atan2(dy, dx) * 180 / PI + 360) % 360).toFloat()
-                    val s = (hypot(dx, dy) / (min(size.width, size.height) / 2f)).coerceIn(0f, 1f)
-                    callback(h, s)
-                }
-                detectTapGestures { if ((it-Offset(size.width/2f,size.height/2f)).getDistance() <= min(size.width,size.height)/2f) update(it) }
-            }
-            .pointerInput(Unit) {
-                awaitEachGesture {
-                    val down=awaitFirstDown(requireUnconsumed=false)
-                    val center=Offset(size.width/2f,size.height/2f)
-                    val radius=min(size.width,size.height)/2f
-                    // A gesture begun in the surrounding scroll gutter never acquires the wheel.
-                    if((down.position-center).getDistance()>radius) return@awaitEachGesture
-                    val held=awaitLongPressOrCancellation(down.id) ?: return@awaitEachGesture
-                    fun update(position:Offset) {
-                        val d=position-center
-                        callback(((atan2(d.y,d.x)*180/PI+360)%360).toFloat(),(d.getDistance()/radius).coerceIn(0f,1f))
-                    }
-                    held.consume();update(held.position)
-                    drag(held.id) {change->change.consume();update(change.position)}
-                }
-            }
-    ) {
-        val radius = min(size.width, size.height) / 2f
-        drawCircle(Brush.sweepGradient(ring, center), radius)
-        drawCircle(
-            Brush.radialGradient(listOf(Color.White, Color.Transparent), center, radius),
-            radius,
-        )
-        drawCircle(Color.Black.copy(alpha = 1f - value), radius)
-        val angle = hue * PI / 180
-        val pointer =
-            center + Offset(cos(angle).toFloat(), sin(angle).toFloat()) * (saturation * radius)
-        drawCircle(Color.Black, 10.dp.toPx(), pointer)
-        drawCircle(Color.White, 7.dp.toPx(), pointer)
-        drawCircle(Color.hsv(hue, saturation, value), 4.dp.toPx(), pointer)
     }
 }

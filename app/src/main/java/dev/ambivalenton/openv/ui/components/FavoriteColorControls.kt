@@ -5,7 +5,6 @@ import androidx.compose.foundation.border
 
 import androidx.compose.foundation.background
 
-import dev.ambivalenton.openv.ui.components.ThemedOutlinedButton
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectableGroup
@@ -50,9 +49,7 @@ import dev.ambivalenton.openv.localization.tr
                 }
             }
         }
-        ThemedOutlinedButton(onPickerOpen,Modifier.fillMaxWidth().heightIn(min=48.dp).testTag("favorite-custom-color")) {
-            Text(tr("Eigene Farbe auswählen"))
-        }
+        CustomColorEntry(selected?.takeIf {own->presets.none {it.color==own}},onPickerOpen,Modifier.padding(top=4.dp).testTag("favorite-custom-color"))
         // M16: a very light or very dark own colour gets a readability preview on the real surface:
         // names keep the normal text colour, the colour itself shows in the outlined symbol.
         selected?.let {seed->

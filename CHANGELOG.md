@@ -4,6 +4,12 @@ Alle nennenswerten Änderungen an Öpen-V. Versionen folgen [Semantic Versioning
 
 ## [Unveröffentlicht]
 
+## [1.0.8] (108) · 2026-11-24
+
+- „Eigene Farbe“ neu gestaltet: eine große Farbfläche (links blass, rechts kräftig, oben hell, unten dunkel) und ein Farbton-Regenbogen folgen dem Finger sofort – das Farbrad mit Gedrückthalten und die vier Schieberegler entfallen. Deckkraft als eigener Streifen, wo eine Farbe durchscheinen darf. Oben „Vorher“ und neue Farbe nebeneinander mit Leseprobe „Aa“ (ein Tipp auf „Vorher“ setzt zurück) und das Feld für den Hex-Code. Darunter mit einem Tipp: hellere und dunklere Stufen derselben Farbe, passende Farben (Nachbarn, Gegenfarbe, Dreiklang), der Akzent des App-Designs und zuletzt gewählte Farben. Klare Knöpfe „Abbrechen“ und „Übernehmen“ (in der gewählten Farbe). TalkBack: Fläche und Streifen nennen ihre Werte und lassen sich ohne Ziehen verstellen.
+- Der Zugang „Eigene Farbe wählen“ ist eine eigene Zeile mit Farbkreis und zeigt die zuletzt gemischte Farbe; im Favoriten-Dialog und in der Farbauswahl gleich.
+- Mischpalette: Sie federt aus dem Knopf heraus – die Breite eilt der Höhe etwas voraus, sodass sie wie ein Tropfen aufquillt –, schwingt leicht über und kommt zur Ruhe; die Farbnäpfe ploppen nacheinander auf. Beim Schließen sammeln sich erst die Näpfe, dann zieht sich die Palette ohne Nachschwingen zurück. Sie bleibt dabei immer ganz auf dem Bildschirm. Im Ruhemodus ohne Bewegung.
+
 ## [1.0.7] (107) · 2026-11-24
 
 - Favoriten-Widget neu gestaltet: Jeder Favorit ist eine Kachel in seiner Farbe mit Symbol und – wo Platz ist – Namen; breite Kacheln nennen auch die Haltestelle. Die Anordnung passt sich jeder Größe an: 1×1 zeigt den wichtigsten Favoriten mit Namen, flache Widgets eine Reihe, schmale hohe eine Liste, große Widgets große Kacheln mit Suchknopf. Hervorgehobene Favoriten stehen vorn in kräftiger Farbe. Widgets mit nur einer Kachelreihe scrollen nicht mehr, sondern zeigen, was hineinpasst; bisher blieb 1×1 leer und es gab nirgends Namen.
@@ -70,7 +76,8 @@ Erste Version.
 - Fahrplandaten von VRR OpenService, Haltestellenverzeichnis für Deutschland offline mitgeliefert.
 - Test-App „Öpen-V · Vorschau“ (`dev.ambivalenton.openv.next`), die sich neben der Store-App installiert.
 
-[Unveröffentlicht]: https://github.com/Ambivalenton/openv-release/compare/v1.0.7...HEAD
+[Unveröffentlicht]: https://github.com/Ambivalenton/openv-release/compare/v1.0.8...HEAD
+[1.0.8]: https://github.com/Ambivalenton/openv-release/compare/v1.0.7...v1.0.8
 [1.0.7]: https://github.com/Ambivalenton/openv-release/compare/v1.0.6...v1.0.7
 [1.0.6]: https://github.com/Ambivalenton/openv-release/compare/v1.0.5...v1.0.6
 [1.0.5]: https://github.com/Ambivalenton/openv-release/compare/v1.0.4...v1.0.5

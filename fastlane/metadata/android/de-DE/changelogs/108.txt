@@ -1,0 +1,4 @@
+• „Eigene Farbe“ neu: große Farbfläche und Farbton-Streifen, die dem Finger sofort folgen; Deckkraft wo nötig.
+• Vorher/Nachher mit Leseprobe und Hex-Code; ein Tipp auf „Vorher“ setzt zurück.
+• Passende Farben mit einem Tipp: hellere und dunklere Stufen, Nachbarn, Gegenfarbe, App-Akzent, zuletzt gewählt.
+• Mischpalette öffnet sich federnd, Farbnäpfe erscheinen nacheinander.

@@ -1,0 +1,4 @@
+• "Custom colour" redesigned: a large colour field and a hue strip that follow your finger at once; opacity where needed.
+• Before/after with a readability sample and hex code; tap "Before" to reset.
+• Matching colours in one tap: lighter and darker steps, neighbours, opposite, app accent, recently chosen.
+• The mixing palette springs open and its colour wells pop in one after another.

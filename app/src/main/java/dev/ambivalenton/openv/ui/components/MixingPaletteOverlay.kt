@@ -7,8 +7,8 @@ import android.graphics.Path as NativePath
 import android.graphics.RectF
 import android.graphics.Typeface
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.Canvas
@@ -40,6 +40,9 @@ import dev.ambivalenton.openv.data.model.reduceMotion
 import dev.ambivalenton.openv.localization.tr
 import dev.ambivalenton.openv.ui.theme.LocalAppSettings
 import dev.ambivalenton.openv.ui.theme.appCorner
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.math.*
 import kotlin.random.Random
 
@@ -57,13 +60,29 @@ private fun interpolate(a:Float,b:Float,t:Float)=a+(b-a)*t
 private fun interpolate(a:Rect,b:Rect,t:Float)=Rect(interpolate(a.left,b.left,t),interpolate(a.top,b.top,t),interpolate(a.right,b.right,t),interpolate(a.bottom,b.bottom,t))
 @Composable internal fun MixingPaletteOverlay(title:String,fields:List<PaletteField>,values:Map<String,Long>,origin:PaletteMorphOrigin?,
     onEdit:(String)->Unit,onReset:()->Unit,onDismiss:()->Unit,closeRequested:Boolean=false) {
-    val progress=remember{Animatable(0f)};var closing by remember{mutableStateOf(false)}
+    // Build 108: the palette springs out of the button – its width a little ahead of its height, so it
+    // swells like a drop – and settles with a soft overshoot; the wells pop in one after another.
+    // Closing gathers the wells first and draws the palette back without bouncing.
+    val count=fields.size+1
+    val grow=remember{Animatable(0f)};val rise=remember{Animatable(0f)}
+    val pops=remember(count){List(count){Animatable(0f)}}
+    var closing by remember{mutableStateOf(false)}
     val finish by rememberUpdatedState(onDismiss)
     val calm=LocalAppSettings.current.reduceMotion||!ValueAnimator.areAnimatorsEnabled()
     LaunchedEffect(closeRequested){if(closeRequested)closing=true}
     LaunchedEffect(closing,calm){
-        progress.animateTo(if(closing)0f else 1f,tween(if(calm)0 else if(closing)540 else 680,easing=FastOutSlowInEasing))
-        if(closing)finish()
+        if(!closing){
+            launch{grow.animateTo(1f,if(calm)snap()else spring(PALETTE_GROW_DAMPING,PALETTE_GROW_STIFFNESS))}
+            launch{rise.animateTo(1f,if(calm)snap()else spring(PALETTE_RISE_DAMPING,PALETTE_RISE_STIFFNESS))}
+            pops.forEachIndexed{i,pop->launch{if(!calm)delay(PALETTE_WELL_DELAY+i*PALETTE_WELL_STAGGER);pop.animateTo(1f,if(calm)snap()else spring(PALETTE_WELL_DAMPING,PALETTE_WELL_STIFFNESS))}}
+        }else{
+            coroutineScope{
+                pops.asReversed().forEachIndexed{i,pop->launch{if(!calm)delay(i*12L);pop.animateTo(0f,if(calm)snap()else spring(1f,1100f,.01f))}}
+                launch{if(!calm)delay(50);grow.animateTo(0f,if(calm)snap()else spring(1f,PALETTE_CLOSE_STIFFNESS,.004f))}
+                launch{if(!calm)delay(50);rise.animateTo(0f,if(calm)snap()else spring(1f,PALETTE_CLOSE_STIFFNESS*.85f,.004f))}
+            }
+            finish()
+        }
     }
     val requestClose={closing=true}
     AppDialog(requestClose,DialogProperties(usePlatformDefaultWidth=false,decorFitsSystemWindows=false),onTabDismiss={finish()},behindNavigation=true,drawScrim=false){
@@ -78,7 +97,6 @@ private fun interpolate(a:Rect,b:Rect,t:Float)=Rect(interpolate(a.left,b.left,t)
         val type=MaterialTheme.typography.labelMedium
         val face=LocalFontFamilyResolver.current.resolve(type.fontFamily,type.fontWeight?:FontWeight.Medium,FontStyle.Normal,FontSynthesis.All).value as Typeface
         val labelSize=with(density){type.fontSize.toPx()}
-        val count=fields.size+1
         BoxWithConstraints(Modifier.fillMaxSize().testTag("design-palette-dialog").onGloballyPositioned{coordinates->
             val screen=IntArray(2);val window=IntArray(2);view.getLocationOnScreen(screen);view.getLocationInWindow(window)
             screenOffset=coordinates.boundsInWindow().topLeft+Offset((screen[0]-window[0]).toFloat(),(screen[1]-window[1]).toFloat())
@@ -89,11 +107,17 @@ private fun interpolate(a:Rect,b:Rect,t:Float)=Rect(interpolate(a.left,b.left,t)
             val placement=mixingPalettePlacement(totalW,totalH,start,count,clearance,density.density)
             val target=placement.bounds;val w=target.width;val h=target.height;val wide=placement.wide
             val spots=remember(count,seed,wide){mixingPaletteSpots(count,seed,wide)}
-            val p=progress.value;val q=mixingPaletteHole(count,wide)
-            val width=interpolate(start.width,w,p);val height=interpolate(start.height,h,p)
-            val pivot=Offset(interpolate(.5f,q.x,p),interpolate(.5f,q.y,p))
-            val current=Rect(placement.anchor.x-pivot.x*width,placement.anchor.y-pivot.y*height,placement.anchor.x+(1-pivot.x)*width,placement.anchor.y+(1-pivot.y)*height)
-            val alpha=((p-.30f)/.55f).coerceIn(0f,1f);val active=p>=.999f&&!closing
+            val px=grow.value.coerceAtLeast(0f);val py=rise.value.coerceAtLeast(0f)
+            val p=((px+py)/2f).coerceIn(0f,1f);val q=mixingPaletteHole(count,wide)
+            val width=interpolate(start.width,w,px);val height=interpolate(start.height,h,py)
+            // The palette grows out of the button's corner: its grip reaches the button early, so the
+            // swelling body (and its overshoot) never runs past the screen edge.
+            val lead=(p/.35f).coerceIn(0f,1f).let{it*it*(3-2*it)}
+            val pivot=Offset(interpolate(.5f,q.x,lead),interpolate(.5f,q.y,lead))
+            val edge=4*density.density
+            val loose=Rect(placement.anchor.x-pivot.x*width,placement.anchor.y-pivot.y*height,placement.anchor.x+(1-pivot.x)*width,placement.anchor.y+(1-pivot.y)*height)
+            val current=loose.translate(min(0f,totalW-edge-loose.right)+max(0f,edge-loose.left),min(0f,totalH-edge-loose.bottom)+max(0f,edge-loose.top))
+            val alpha=((p-.30f)/.55f).coerceIn(0f,1f);val active=p>=.96f&&!closing
             val holeRadius=mixingPaletteHoleRadius(w,h,density.density)
             val region=remember(w,h,wide,count,holeRadius){android.graphics.Region().apply{
                 setPath(mixingPalettePath(w,h,1f,wide,count,holeRadius),android.graphics.Region(0,0,ceil(w).toInt(),ceil(h).toInt()))
@@ -117,7 +141,11 @@ private fun interpolate(a:Rect,b:Rect,t:Float)=Rect(interpolate(a.left,b.left,t)
                     paint.alpha=(255*p).roundToInt();native.drawPath(path,paint);paint.alpha=255;paint.shader=null;native.restore()
                     paint.color=scheme.outlineVariant.copy(alpha=.8f*p).toArgb();paint.style=Paint.Style.STROKE;paint.strokeWidth=density.density;native.drawPath(path,paint);paint.style=Paint.Style.FILL
                     if(alpha>0f)spots.forEachIndexed{index,spot->
+                        val pop=pops[index].value
+                        if(pop<=.002f)return@forEachIndexed
                         val center=Offset(spot.x*w,spot.y*h);val radius=spot.radius*w
+                        val wellSaved=native.save();native.scale(pop,pop,center.x,center.y)
+                        val alpha=alpha*pop.coerceIn(0f,1f)
                         val reset=index==fields.size
                         val color=if(reset)defaults.first()else values.getValue(fields[index].key).toInt()
                         paint.color=Color(color).copy(alpha=alpha).toArgb()
@@ -128,6 +156,7 @@ private fun interpolate(a:Rect,b:Rect,t:Float)=Rect(interpolate(a.left,b.left,t)
                         val textColor=if(reset)paletteLabelColor(defaults.first())else labelColors.getValue(fields[index].key)
                         paint.style=Paint.Style.STROKE;paint.strokeWidth=density.density;paint.color=Color(textColor).copy(alpha=.2f*alpha).toArgb();native.drawCircle(center.x,center.y,radius-.5f*density.density,paint);paint.style=Paint.Style.FILL
                         drawPaletteWellLabel(native,paint,if(reset)resetLabel else fields[index].title,center,radius,textColor,alpha,face,labelSize,reset)
+                        native.restoreToCount(wellSaved)
                     }
                     native.restoreToCount(saved)
                 }
@@ -148,6 +177,16 @@ private fun interpolate(a:Rect,b:Rect,t:Float)=Rect(interpolate(a.left,b.left,t)
         }
     }
 }
+
+internal const val PALETTE_GROW_DAMPING=.6f
+internal const val PALETTE_GROW_STIFFNESS=320f
+internal const val PALETTE_RISE_DAMPING=.66f
+internal const val PALETTE_RISE_STIFFNESS=230f
+internal const val PALETTE_WELL_DAMPING=.55f
+internal const val PALETTE_WELL_STIFFNESS=540f
+internal const val PALETTE_WELL_DELAY=130L
+internal const val PALETTE_WELL_STAGGER=36L
+internal const val PALETTE_CLOSE_STIFFNESS=620f
 
 private fun drawPaletteWellLabel(canvas:android.graphics.Canvas,paint:Paint,title:String,center:Offset,radius:Float,color:Int,alpha:Float,face:Typeface,labelSize:Float,reset:Boolean){
     paint.color=Color(color).copy(alpha=alpha).toArgb();paint.typeface=face
