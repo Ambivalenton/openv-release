@@ -111,6 +111,8 @@ fun SearchScreen(
     addFavorite:Int=0,
     /** A favourite or line searched from the typed start (null: the app's start). */
     onFavoriteFrom:(String,Long,TimeMode,Location?)->Unit={id,time,mode,_->onFavorite(id,time,mode)},
+    /** Build 106: the plan is being edited (the navigation pill steps aside meanwhile). */
+    onPlanEditing:(Boolean)->Unit={},
 ) {
     var destination by
         rememberSaveable(stateSaver = locationSaver) { mutableStateOf<Location?>(null) }
@@ -136,6 +138,8 @@ fun SearchScreen(
     var plannerStart by rememberSaveable(stateSaver = locationSaver) {
         mutableStateOf(ui.store.settings.manualOrigin?.takeIf { it.routable && !it.isDevicePosition }) }
     var plannerFields by rememberSaveable { mutableIntStateOf(0) }
+    // Build 106: a favourite held on the plan becomes the start; the start field is renewed to show it.
+    var plannerStartPicked by rememberSaveable { mutableIntStateOf(0) }
     val plannerStartFocus = remember { androidx.compose.ui.focus.FocusRequester() }
     val plannerMotion = dev.ambivalenton.openv.ui.components.rememberPlannerSwapMotion()
     val plannerCalm = dev.ambivalenton.openv.ui.components.plannerMotionCalm()
@@ -148,6 +152,8 @@ fun SearchScreen(
     androidx.activity.compose.BackHandler(originOpen) { originOpen = false }
     var edit by remember { mutableStateOf<Favorite?>(null) }
     var editing by rememberSaveable {mutableStateOf(false)}
+    val reportEditing by rememberUpdatedState(onPlanEditing)
+    DisposableEffect(editing) { reportEditing(editing); onDispose { reportEditing(false) } }
     var edgeMenu by rememberSaveable {mutableStateOf<String?>(null)}
     var connectFrom by rememberSaveable {mutableStateOf<String?>(null)}
     var trayPick by rememberSaveable {mutableStateOf<String?>(null)}
@@ -331,6 +337,12 @@ fun SearchScreen(
         onFavoriteFrom(id, time, mode, origin)
     }
     val favoriteSearch: (String, Long, TimeMode) -> Unit = if (planner) ::plannerFavorite else onFavorite
+    /** Planermodus: holding a favourite on the plan enters it as the start in the field above. */
+    fun plannerStartFrom(id: String) {
+        val favorite = ui.store.favorites.firstOrNull { it.id == id } ?: return
+        plannerStart = favorite.location; startHint = null; sameHint = false
+        plannerStartPicked++
+    }
     fun startSearch() {
         val target = destination?.takeIf { it.routable }
         if (planner) {
@@ -425,7 +437,7 @@ fun SearchScreen(
                 if (planner) {
                     dev.ambivalenton.openv.ui.components.PlannerFieldPair(plannerMotion, ::plannerSwap,
                         swapEnabled = plannerStart != null || destination != null,
-                        first = { m -> key(plannerFields) {
+                        first = { m -> key(plannerFields, plannerStartPicked) {
                             PlaceSearchField(tr("Start, Adresse oder Haltestelle"), plannerStart, providerKey, vm::findLocations,
                                 { plannerStart = it; startHint = null },
                                 modifier = m.testTag("planner-start-field"), expressive = true,
@@ -577,8 +589,8 @@ fun SearchScreen(
                         onNodeTap = { id -> if (editing) edit = ui.store.favorites.firstOrNull { it.id == id } else favoriteSearch(id, selectedTime ?: System.currentTimeMillis(), mode) },
                         // Einstellungen → Favoriten → "Favorit im Netzplan gedrückt halten".
                         onNodeHold = { id ->
-                            when (settings.networkHoldAction) {
-                                NetworkHoldAction.LOCATION -> vm.toggleLocationOverride(id)
+                            when (settings.holdAction) {
+                                NetworkHoldAction.LOCATION -> if (planner) plannerStartFrom(id) else vm.toggleLocationOverride(id)
                                 NetworkHoldAction.PIN -> onPinFavorite(id)
                                 NetworkHoldAction.OVERVIEW -> vm.toggleOverviewFavorite(id)
                                 // MOVE is handled by the plan itself (onEditRequest); NOTHING does nothing.

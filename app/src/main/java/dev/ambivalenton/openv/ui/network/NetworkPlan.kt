@@ -199,7 +199,7 @@ fun NetworkPlan(
     val overrideId = store.locationOverride?.takeIf { store.originSource() == OriginSource.OVERRIDE }?.nodeId
     // What a hold does in live mode, and the favourite pinned to the overview (only shown
     // while that hold action is chosen, because only then it changes the overview).
-    val holdAction = store.settings.networkHoldAction
+    val holdAction = store.settings.holdAction
     val overviewPins = if (holdAction == NetworkHoldAction.OVERVIEW) store.overviewPins.toSet() else emptySet()
     // The design's sheet: printed-map designs use their paper in light mode and a dark sheet with a
     // hint of it in dark mode (AMOLED included), so the plan never glares in a dark app.
@@ -988,10 +988,11 @@ private fun nodeSemantics(
     if (!editing) {
         onClick(tr("Verbindung hierher suchen")) { actions.onNodeTap(favorite.id); true }
         // The long-click action follows "Favorit im Netzplan gedrückt halten".
-        when (store.settings.networkHoldAction) {
+        when (store.settings.holdAction) {
             NetworkHoldAction.NOTHING -> {}
             NetworkHoldAction.MOVE -> onLongClick(tr("Bearbeiten und verschieben")) { actions.onEditRequest(); true }
-            NetworkHoldAction.LOCATION -> onLongClick(if (favorite.id == overrideId) tr("Standortfestlegung aufheben") else tr("Als Standort festlegen")) { actions.onNodeHold(favorite.id); true }
+            NetworkHoldAction.LOCATION -> onLongClick(if (store.settings.plannerMode) tr("Als Startpunkt setzen")
+                else if (favorite.id == overrideId) tr("Standortfestlegung aufheben") else tr("Als Standort festlegen")) { actions.onNodeHold(favorite.id); true }
             NetworkHoldAction.PIN -> onLongClick(tr("Verbindung anpinnen")) { actions.onNodeHold(favorite.id); true }
             NetworkHoldAction.OVERVIEW -> onLongClick(if (favorite.id in overviewPins) tr("Nicht mehr in der Übersicht anzeigen") else tr("In Übersicht anzeigen")) { actions.onNodeHold(favorite.id); true }
         }

@@ -70,10 +70,16 @@ fun FavoriteSettingsContent(
     if (listOpen) FavoriteListDialog(store.favorites, onAdd, onEdit) { listOpen = false }
     // Favourites at the current location are always hidden in the overview (no switch).
     FavoriteRadiusSetting(settings.favoriteRadiusMeters) { meters -> onSettings { it.copy(favoriteRadiusMeters = meters) } }
-    // What holding a favourite in the plan does; fixed stops, default "frei bewegen".
-    StepBubbleSetting(tr("Favorit im Netzplan gedrückt halten"), NetworkHoldAction.entries.map { it.title },
-        settings.networkHoldAction.ordinal, { index -> onSettings { it.copy(networkHoldAction = NetworkHoldAction.entries[index]) } },
-        "network-hold", description = { NetworkHoldAction.entries[it].description })
+    // What holding a favourite in the plan does; fixed stops, default "frei bewegen". Build 106: the
+    // Planermodus has its own choice (default "Als Startpunkt setzen") and no "In Übersicht anzeigen".
+    val planner = settings.plannerMode
+    val holdChoices = networkHoldChoices(planner)
+    key(planner) {
+        StepBubbleSetting(tr("Favorit im Netzplan gedrückt halten"), holdChoices.map { it.titleFor(planner) },
+            holdChoices.indexOf(if (planner) settings.holdAction else settings.networkHoldAction).coerceAtLeast(0),
+            { index -> onSettings { if (planner) it.copy(plannerHoldAction = holdChoices[index]) else it.copy(networkHoldAction = holdChoices[index]) } },
+            "network-hold", description = { holdChoices[it].descriptionFor(planner) })
+    }
     // The grid comes last (scrolling through the list used to resize it by accident).
     // Every change re-arranges the favourites (and removes the lines): always confirmed first.
     NetworkGridSizeSetting(store.network.columns, store.network.rows, { c, r -> store.outsideGrid(c, r).map { it.label } }, onGridSize)

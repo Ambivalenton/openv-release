@@ -64,6 +64,9 @@ data class AppSettings(
     val networkVehicles: Boolean = true,
     /** Holding a favourite in the network plan (live mode). */
     val networkHoldAction: NetworkHoldAction = NetworkHoldAction.MOVE,
+    /** Build 106: holding a favourite while the Planermodus is on – its own choice, by default the
+     * favourite becomes the start in the field above (there is no overview and no location to set). */
+    val plannerHoldAction: NetworkHoldAction = NetworkHoldAction.LOCATION,
     /** H07 (build 93): the preferred view of the results, chart or list. */
     val resultsView: ResultsView = ResultsView.CHART,
     /** 2.10 (build 93): the day and the night design and when they change. */

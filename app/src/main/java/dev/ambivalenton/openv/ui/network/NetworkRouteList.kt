@@ -138,9 +138,9 @@ fun NetworkRouteList(store: StoredState, onRoute: (NetworkRouteRow) -> Unit, onF
 }
 
 /** M01: the hint for holding a favourite on the plan, taken from the current setting. */
-fun networkHoldHint(action: NetworkHoldAction): String = when (action) {
+fun networkHoldHint(action: NetworkHoldAction, planner: Boolean = false): String = when (action) {
     NetworkHoldAction.MOVE -> tr("Halte einen Favoriten gedrückt, um ihn zu verschieben.")
-    NetworkHoldAction.LOCATION -> tr("Halte einen Favoriten gedrückt, um deinen Standort für die ganze App dorthin zu legen. Nochmals halten hebt das wieder auf.")
+    NetworkHoldAction.LOCATION -> if (planner) tr("Halte einen Favoriten gedrückt, um ihn oben als Start einzutragen.") else tr("Halte einen Favoriten gedrückt, um deinen Standort für die ganze App dorthin zu legen. Nochmals halten hebt das wieder auf.")
     NetworkHoldAction.PIN -> tr("Halte einen Favoriten gedrückt, um die nächste Verbindung dorthin direkt anzupinnen.")
     NetworkHoldAction.OVERVIEW -> tr("Halte einen Favoriten gedrückt, um ihn an die Übersicht zu heften. Nochmals halten löst ihn wieder.")
     NetworkHoldAction.NOTHING -> tr("Gedrückthalten eines Favoriten hat keine Wirkung. Bearbeiten kannst du über den Stift.")

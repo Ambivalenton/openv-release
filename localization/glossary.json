@@ -92,8 +92,8 @@
     "de": "Favorit als Start",
     "en": "Favourite as start",
     "category": "Dein Netz",
-    "description_de": "Wähle unter Favoriten-Einstellungen → Raster des Netzplans die Halte-Aktion Als aktuellen Standort festlegen. Halte danach einen Favoriten, um ab dort zu planen; erneutes Halten hebt die Auswahl auf. Dein tatsächlicher Gerätestandort wird dadurch nicht verändert.",
-    "description_en": "Under Favourite settings → Network map grid, choose Set as current location as the hold action. Then hold a favourite to plan from it; hold again to undo. This does not change your actual device location."
+    "description_de": "Wähle unter Favoriten-Einstellungen → Raster des Netzplans die Halte-Aktion Als aktuellen Standort festlegen. Halte danach einen Favoriten, um ab dort zu planen; erneutes Halten hebt die Auswahl auf. Dein tatsächlicher Gerätestandort wird dadurch nicht verändert. Im Planermodus ist „Als Startpunkt setzen“ voreingestellt: Der gehaltene Favorit steht dann oben als Start.",
+    "description_en": "Under Favourite settings → Network map grid, choose Set as current location as the hold action. Then hold a favourite to plan from it; hold again to undo. This does not change your actual device location. In planner mode, “Set as starting point” is the default: the held favourite then appears as the start at the top."
   },
   {
     "id": "favourite_radius",

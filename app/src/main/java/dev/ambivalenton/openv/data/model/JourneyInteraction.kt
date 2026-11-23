@@ -25,6 +25,20 @@ import kotlin.math.abs
     val description get()=tr(descriptionKey)
 }
 
+/** The hold action in effect: the Planermodus keeps its own choice and has no overview to pin to. */
+val AppSettings.holdAction: NetworkHoldAction get() =
+    if (plannerMode) plannerHoldAction.takeIf { it != NetworkHoldAction.OVERVIEW } ?: NetworkHoldAction.LOCATION else networkHoldAction
+
+/** The choices offered for holding a favourite; the Planermodus offers no "In Übersicht anzeigen". */
+fun networkHoldChoices(planner: Boolean): List<NetworkHoldAction> =
+    if (planner) NetworkHoldAction.entries.filter { it != NetworkHoldAction.OVERVIEW } else NetworkHoldAction.entries
+
+/** In the Planermodus, "Standort festlegen" puts the favourite into the start field instead. */
+fun NetworkHoldAction.titleFor(planner: Boolean): String =
+    if (planner && this == NetworkHoldAction.LOCATION) tr("Als Startpunkt setzen") else title
+fun NetworkHoldAction.descriptionFor(planner: Boolean): String =
+    if (planner && this == NetworkHoldAction.LOCATION) tr("Der Favorit wird oben als Start eingetragen. Die Suche beginnt dann dort.") else description
+
 /** Start includes the approach walk; exactly five minutes is still too early. */
 fun alternativeSuggestionWindow(session:PinnedJourneySession,now:Long):Boolean {
     if(session.trip.segments.isEmpty())return false

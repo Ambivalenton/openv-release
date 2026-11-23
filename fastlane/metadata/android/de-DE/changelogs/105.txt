@@ -1,1 +1,4 @@
-Verbindungsdetails neu gestaltet: Linien enden genau an ihren Haltepunkten, Fußspuren füllen den Weg dazwischen. Jede Fahrt steht als ruhiger Block in ihrer Linienfarbe, die Schiene zeichnet sich beim Öffnen federnd ein, Zwischenhalte springen Halt für Halt auf die Linie. Die Kapsel von „Abfahrt/Ankunft“ schwingt flüssiger aus.
+• Verbindungsdetails überarbeitet: Linien enden exakt an ihren Haltestellen, Fußwege werden durchgehend dargestellt.
+• Neue Darstellung der Fahrtabschnitte mit Start- und Zielmarkierung und Zwischenhalten im Stil eines Liniennetzplans.
+• Animationen beim Öffnen von Verbindungen und beim Aufklappen von Zwischenhalten.
+• Schalter „Abfahrt/Ankunft“ mit flüssigerer Bewegung.

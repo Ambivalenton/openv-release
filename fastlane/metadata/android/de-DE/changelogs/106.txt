@@ -1,0 +1,3 @@
+• Navigationsleiste: flüssigere Bewegung der Auswahl; Symbole reagieren, sobald die Auswahl sie erreicht.
+• Die Navigationsleiste blendet sich in geöffneten Verbindungen und beim Bearbeiten des Netzplans aus.
+• Planermodus: Gedrückthalten eines Favoriten setzt ihn als Startpunkt.

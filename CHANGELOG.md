@@ -4,6 +4,13 @@ Alle nennenswerten Änderungen an Öpen-V. Versionen folgen [Semantic Versioning
 
 ## [Unveröffentlicht]
 
+## [1.0.6] (106) · 2026-11-23
+
+- Navigationsleiste: Die Auswahlkapsel landet ohne Sprung (Federimpuls statt sofortiger Stauchung). Symbole reagieren, wenn die Kapsel sie erreicht: ein kleiner Hüpfer beim Durchfahren, ein voller mit Landung am Ziel. Beim Darübergleiten nehmen sie die Farbe der Kapsel an, beim Drücken geben sie leicht nach. Zug, Lupe und Übersicht bewegen sich mit Federn statt fester Zeitkurven.
+- Navigationsleiste weicht aus: In geöffneten Verbindungen (Ergebnisse, Vorschau aus Übersicht und Anzeigetafel) und beim Bearbeiten des Netzplans hebt sie sich kurz und gleitet nach unten hinaus; danach kommt sie mit einer Feder zurück, ebenso nach dem Schließen der Tastatur. Übersicht, Abfahrten, Ergebnisliste, Reisebegleitung und Einstellungen behalten sie. Ohne Leiste halten Inhalte Abstand zur Gestenleiste des Systems.
+- Planermodus: Gedrückthalten eines Favoriten im Netzplan trägt ihn oben als Start ein (eigene Einstellung, voreingestellt). „In Übersicht anzeigen“ wird dort nicht angeboten, weil der Planermodus keine Übersicht hat.
+- Vorschau-Releases: sachliche Beschreibung mit kurzer Änderungsliste aus den Store-Texten (Deutsch, Englisch ausklappbar) und Installationshinweis.
+
 ## [1.0.5] (105) · 2026-11-23
 
 - Zeitstrahl der Verbindungsdetails: Linien enden genau an ihren Haltepunkten. Bisher malte jede Zeile ihr Stück Linie bis an ihren eigenen Rand – die Hinweis-Zeile vor einem Halt zog die Linie der Fahrt über den Einstiegspunkt hinaus, die Ankunftszeile ließ sie unter dem Ausstiegspunkt weiterlaufen (mit grauem Stummel vor einem Fußweg). Jetzt wird die Schiene einmal für die ganze Reise von Punkt zu Punkt gezeichnet; Fußspuren füllen genau den Weg zwischen ihren beiden Punkten. Erkannte Hinweise (etwa „Haltestelle vorübergehend verlegt“) behalten ihr Ausrufezeichen auf der Schiene – direkt vor dem Einstieg, auf dem Weg dorthin; „1 Hinweis“ statt „1 Hinweise“.
@@ -55,7 +62,8 @@ Erste Version.
 - Fahrplandaten von VRR OpenService, Haltestellenverzeichnis für Deutschland offline mitgeliefert.
 - Test-App „Öpen-V · Vorschau“ (`dev.ambivalenton.openv.next`), die sich neben der Store-App installiert.
 
-[Unveröffentlicht]: https://github.com/Ambivalenton/openv-release/compare/v1.0.5...HEAD
+[Unveröffentlicht]: https://github.com/Ambivalenton/openv-release/compare/v1.0.6...HEAD
+[1.0.6]: https://github.com/Ambivalenton/openv-release/compare/v1.0.5...v1.0.6
 [1.0.5]: https://github.com/Ambivalenton/openv-release/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/Ambivalenton/openv-release/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/Ambivalenton/openv-release/compare/v1.0.2...v1.0.3

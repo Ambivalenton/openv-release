@@ -2,7 +2,7 @@
 
 ## Automatisch bei jedem Push auf `main`
 
-Der Workflow [`ci.yml`](../.github/workflows/ci.yml) prüft Quellen und Texte, führt alle Tests und Lint aus und baut die Test-App **„Öpen-V · Vorschau“** (`dev.ambivalenton.openv.next`, ARM64). Auf `main` erscheint sie im Release [`vorschau`](https://github.com/Ambivalenton/openv-release/releases/tag/vorschau), das jedes Mal ersetzt wird. Bei Pull Requests liegt sie als Actions-Artefakt bereit.
+Der Workflow [`ci.yml`](../.github/workflows/ci.yml) prüft Quellen und Texte, führt alle Tests und Lint aus und baut die Test-App **„Öpen-V · Vorschau“** (`dev.ambivalenton.openv.next`, ARM64). Auf `main` erscheint sie im Release [`vorschau`](https://github.com/Ambivalenton/openv-release/releases/tag/vorschau), das jedes Mal ersetzt wird. Die Beschreibung des Releases entsteht aus `fastlane/metadata/android/{de-DE,en-US}/changelogs/<versionCode>.txt` (eine Zeile je Änderung, beginnend mit „• “); diese Texte sind öffentlich und daher allgemein, sachlich und ohne interne Details formuliert. Bei Pull Requests liegt sie als Actions-Artefakt bereit.
 
 Damit sich jede Vorschau als Update installiert, braucht das Repository das Secret `OPENV_REVIEW_KEYSTORE_BASE64` (Base64 eines Android-Debug-Keystores mit Alias `androiddebugkey`, Passwort `android`). Fehlt es, ist die Vorschau mit einem wechselnden Schlüssel signiert und lässt sich nur nach Deinstallation neu installieren.
 

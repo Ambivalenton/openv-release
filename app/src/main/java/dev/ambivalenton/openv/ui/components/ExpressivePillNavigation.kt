@@ -56,9 +56,21 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlin.coroutines.coroutineContext
+import kotlin.math.abs
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
 
 
 data class PillDestination(val label: String,val icon: Int,val timeline:Boolean=false)
+
+/**
+ * Build 106: where the navigation pill steps aside (springs down and out): an opened connection – in the
+ * results, or previewed from the overview or the board – and the plan while it is edited. These views need
+ * the whole height and have their own way back. A running journey ([pinnedOpen]) keeps the pill, and so do
+ * the pages, the results and the settings (a tab tap leaves them at once).
+ */
+fun navigationPillAside(route:String,connectionOpen:Boolean,previewOpen:Boolean,pinnedOpen:Boolean,planEditing:Boolean):Boolean =
+    (route=="results" && connectionOpen) || (previewOpen && !pinnedOpen) || planEditing
 
 /** Geometry of the navigation pill, shared with layouts that keep a distance to it. The
  * visible pill is the box minus its inset on every side; the box sits [PillNavigationPadding] inside
@@ -95,6 +107,24 @@ internal val PillNavigationTop=PillNavigationPadding+PillNavigationInset
     var reduced by remember {mutableStateOf(!ValueAnimator.areAnimatorsEnabled())}
     val head by animateFloatAsState(destination,if(quiet) snap() else spring(dampingRatio=PILL_HEAD_DAMPING,stiffness=650f),label="capsule-leading-edge")
     val tail by animateFloatAsState(destination,if(quiet) snap() else spring(dampingRatio=PILL_TAIL_DAMPING,stiffness=285f),label="capsule-trailing-edge")
+    // Build 106: every symbol answers the capsule – a small hop where it passes underneath, a full hop
+    // with a squash on landing where it arrives. Springs started by an impulse, drawn in the layer only.
+    val hops=remember(tabs.size) {List(tabs.size) {Animatable(0f)}}
+    val aim by rememberUpdatedState(destination)
+    LaunchedEffect(hops,quiet) {
+        if(quiet) return@LaunchedEffect
+        val inside=BooleanArray(hops.size) {abs((head+tail)/2-it)<PILL_HIT_RADIUS}
+        snapshotFlow {(head+tail)/2}.collect {middle->
+            for(i in hops.indices) {
+                val hit=abs(middle-i)<PILL_HIT_RADIUS
+                if(hit && !inside[i] && !reduced) launch {
+                    hops[i].animateTo(0f,spring(dampingRatio=.42f,stiffness=520f),
+                        initialVelocity=PILL_HOP_VELOCITY*(if(abs(aim-i)<.01f) 1f else PILL_PASS_HOP))
+                }
+                inside[i]=hit
+            }
+        }
+    }
     LaunchedEffect(pager.isScrollInProgress,requested,quiet) {
         reduced=quiet || !ValueAnimator.areAnimatorsEnabled() || coroutineContext[MotionDurationScale]?.scaleFactor==0f
         if(reduced || quiet) shell.amount.snapTo(0f)
@@ -244,6 +274,9 @@ internal val PillNavigationTop=PillNavigationPadding+PillNavigationInset
                             flashJob=scope.launch {flash.snapTo(1f);flash.animateTo(0f,tween(PILL_FLASH_MILLIS))}
                         }
                     }}
+                    // Pressed, the symbol gives a little; let go, it springs back.
+                    val pressed by interactions.collectIsPressedAsState()
+                    val press by animateFloatAsState(if(pressed && !quiet) .86f else 1f,if(quiet) snap() else spring(dampingRatio=.45f,stiffness=700f),label="pill-press")
                     Column(Modifier.weight(1f).fillMaxHeight().selectable(selected=index==selected,
                         interactionSource=interactions,indication=null,role=Role.Tab,
                         // Every tap aims the capsule, also back at the page the pages are just
@@ -251,8 +284,17 @@ internal val PillNavigationTop=PillNavigationPadding+PillNavigationInset
                         onClick={requested=index;onSelect(index)}),
                         horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.Center) {
                         // System bars (e.g. silver Leopard) carry their own readable label colour.
-                        val ink=if(index==selected) selectedInk else if(os!=null)Color(systemHeaderForeground(os,surfacePalette)) else MaterialTheme.colorScheme.onSurfaceVariant
-                        PillDestinationIcon(tab,ink,Modifier.size(24.dp).testTag("pill-icon-$index-${if(tab.timeline) "timeline" else "default"}"),selected=index==selected)
+                        val idle=if(os!=null)Color(systemHeaderForeground(os,surfacePalette)) else MaterialTheme.colorScheme.onSurfaceVariant
+                        // Build 106: the colour follows the capsule – a symbol takes the capsule's ink as it slides underneath.
+                        val cover=if(reduced||quiet) (if(index==selected) 1f else 0f) else (1f-abs((head+tail)/2-index)*1.3f).coerceIn(0f,1f)
+                        val ink=androidx.compose.ui.graphics.lerp(idle,selectedInk,cover)
+                        val hop=hops.getOrNull(index)
+                        PillDestinationIcon(tab,ink,Modifier.size(24.dp).graphicsLayer {
+                            val pose=hopPose(hop?.value ?: 0f,press)
+                            transformOrigin=TransformOrigin(.5f,1f)
+                            translationY=-5.dp.toPx()*pose.lift
+                            scaleX=pose.scaleX;scaleY=pose.scaleY
+                        }.testTag("pill-icon-$index-${if(tab.timeline) "timeline" else "default"}"),selected=index==selected)
                         Text(tab.label,style=MaterialTheme.typography.labelMedium,
                             fontWeight=if(index==selected) FontWeight.SemiBold else FontWeight.Normal,
                             maxLines=1,overflow=TextOverflow.Ellipsis,color=ink)

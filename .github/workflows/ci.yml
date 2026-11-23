@@ -71,18 +71,11 @@ jobs:
           version=$(grep -oE 'versionName = "[^"]+"' app/build.gradle.kts | cut -d'"' -f2)
           python3 tools/verify_apk.py --apk "$apk" --package dev.ambivalenton.openv.next --version-code "$code" \
             --abi arm64-v8a --report-cert --json "$RUNNER_TEMP/apk-check.json"
-          if [ "$HAS_PREVIEW_KEY" = "true" ]; then
-            note="Mit dem festen Testschlüssel signiert: installiert sich als Update der vorherigen Vorschau."
-            suffix=""
-          else
-            note="Ohne festen Testschlüssel gebaut (Secret OPENV_REVIEW_KEYSTORE_BASE64 fehlt): installierbar, aber nur nach Deinstallation der vorherigen Vorschau."
-            suffix="_einmalig"
-          fi
+          if [ "$HAS_PREVIEW_KEY" = "true" ]; then suffix=""; else suffix="_einmalig"; fi
           name="OpenV-Vorschau_${version}_b${code}_${GITHUB_SHA::7}${suffix}.apk"
           mkdir -p "$RUNNER_TEMP/out"
           cp "$apk" "$RUNNER_TEMP/out/$name"
           echo "file=$RUNNER_TEMP/out/$name" >> "$GITHUB_OUTPUT"
-          echo "note=$note" >> "$GITHUB_OUTPUT"
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "code=$code" >> "$GITHUB_OUTPUT"
 
@@ -92,15 +85,50 @@ jobs:
           path: ${{ steps.apk.outputs.file }}
           retention-days: 14
 
+      # Public release notes: what changed in this version (the store changelog of its versionCode,
+      # one line per change) and how the preview installs; German first, English folded below.
       - name: Release „vorschau“ aktualisieren
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.apk.outputs.version }}
+          CODE: ${{ steps.apk.outputs.code }}
         run: |
+          changes() { sed -e 's/^[•*-] */- /' -e '/^[[:space:]]*$/d' "fastlane/metadata/android/$1/changelogs/$CODE.txt"; }
+          if [ "$HAS_PREVIEW_KEY" = "true" ]; then
+            install_de="Spätere Vorschauversionen lassen sich als Update darüber installieren."
+            install_en="Later preview builds install as an update."
+          else
+            install_de="Dieser Build ist einmalig signiert; eine zuvor installierte Vorschau muss vorher entfernt werden."
+            install_en="This build has a one-off signature; remove an earlier preview before installing it."
+          fi
+          notes="$RUNNER_TEMP/notes.md"
+          {
+            echo "Vorabversion von Öpen-V $VERSION zum Testen vor der nächsten regulären Veröffentlichung."
+            echo
+            echo "### Änderungen"
+            changes de-DE
+            echo
+            echo "### Installation"
+            echo "Die Vorschau wird als eigene App „Öpen-V · Vorschau“ neben der regulären Version installiert. $install_de"
+            echo
+            echo "<details><summary>English</summary>"
+            echo
+            echo "Preview build of Öpen-V $VERSION for testing ahead of the next regular release."
+            echo
+            echo "**Changes**"
+            echo
+            changes en-US
+            echo
+            echo "**Installation:** installs as a separate app, “Öpen-V · Vorschau”, alongside the regular version. $install_en"
+            echo
+            echo "</details>"
+            echo
+            echo "Build $CODE · [${GITHUB_SHA::7}](https://github.com/$GITHUB_REPOSITORY/commit/$GITHUB_SHA) · [Alle Änderungen](https://github.com/$GITHUB_REPOSITORY/blob/main/CHANGELOG.md)"
+          } > "$notes"
           gh release delete vorschau --yes --cleanup-tag 2>/dev/null || true
           gh release create vorschau "${{ steps.apk.outputs.file }}" --prerelease --target "$GITHUB_SHA" \
-            --title "Öpen-V · Vorschau ${{ steps.apk.outputs.version }} (Build ${{ steps.apk.outputs.code }}, ${GITHUB_SHA::7})" \
-            --notes "Test-App „Öpen-V · Vorschau“ (dev.ambivalenton.openv.next) vom aktuellen Stand auf main. Sie installiert sich neben der normalen App. ${{ steps.apk.outputs.note }} Commit ${GITHUB_SHA}."
+            --title "Öpen-V · Vorschau $VERSION (Build $CODE)" --notes-file "$notes"
 
       - name: Testberichte bei Fehler sichern
         if: failure()

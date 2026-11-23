@@ -38,8 +38,23 @@ internal fun elasticCapsuleRect(width: Float,height: Float,slots: Int,inset: Flo
     val landing=Animatable(0f)
     suspend fun inflate()=amount.animateTo(1f,spring(dampingRatio=.65f,stiffness=620f))
     suspend fun settle()=amount.animateTo(0f,spring(dampingRatio=PILL_SHELL_DAMPING,stiffness=330f))
-    suspend fun land() {
-        landing.snapTo(-.16f)
-        landing.animateTo(0f,spring(dampingRatio=.36f,stiffness=430f))
+    /** Build 106: an impulse instead of a jump to -16 %: the squash grows out of rest and swings back,
+     * with no frame where the capsule changes size at once. */
+    suspend fun land(strength:Float=1f) {
+        landing.animateTo(0f,spring(dampingRatio=.38f,stiffness=430f),initialVelocity=-PILL_LANDING_IMPULSE*strength)
     }
 }
+
+/** Gives a landing squash of about 16 % (spring .38/430: peak ≈ 0.03 × the impulse). */
+internal const val PILL_LANDING_IMPULSE=5.4f
+/** A symbol counts as hit while the capsule's middle is this close (in slots). */
+internal const val PILL_HIT_RADIUS=.3f
+/** A symbol's hop (spring .42/520): this impulse lifts it by one full hop height. */
+internal const val PILL_HOP_VELOCITY=38f
+/** A symbol the capsule only passes on its way hops lower. */
+internal const val PILL_PASS_HOP=.45f
+
+/** Draw-phase pose of a symbol that hops: up and slim while in the air, flat and wide when it lands. */
+internal data class HopPose(val lift:Float,val scaleX:Float,val scaleY:Float)
+internal fun hopPose(hop:Float,press:Float=1f):HopPose =
+    HopPose(lift=hop.coerceAtLeast(0f),scaleX=press*(1f-.08f*hop),scaleY=press*(1f+.14f*hop))

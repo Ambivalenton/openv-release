@@ -1,0 +1,3 @@
+• Navigation bar: smoother selection movement; icons respond as the selection reaches them.
+• The navigation bar hides while a connection is open and while the network map is being edited.
+• Planner mode: holding a favourite sets it as the starting point.

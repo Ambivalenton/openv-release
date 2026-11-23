@@ -30,6 +30,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.*
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import dev.ambivalenton.openv.ui.components.navigationPillAside
 import androidx.compose.foundation.pager.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -234,6 +236,8 @@ private fun OpenVNavigation(
 ) {
     val overlays=remember {AppOverlayState()}
     var navigationHiddenPin by remember {mutableStateOf<String?>(null)}
+    // Build 106: the plan is being edited on the search page; the navigation pill steps aside meanwhile.
+    var planEditing by remember {mutableStateOf(false)}
     val tracker = remember(app) { app.koin.get<PinnedJourneyController>() }
     val pinned by tracker.state.collectAsStateWithLifecycle()
     val recoverable by tracker.recoverable.collectAsStateWithLifecycle()
@@ -887,21 +891,41 @@ private fun OpenVNavigation(
         else->null
     }
     val navVisible=!needsIntroduction && !WindowInsets.isImeVisible && !planner
+    // Build 106: the pill steps aside where a view needs the whole height and has its own way back –
+    // an opened connection (results, overview, board) and the plan while it is edited. It stays on the
+    // overview, the board, the results, a running journey and in the settings (a tab tap leaves them).
+    val pillAside=navigationPillAside(route,ui.selectedTripId!=null,overviewPreview!=null,isPinned,
+        planEditing && destinationRoute=="search" && homePager.currentPage==1)
+    val pillShown=navVisible && !pillAside
     // Planermodus: the pinned journey floats where the pill would be.
     val hoverCard=planner && !needsIntroduction && !WindowInsets.isImeVisible && hasPinnedSession && !isPinned
-    val bottomClear=navVisible || hoverCard
+    val bottomClear=pillShown || hoverCard
     val navDensity=LocalDensity.current
     var navHeight by remember {mutableStateOf(88.dp)}
+    // Without the pill, content still keeps clear of the system's gesture bar.
+    val systemBottom=WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val clearance=if(bottomClear) navHeight else if(navVisible) systemBottom+8.dp else 0.dp
+    // 0 = the pill in place, 1 = below the screen edge. Out with a short lift and a drop, back in with a spring.
+    val pillOffset=remember {androidx.compose.animation.core.Animatable(if(pillShown) 0f else 1f)}
+    LaunchedEffect(pillShown,navVisible,quiet) {
+        when {
+            // Keyboard, planner, introduction: gone at once as before, so it comes back with a spring.
+            !navVisible || quiet -> pillOffset.snapTo(if(pillShown) 0f else 1f)
+            pillShown -> pillOffset.animateTo(0f,androidx.compose.animation.core.spring(dampingRatio=PILL_RETURN_DAMPING,stiffness=PILL_RETURN_STIFFNESS))
+            else -> pillOffset.animateTo(1f,androidx.compose.animation.core.tween(PILL_LEAVE_MILLIS,easing=PillLeaveEasing))
+        }
+    }
+    val pillGone by remember {derivedStateOf {pillOffset.value>=1f}}
     // Lower edge of the screen title (px, in root), for the equal gap below the bar's rule.
     var titleBottom by remember {mutableFloatStateOf(-1f)}
     // The drop of the search button falls onto the navigation pill in this layer.
     val liquidStage=remember {dev.ambivalenton.openv.ui.components.LiquidStage()}
-    CompositionLocalProvider(LocalNavigationClearance provides if(bottomClear) navHeight else 0.dp,
+    CompositionLocalProvider(LocalNavigationClearance provides clearance,
         dev.ambivalenton.openv.ui.components.LocalLiquidStage provides liquidStage) {
     Box(Modifier.fillMaxSize().appThemeBackground().imePadding().testTag("floating-navigation-root")) {
-    AppOverlayHost(overlays,Modifier.fillMaxSize(),modalBottomPadding=if(bottomClear) navHeight else 0.dp,
+    AppOverlayHost(overlays,Modifier.fillMaxSize(),modalBottomPadding=clearance,
         foreground={
-            SnackbarHost(snackbar,Modifier.align(Alignment.BottomCenter).padding(bottom=if(bottomClear) navHeight+8.dp else 8.dp)) {data->
+            SnackbarHost(snackbar,Modifier.align(Alignment.BottomCenter).padding(bottom=clearance+8.dp)) {data->
                 Snackbar(data,Modifier.testTag("app-snackbar-message"))
             }
         }) {
@@ -1060,6 +1084,7 @@ private fun OpenVNavigation(
                                         },
                                         countdown = planCountdown,
                                         onPinFavorite = ::pinNextToFavorite,
+                                        onPlanEditing = { planEditing = it },
                                         onSearchFrom = { origin, target, time, mode, query ->
                                             vm.search(target, time, mode, origin, query)
                                             nav.navigate("results") { launchSingleTop = true }
@@ -1130,7 +1155,17 @@ private fun OpenVNavigation(
     }
     }
     }
-    if(navVisible) Box(Modifier.align(Alignment.BottomCenter).onSizeChanged {navHeight=with(navDensity) {it.height.toDp()}}) {
+    if(navVisible && !(pillGone && !pillShown)) Box(Modifier.align(Alignment.BottomCenter).onSizeChanged {navHeight=with(navDensity) {it.height.toDp()}}
+        .graphicsLayer {
+            val out=pillOffset.value
+            translationY=out*(size.height+16.dp.toPx())
+            // A little jelly: slimmer and taller while it flies, wider and flatter where the spring dips below its place.
+            val swing=(-out).coerceIn(-.12f,.12f)
+            transformOrigin=androidx.compose.ui.graphics.TransformOrigin(.5f,1f)
+            scaleY=1f+swing*.55f;scaleX=1f-swing*.3f-(out.coerceIn(0f,1f))*.06f
+            alpha=(1f-(out-.7f).coerceAtLeast(0f)/.3f).coerceIn(0f,1f)
+        }
+        .then(if(!pillShown) Modifier.clearAndSetSemantics {} else Modifier)) {
         ExpressivePillNavigationTo(homePager,listOf(
             PillDestination(tr("Übersicht"),R.drawable.ic_overview),
             PillDestination(tr("Suchen"),if(route=="results" && !ui.trips.value.isNullOrEmpty() && !ui.isListViewVisible && ui.selectedTripId==null) R.drawable.ic_dashboard else R.drawable.ic_search),
@@ -1155,4 +1190,9 @@ private fun OpenVNavigation(
     }
 }
 
-
+/** Build 106: the navigation pill coming back – a lively spring with one small swing above its place. */
+private const val PILL_RETURN_DAMPING=.58f
+private const val PILL_RETURN_STIFFNESS=380f
+/** Leaving: a short lift, then down and out (anticipation), quick enough not to hold anything up. */
+private const val PILL_LEAVE_MILLIS=300
+private val PillLeaveEasing=androidx.compose.animation.core.CubicBezierEasing(.45f,-.35f,.75f,.45f)
