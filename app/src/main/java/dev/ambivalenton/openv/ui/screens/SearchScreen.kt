@@ -153,6 +153,8 @@ fun SearchScreen(
     var trayPick by rememberSaveable {mutableStateOf<String?>(null)}
     var addAt by remember {mutableStateOf<GridPoint?>(null)}
     var removedEdge by remember {mutableStateOf<Pair<NetworkEdge,Int>?>(null)}
+    // Build 104: the delete zone of the edit bar, shared with the plan while a favourite is moved.
+    val deleteZone = remember { dev.ambivalenton.openv.ui.network.NetworkDeleteZone() }
     var deletingFavorite by remember {mutableStateOf<Favorite?>(null)}
     // M17: a tap between close targets on the plan asks which one is meant.
     var targetChoice by remember {mutableStateOf<Pair<List<String>,List<String>>?>(null)}
@@ -474,7 +476,9 @@ fun SearchScreen(
                 })
                 // The departure/arrival pill and the "Ab jetzt" area that springs out of the frame.
                 ScheduleControls(selectedTime, { selectedTime = it }, mode, { mode = it },
-                    onNow = { selectedTime = null; mode = TimeMode.DEPARTURE })
+                    onNow = { selectedTime = null; mode = TimeMode.DEPARTURE },
+                    // Build 104: the open plan editor reaches up into this row; "Abfahrt/Ankunft" steps aside.
+                    modeAway = editing)
                 if (!planner && settings.originMode == OriginMode.AUTOMATIC && (ui.position.error != null || !locationPermissionGranted(context)))
                     androidx.compose.foundation.layout.FlowRow(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.Center) {
                         Text(
@@ -531,7 +535,8 @@ fun SearchScreen(
                         onSettings = { manage = true },
                         onAdd = { addAt = null; edit = null; addLocation = null; add = true },
                         onDone = { editing = false; trayPick = null },
-                        modifier = Modifier.fillMaxWidth())
+                        modifier = Modifier.fillMaxWidth(),
+                        deleteZone = deleteZone)
             }
         }
         if (ui.store.favorites.isEmpty())
@@ -589,7 +594,9 @@ fun SearchScreen(
                         onToTray = { id -> vm.nodeToTray(id) },
                         onConnectRequest = { id -> connectFrom = id },
                         onAmbiguousTap = { nodes, lines -> targetChoice = nodes to lines },
-                    ), pinnedState=pinnedState ?: activePin?.let {PinnedJourneyState(session=it)})
+                        // Build 104: let go above the delete zone – deleted at once, "Rückgängig" brings it back.
+                        onDelete = { id -> vm.deleteFavoriteWithUndo(id)?.let(onFavoriteRemoved) },
+                    ), pinnedState=pinnedState ?: activePin?.let {PinnedJourneyState(session=it)}, deleteZone = deleteZone)
                 NetworkPlanFooter(ui.store, editing, trayPick, { id -> trayPick = if (trayPick == id) null else id },
                     removedEdge?.let { removed -> { vm.restoreEdge(removed.first, removed.second); removedEdge = null } })
             }

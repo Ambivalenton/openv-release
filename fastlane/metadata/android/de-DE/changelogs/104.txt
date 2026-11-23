@@ -1,0 +1,1 @@
+Netzplan bearbeiten: doppelt so hoher Bereich mit kurzer Gesten-Erklärung, „Abfahrt/Ankunft“ weicht dafür federnd zur Seite. Einen Favoriten beim Verschieben auf die rote Zone ziehen löscht ihn – mit „Rückgängig“. „Favorit löschen“ in den Einstellungen eines Favoriten hat einen eigenen roten Rahmen.

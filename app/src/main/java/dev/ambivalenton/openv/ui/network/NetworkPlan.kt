@@ -34,6 +34,8 @@ import androidx.compose.ui.graphics.drawscope.translate
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -106,6 +108,8 @@ data class NetworkPlanActions(
     val onEditRequest: () -> Unit = {},
     /** M17: a tap that hits several close targets about equally; the caller lets the person choose. */
     val onAmbiguousTap: ((List<String>, List<String>) -> Unit)? = null,
+    /** Build 104: a moved favourite was let go above the delete zone of the edit bar. */
+    val onDelete: (String) -> Unit = {},
 )
 
 private enum class Press { TAP, DRAG, CANCEL }
@@ -159,8 +163,13 @@ fun NetworkPlan(
     modifier: Modifier = Modifier,
     preview: NetworkPlanPreview? = null,
     pinnedState: PinnedJourneyState? = null,
+    /** Build 104: the edit bar's delete zone, shared while a favourite is moved. */
+    deleteZone: NetworkDeleteZone? = null,
 ) {
     val scheme = MaterialTheme.colorScheme
+    // Where the plan lies on screen: the finger's position is compared with the delete zone above it.
+    var planOrigin by remember { mutableStateOf(Offset.Zero) }
+    val latestZone by rememberUpdatedState(deleteZone)
     val settings = LocalAppSettings.current
     val visuals = dev.ambivalenton.openv.ui.theme.LocalAppVisuals.current
     val look = (preview?.design ?: settings.networkPlanDesign).lookFor(visuals.theme)
@@ -379,6 +388,7 @@ fun NetworkPlan(
                 }
             }
             .then(if (preview != null) Modifier.clearAndSetSemantics {} else Modifier.semantics { isTraversalGroup = true })
+            .then(if (preview != null) Modifier else Modifier.onGloballyPositioned { planOrigin = it.positionInRoot() })
             .then(if (preview != null) Modifier else Modifier.pointerInput(routesPx.keys, placed, sidePx, columns, rows, trayPick, undoGesture) {
                 val slop = viewConfiguration.touchSlop
                 val hold = viewConfiguration.longPressTimeoutMillis
@@ -439,9 +449,12 @@ fun NetworkPlan(
                                 // The start comes from the stored point: centerOf() already follows the finger once moving.
                                 val startCenter = placed[node]?.let(geometry::center) ?: down.position
                                 moving = node; movePointer = startCenter; moveTarget = null
+                                val zone = latestZone
+                                zone?.moving = node
                                 val grab = startCenter - down.position
                                 var outside = false
                                 var cancelled = false
+                                var overZone = false
                                 while (true) {
                                     val event = awaitPointerEvent()
                                     val change = event.changes.firstOrNull { it.id == down.id } ?: break
@@ -449,6 +462,12 @@ fun NetworkPlan(
                                     change.consume()
                                     movePointer = change.position + grab
                                     outside = change.position.x < 0 || change.position.y < 0 || change.position.x > widthPx || change.position.y > heightPx
+                                    // Build 104: above the edit bar's delete zone the favourite is deleted when let go.
+                                    val above = zone?.bounds?.contains(planOrigin + change.position) == true
+                                    if (above != overZone) {
+                                        overZone = above; zone?.over = above
+                                        if (above) haptics.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+                                    }
                                     val target = if (outside) null else freePointAt(movePointer, node)
                                     if (target != moveTarget && target != null && !quiet) haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
                                     moveTarget = target
@@ -456,13 +475,15 @@ fun NetworkPlan(
                                 }
                                 val target = moveTarget
                                 moving = null; moveTarget = null
+                                zone?.over = false; zone?.moving = null
                                 when {
                                     cancelled -> Unit
+                                    overZone -> { haptics.performHapticFeedback(HapticFeedbackType.Confirm); latestActions.onDelete(node) }
                                     outside -> latestActions.onToTray(node)
                                     // Back on its own field (a hold without moving): nothing to store.
                                     target != null && target != placed[node] -> latestActions.onMove(node, target)
                                 }
-                            } finally { holdToEdit = false; moving = null; moveTarget = null }
+                            } finally { holdToEdit = false; moving = null; moveTarget = null; latestZone?.let { it.moving = null; it.over = false } }
                         }
                         !editing && node != null && press == null -> {
                             if (holdNow != NetworkHoldAction.NOTHING) {

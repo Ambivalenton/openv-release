@@ -299,10 +299,16 @@ fun FavoriteEditDialog(
             }
             }
             moreOptions()
-            if(onDelete!=null) TextButton(onDelete,Modifier.testTag("favorite-delete")) {
-                AppIcon(R.drawable.ic_delete,null,tint=MaterialTheme.colorScheme.error)
-                Spacer(Modifier.width(8.dp))
-                Text(tr("Favorit löschen"),color=MaterialTheme.colorScheme.error)
+            // Build 104: deleting stands apart in its own frame, in the signal colour of the plan's delete zone.
+            if(onDelete!=null) {
+                val (signal,_)=dev.ambivalenton.openv.ui.network.deleteSignal()
+                OutlinedButton(onDelete,Modifier.fillMaxWidth().padding(top=8.dp).heightIn(min=52.dp).testTag("favorite-delete"),
+                    shape=dev.ambivalenton.openv.ui.theme.appCorner(18.dp),border=androidx.compose.foundation.BorderStroke(2.dp,signal),
+                    colors=ButtonDefaults.outlinedButtonColors(containerColor=signal.copy(alpha=.08f),contentColor=signal)) {
+                    AppIcon(R.drawable.ic_delete,null,tint=signal)
+                    Spacer(Modifier.width(10.dp))
+                    Text(tr("Favorit löschen"),style=MaterialTheme.typography.titleSmall)
+                }
             }
 
             }

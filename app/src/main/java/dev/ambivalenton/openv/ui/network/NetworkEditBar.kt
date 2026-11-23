@@ -41,6 +41,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp
+import dev.ambivalenton.openv.data.model.reduceMotion
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.runtime.setValue
 import dev.ambivalenton.openv.R
 import dev.ambivalenton.openv.localization.tr
 import dev.ambivalenton.openv.ui.components.AppIcon
@@ -64,6 +70,10 @@ internal object NetworkEditBarGeometry {
     val BUTTON = 40.dp
     /** Build 102: the plus of "Favorit hinzufügen" is a tenth smaller than its neighbours. */
     val ADD_BUTTON = BUTTON * .9f
+    /** Build 104: the open bar is twice as tall; the upper half (the info band) reaches above its row. */
+    val INFO_HEIGHT = OPEN_HEIGHT
+    /** Height of a tool box and of the delete zone in the lower half. */
+    val BOX_HEIGHT = OPEN_HEIGHT - 8.dp
     /** Inset of the outer buttons from the bar's ends. */
     val INSET = (HEIGHT - BUTTON) / 2
     /** Room of the check at the right end (no box of its own). */
@@ -99,8 +109,15 @@ fun NetworkEditBar(
     onAdd: () -> Unit,
     onDone: () -> Unit,
     modifier: Modifier = Modifier,
+    /** Build 104: while a favourite is moved, the tools give way to a zone that deletes it. */
+    deleteZone: NetworkDeleteZone? = null,
 ) {
     val scheme = MaterialTheme.colorScheme
+    val quiet = dev.ambivalenton.openv.ui.theme.LocalAppSettings.current.reduceMotion
+    val deleting = editing && deleteZone?.moving != null
+    val zoneIn by androidx.compose.animation.core.animateFloatAsState(if (deleting) 1f else 0f,
+        if (quiet) androidx.compose.animation.core.snap() else androidx.compose.animation.core.spring(dampingRatio = .62f, stiffness = 520f),
+        label = "network-delete-zone")
     val motion = MaterialTheme.motionScheme
     val transition = updateTransition(editing, label = "network-edit-bar")
     // Opening uses the bouncier fast spatial spring (the bar overshoots and settles); closing the
@@ -114,7 +131,11 @@ fun NetworkEditBar(
     androidx.compose.foundation.layout.BoxWithConstraints(modifier.fillMaxWidth().height(geometry.OPEN_HEIGHT), contentAlignment = Alignment.CenterEnd) {
         val full = maxWidth
         val width = lerp(geometry.HEIGHT.value, full.value, progress).coerceAtLeast(geometry.BUTTON.value).dp
-        val height = lerp(geometry.HEIGHT.value, geometry.OPEN_HEIGHT.value, progress.coerceIn(0f, 1f)).dp
+        // Build 104: open, the bar is twice the row's height. Its lower edge stays on the row, so the plan
+        // below keeps its place; the upper half (the info band) lies over the row above, which steps aside.
+        val opened = progress.coerceIn(0f, 1.08f)
+        val height = lerp(geometry.HEIGHT.value, (geometry.OPEN_HEIGHT + geometry.INFO_HEIGHT).value, opened).dp
+        val top = lerp((geometry.OPEN_HEIGHT - geometry.HEIGHT).value / 2, -geometry.INFO_HEIGHT.value, opened).dp
         val pencilInteraction = remember { MutableInteractionSource() }
         // Closed it is the round pencil button with the app's press morph; open, the theme's bar shape.
         val pressShape = themedPressShape(pencilInteraction, geometry.HEIGHT)
@@ -123,7 +144,10 @@ fun NetworkEditBar(
         val onContainer = scheme.onSecondaryContainer
         val showTools = editing || transition.currentState || transition.isRunning
         Box(
-            Modifier.width(width).height(height)
+            Modifier.layout { measurable, constraints ->
+                val placeable = measurable.measure(constraints.copy(minHeight = 0, maxHeight = androidx.compose.ui.unit.Constraints.Infinity))
+                layout(placeable.width, geometry.OPEN_HEIGHT.roundToPx()) { placeable.place(0, top.roundToPx()) }
+            }.width(width).height(height).then(if (editing) Modifier.testTag("network-edit-bar") else Modifier)
                 .shapeShadow(barShape, (1.5f * progress.coerceIn(0f, 1f)).dp)
                 .clip(barShape)
                 .background(container)
@@ -136,7 +160,7 @@ fun NetworkEditBar(
             // Pencil: turns and fades out where the check grows in.
             val pencil = (1f - progress * 2.2f).coerceIn(0f, 1f)
             if (pencil > 0f) AppIcon(R.drawable.ic_edit, null,
-                Modifier.align(Alignment.CenterEnd).offset(x = -(geometry.HEIGHT - 24.dp) / 2)
+                Modifier.align(Alignment.BottomEnd).offset(x = -(geometry.HEIGHT - 24.dp) / 2, y = -(geometry.HEIGHT - 24.dp) / 2)
                     .graphicsLayer {
                         alpha = pencil
                         rotationZ = -40f * progress
@@ -156,19 +180,32 @@ fun NetworkEditBar(
                 val boxWidth = ((full - geometry.CHECK_AREA - geometry.INSET - geometry.BOX_GAP) / 2).coerceAtLeast(geometry.BUTTON)
                 val middleWidth = boxWidth
                 val leftWidth = boxWidth
+                // Build 104: the gestures of the edit mode in three short cells across the whole bar.
+                GestureBand(stagger(progress, geometry.SETTINGS_START), boxFill, boxInk)
+                // While a favourite is moved, the tools step back (shrink, sink, fade) and the delete zone springs in.
+                val away = zoneIn.coerceIn(0f, 1f)
+                val toolsHidden = Modifier.graphicsLayer {
+                    alpha = 1f - away
+                    val s = 1f - .14f * zoneIn
+                    scaleX = s; scaleY = s
+                    translationY = 10.dp.toPx() * zoneIn
+                }
+                Box(Modifier.matchParentSize().then(toolsHidden)) {
                 ToolBox(rightGap = geometry.CHECK_AREA + boxWidth + geometry.BOX_GAP, boxWidth = leftWidth, reveal = stagger(progress, geometry.SETTINGS_START),
-                    active = active, label = tr("Favoriten-Einstellungen"), tag = "network-settings", boxFill = boxFill, boxInk = boxInk,
+                    active = active && !deleting, label = tr("Favoriten-Einstellungen"), tag = "network-settings", boxFill = boxFill, boxInk = boxInk,
                     fill = toolFill, icon = R.drawable.ic_settings, tint = toolInk, motion = IconTapMotion.NUDGE, onClick = onSettings,
                     shape = null, buttonSize = geometry.BUTTON)
                 ToolBox(rightGap = geometry.CHECK_AREA, boxWidth = middleWidth, reveal = stagger(progress, geometry.ADD_START),
-                    active = active, label = tr("Favorit hinzufügen"), tag = "network-add", boxFill = boxFill, boxInk = boxInk,
+                    active = active && !deleting, label = tr("Favorit hinzufügen"), tag = "network-add", boxFill = boxFill, boxInk = boxInk,
                     fill = toolFill, icon = R.drawable.ic_add, tint = toolInk, motion = IconTapMotion.QUARTER_TURN, onClick = onAdd,
                     shape = contrastingAddShape(), buttonSize = geometry.ADD_BUTTON)
                 ToolButton(
-                    slotEnd = geometry.INSET, reveal = stagger(progress, geometry.CHECK_START), active = active,
+                    slotEnd = geometry.INSET, reveal = stagger(progress, geometry.CHECK_START), active = active && !deleting,
                     label = tr("Fertig"), tag = "network-done", fill = scheme.primary,
                     icon = R.drawable.ic_check, tint = scheme.onPrimary, motion = IconTapMotion.DRAW, onClick = onDone,
                 )
+                }
+                if (deleteZone != null && (deleting || zoneIn > .01f)) DeleteZone(deleteZone, zoneIn)
             }
         }
     }
@@ -197,9 +234,9 @@ private fun BoxScope.ToolBox(
     val interaction = remember { MutableInteractionSource() }
     val buttonShape = shape ?: themedPressShape(interaction, buttonSize)
     val visible = reveal.coerceIn(0f, 1f)
-    val boxHeight = NetworkEditBarGeometry.OPEN_HEIGHT - 8.dp
+    val boxHeight = NetworkEditBarGeometry.BOX_HEIGHT
     Box(
-        Modifier.align(Alignment.CenterEnd).offset(x = -rightGap).width(boxWidth).height(boxHeight)
+        Modifier.align(Alignment.BottomEnd).offset(x = -rightGap, y = -(NetworkEditBarGeometry.OPEN_HEIGHT - boxHeight) / 2).width(boxWidth).height(boxHeight)
             .graphicsLayer {
                 alpha = (visible * 1.6f).coerceIn(0f, 1f)
                 // Fading must not render into a buffer of the box's size, which would cut the shadow.
@@ -260,7 +297,8 @@ private fun BoxScope.ToolButton(
     val shape = themedPressShape(interaction, NetworkEditBarGeometry.BUTTON)
     val visible = reveal.coerceIn(0f, 1f)
     Box(
-        Modifier.align(Alignment.CenterEnd).offset(x = -slotEnd).size(NetworkEditBarGeometry.BUTTON)
+        Modifier.align(Alignment.BottomEnd).offset(x = -slotEnd, y = -(NetworkEditBarGeometry.OPEN_HEIGHT - NetworkEditBarGeometry.BUTTON) / 2)
+            .size(NetworkEditBarGeometry.BUTTON)
             .graphicsLayer {
                 alpha = (visible * 1.6f).coerceIn(0f, 1f)
                 // Allows a little of the spring's overshoot without touching the neighbour.
@@ -288,4 +326,102 @@ internal fun twoLines(label: String): String {
     if (hyphen in 1 until label.lastIndex) return label.substring(0, hyphen + 1) + "\n" + label.substring(hyphen + 1)
     val space = label.indexOf(' ')
     return if (space > 0) label.substring(0, space) + "\n" + label.substring(space + 1) else label
+}
+
+/**
+ * Build 104: shared between the edit bar and the plan while a favourite is moved. The plan names the
+ * favourite in [moving] and reads [over]; the bar shows the delete zone and reports its [bounds] (root
+ * coordinates), so the plan can tell whether the finger is above it.
+ */
+@androidx.compose.runtime.Stable
+class NetworkDeleteZone {
+    var moving by androidx.compose.runtime.mutableStateOf<String?>(null)
+    var bounds by androidx.compose.runtime.mutableStateOf<androidx.compose.ui.geometry.Rect?>(null)
+    var over by androidx.compose.runtime.mutableStateOf(false)
+}
+
+/** The three gestures of the edit mode, each a word and what it does, on the band above the tools. */
+@Composable
+private fun BoxScope.GestureBand(reveal: Float, fill: Color, ink: Color) {
+    val geometry = NetworkEditBarGeometry
+    val cells = listOf(tr("Halten und schieben") to tr("Favorit verschieben"), tr("Ziehen") to tr("Linie verbinden"),
+        tr("Tippen") to tr("Favorit einstellen"))
+    androidx.compose.foundation.layout.Row(
+        Modifier.align(Alignment.TopStart).padding(start = geometry.INSET, end = geometry.INSET, top = geometry.INSET)
+            .fillMaxWidth().height(geometry.INFO_HEIGHT - geometry.INSET)
+            .graphicsLayer { alpha = (reveal * 1.6f).coerceIn(0f, 1f); translationY = (1f - reveal.coerceIn(0f, 1f)) * 8.dp.toPx() }
+            .clip(appCorner((geometry.INFO_HEIGHT - geometry.INSET) / 2)).background(fill)
+            .semantics(mergeDescendants = true) {}.testTag("network-gesture-band"),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        cells.forEachIndexed { index, (gesture, effect) ->
+            if (index > 0) Box(Modifier.width(1.dp).height(26.dp).background(ink.copy(alpha = .18f)))
+            androidx.compose.foundation.layout.Column(Modifier.weight(1f).padding(horizontal = 4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally) {
+                androidx.compose.material3.Text(gesture, color = ink, maxLines = 1, softWrap = false,
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold),
+                    autoSize = androidx.compose.foundation.text.TextAutoSize.StepBased(minFontSize = 7.sp,
+                        maxFontSize = MaterialTheme.typography.labelMedium.fontSize, stepSize = .5.sp))
+                androidx.compose.material3.Text(effect, color = ink.copy(alpha = .78f), maxLines = 1, softWrap = false,
+                    style = MaterialTheme.typography.labelSmall,
+                    autoSize = androidx.compose.foundation.text.TextAutoSize.StepBased(minFontSize = 7.sp,
+                        maxFontSize = MaterialTheme.typography.labelSmall.fontSize, stepSize = .5.sp))
+            }
+        }
+    }
+}
+
+/**
+ * The zone that deletes a moved favourite: red, or another signal colour where the theme itself is red.
+ * It springs in where the tools were, grows a little while the favourite is above it and reports its bounds.
+ */
+@Composable
+private fun BoxScope.DeleteZone(zone: NetworkDeleteZone, shown: Float) {
+    val geometry = NetworkEditBarGeometry
+    val quiet = dev.ambivalenton.openv.ui.theme.LocalAppSettings.current.reduceMotion
+    val (signal, ink) = deleteSignal()
+    val over = zone.over
+    val grow by androidx.compose.animation.core.animateFloatAsState(if (over) 1f else 0f,
+        if (quiet) androidx.compose.animation.core.snap() else androidx.compose.animation.core.spring(dampingRatio = .45f, stiffness = 600f),
+        label = "network-delete-over")
+    androidx.compose.runtime.DisposableEffect(zone) { onDispose { zone.bounds = null; zone.over = false } }
+    androidx.compose.foundation.layout.Row(
+        Modifier.align(Alignment.BottomStart).padding(start = geometry.INSET, end = geometry.INSET, bottom = (geometry.OPEN_HEIGHT - geometry.BOX_HEIGHT) / 2)
+            .fillMaxWidth().height(geometry.BOX_HEIGHT)
+            .onGloballyPositioned { zone.bounds = it.boundsInRoot() }
+            .graphicsLayer {
+                alpha = (shown * 1.4f).coerceIn(0f, 1f)
+                val s = .86f + .14f * shown + .05f * grow
+                scaleX = s; scaleY = s
+            }
+            .clip(appCorner(geometry.BOX_HEIGHT / 2)).background(lerp(signal, Color.Black, .14f * grow))
+            .semantics(mergeDescendants = true) {}.testTag("network-delete-zone"),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
+    ) {
+        AppIcon(R.drawable.ic_delete, null, Modifier.size(22.dp).graphicsLayer { rotationZ = -14f * grow }, tint = ink)
+        androidx.compose.material3.Text(if (over) tr("Loslassen zum Löschen") else tr("Hierhin verschieben, um den Favoriten zu löschen"),
+            Modifier.padding(start = 10.dp, end = 6.dp), color = ink, maxLines = 2,
+            style = MaterialTheme.typography.labelLarge.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold),
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            autoSize = androidx.compose.foundation.text.TextAutoSize.StepBased(minFontSize = 8.sp,
+                maxFontSize = MaterialTheme.typography.labelLarge.fontSize, stepSize = .5.sp))
+    }
+}
+
+/** Red for deleting; a theme whose own accent is red gets another signal colour (orange or magenta). */
+@Composable
+internal fun deleteSignal(): Pair<Color, Color> {
+    val scheme = MaterialTheme.colorScheme
+    return androidx.compose.runtime.remember(scheme.error, scheme.primary) { deleteSignalFor(scheme.error, scheme.primary) }
+}
+
+internal fun deleteSignalFor(error: Color, accent: Color): Pair<Color, Color> {
+    fun hct(c: Color) = dev.ambivalenton.openv.color.utilities.Hct.fromInt(c.toArgb())
+    fun distance(a: Double, b: Double) = kotlin.math.min(kotlin.math.abs(a - b), 360 - kotlin.math.abs(a - b))
+    val e = hct(error); val p = hct(accent)
+    val base = if (p.chroma > 20 && distance(e.hue, p.hue) < 35) {
+        val hue = if (distance(55.0, p.hue) >= distance(330.0, p.hue)) 55.0 else 330.0
+        Color(dev.ambivalenton.openv.color.utilities.Hct.from(hue, maxOf(e.chroma, 60.0), e.tone.coerceIn(35.0, 60.0)).toInt())
+    } else error
+    return base to contrastContentColor(base)
 }

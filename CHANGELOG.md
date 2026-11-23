@@ -4,6 +4,13 @@ Alle nennenswerten Änderungen an Öpen-V. Versionen folgen [Semantic Versioning
 
 ## [Unveröffentlicht]
 
+## [1.0.4] (104) · 2026-11-23
+
+- Netzplan bearbeiten: Der ausgeklappte Bereich ist doppelt so hoch. Oben ein eigenes Band mit den drei Gesten – „Halten und schieben“ verschiebt, „Ziehen“ verbindet eine Linie, „Tippen“ öffnet die Einstellungen des Favoriten –, darunter wie bisher „Favoriten-Einstellungen“, „Favorit hinzufügen“ und Fertig. Der Netzplan bleibt an seinem Platz; der Bereich wächst nach oben.
+- „Abfahrt/Ankunft“ fliegt dafür beim Ausklappen federnd links aus dem Bild und schießt beim Einklappen wieder herein; die Kapsel im Schalter schwingt dabei mit eigener Feder etwas weiter und zurück.
+- Favoriten löschen: Hält man einen Favoriten zum Verschieben, weichen die beiden Knöpfe federnd einer roten Zone „Hierhin verschieben, um den Favoriten zu löschen“ (bei roten Designs eine andere Signalfarbe). Darüber heißt es „Loslassen zum Löschen“; der Favorit ist dann gelöscht, „Rückgängig“ holt ihn mit seinen Linien zurück.
+- „Favorit löschen“ in den Einstellungen eines Favoriten steht in einem eigenen Rahmen in derselben Signalfarbe.
+
 ## [1.0.3] (103) · 2026-11-23
 
 - Balkendiagramm bei „Ankunft“: keine Lücke mehr zwischen den Balken. Die Vorab-Suche holte die nächste spätere Verbindung ab der Ankunftszeit als Abfahrtszeit; das Diagramm lud dann „später“ erst ab dort weiter, und alle Fahrten dazwischen fehlten. Jetzt schließt die spätere Seite an die letzte noch rechtzeitig ankommende Verbindung an.
@@ -40,7 +47,8 @@ Erste Version.
 - Fahrplandaten von VRR OpenService, Haltestellenverzeichnis für Deutschland offline mitgeliefert.
 - Test-App „Öpen-V · Vorschau“ (`dev.ambivalenton.openv.next`), die sich neben der Store-App installiert.
 
-[Unveröffentlicht]: https://github.com/Ambivalenton/openv-release/compare/v1.0.3...HEAD
+[Unveröffentlicht]: https://github.com/Ambivalenton/openv-release/compare/v1.0.4...HEAD
+[1.0.4]: https://github.com/Ambivalenton/openv-release/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/Ambivalenton/openv-release/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/Ambivalenton/openv-release/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/Ambivalenton/openv-release/compare/v1.0.0...v1.0.1

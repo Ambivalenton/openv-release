@@ -31,6 +31,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -70,16 +71,33 @@ private val ScheduleGap = 8.dp
  * time is chosen, a "Jetzt" area that springs out of the frame's lower right edge and back.
  */
 @Composable fun ScheduleControls(timeMillis: Long?, onTime: (Long?) -> Unit, mode: TimeMode, onMode: (TimeMode) -> Unit,
-    onNow: () -> Unit, modifier: Modifier = Modifier) {
+    onNow: () -> Unit, modifier: Modifier = Modifier,
+    /** Build 104: the row with "Abfahrt/Ankunft" leaves to the left (the open plan editor needs its room). */
+    modeAway: Boolean = false) {
     var frameHeight by remember { mutableIntStateOf(0) }
     var tabLeft by remember { mutableIntStateOf(0) }
+    var rowWidth by remember { mutableIntStateOf(0) }
+    val density = LocalDensity.current
+    val quiet = LocalAppSettings.current.reduceMotion
+    // The row and the capsule inside the pill each follow their own spring: coming back, the row
+    // shoots in with a small overshoot and the softer capsule swings on a little further, then settles.
+    val rowX = remember { Animatable(0f) }
+    val capsuleX = remember { Animatable(0f) }
+    LaunchedEffect(modeAway, rowWidth, quiet) {
+        val target = if (modeAway) -(rowWidth + with(density) { 32.dp.toPx() }) else 0f
+        if (quiet || rowWidth == 0) { rowX.snapTo(target); capsuleX.snapTo(target); return@LaunchedEffect }
+        launch { rowX.animateTo(target, if (modeAway) spring(dampingRatio = .8f, stiffness = 340f) else spring(dampingRatio = .58f, stiffness = 260f)) }
+        launch { capsuleX.animateTo(target, if (modeAway) spring(dampingRatio = .8f, stiffness = 300f) else spring(dampingRatio = .32f, stiffness = 150f)) }
+    }
     Column(modifier.fillMaxWidth()) {
         // The frame is drawn above the area that slides out from underneath it.
         Box(Modifier.zIndex(1f).onSizeChanged { frameHeight = it.height }) { SplitDateTimePicker(timeMillis, onTime) }
         Layout(content = {
-            TimeModeSwitch(mode, onMode)
+            TimeModeSwitch(mode, onMode, capsuleDrift = { capsuleX.value - rowX.value })
             NowExtension(timeMillis != null, onNow, { frameHeight }, { tabLeft })
-        }, modifier = Modifier.fillMaxWidth().zIndex(0f)) { measurables, constraints ->
+        }, modifier = Modifier.fillMaxWidth().zIndex(0f).onSizeChanged { rowWidth = it.width }
+            .graphicsLayer { translationX = rowX.value }
+            .then(if (modeAway) Modifier.clearAndSetSemantics {} else Modifier).testTag("schedule-mode-row")) { measurables, constraints ->
             val width = constraints.maxWidth
             val gap = ScheduleGap.roundToPx()
             val tabWidth = measurables[1].maxIntrinsicWidth(ModePillHeight.roundToPx()).plus(32.dp.roundToPx())
@@ -101,7 +119,9 @@ private val ScheduleGap = 8.dp
  * Both labels share one font size that always fits the slot ("Ankunft" was cut off at
  * larger system fonts or narrow screens), and the pill grows in height with the system font.
  */
-@Composable fun TimeModeSwitch(mode: TimeMode, onMode: (TimeMode) -> Unit, modifier: Modifier = Modifier) {
+@Composable fun TimeModeSwitch(mode: TimeMode, onMode: (TimeMode) -> Unit, modifier: Modifier = Modifier,
+    /** Build 104: how far (px) the capsule swings on its own while the pill moves. */
+    capsuleDrift: () -> Float = { 0f }) {
     val options = listOf(TimeMode.DEPARTURE to tr("Abfahrt"), TimeMode.ARRIVAL to tr("Ankunft"))
     val base = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold)
     val measurer = rememberTextMeasurer()
@@ -131,7 +151,7 @@ private val ScheduleGap = 8.dp
         }
         val text = with(density) { (lineHeight * fit.scale).toDp() }
         val height = if (text + ModePillInset * 2 + 14.dp > ModePillHeight) text + ModePillInset * 2 + 14.dp else ModePillHeight
-        TimeModeSwitchBody(options, mode, onMode, if (fit.scale < 1f) scaledLabel(base, fit.scale) else base, fit.padding, height)
+        TimeModeSwitchBody(options, mode, onMode, if (fit.scale < 1f) scaledLabel(base, fit.scale) else base, fit.padding, height, capsuleDrift)
     }
 }
 
@@ -154,7 +174,8 @@ private val TimeModeLabelPadding = 16.dp
 private val TimeModeMinPadding = 6.dp
 
 @Composable private fun TimeModeSwitchBody(options: List<Pair<TimeMode, String>>, mode: TimeMode, onMode: (TimeMode) -> Unit,
-    labelStyle: androidx.compose.ui.text.TextStyle, labelPadding: Float, pillHeight: androidx.compose.ui.unit.Dp) {
+    labelStyle: androidx.compose.ui.text.TextStyle, labelPadding: Float, pillHeight: androidx.compose.ui.unit.Dp,
+    capsuleDrift: () -> Float = { 0f }) {
     val index = if (mode == TimeMode.ARRIVAL) 1 else 0
     val visuals = LocalAppVisuals.current
     val quiet = LocalAppSettings.current.reduceMotion
@@ -209,7 +230,9 @@ private val TimeModeMinPadding = 6.dp
         val squash = if (quiet) 0f else shell.landing.value
         val cw = (slot * (1 + stretch + squash * .6f)).coerceIn(slot * .7f, inner.width)
         val ch = (inner.height * (1 - stretch * .14f + squash * .4f)).coerceAtMost(inner.height)
-        val cx = (inner.left + slot * ((head + tail) / 2 + .5f)).coerceIn(inner.left + cw / 2, inner.right - cw / 2)
+        // Build 104: the capsule's own swing, at most a third of a slot beyond its place.
+        val drift = capsuleDrift().coerceIn(-slot * .34f, slot * .34f)
+        val cx = (inner.left + slot * ((head + tail) / 2 + .5f) + drift).coerceIn(inner.left + cw / 2, inner.right - cw / 2)
         val capsuleRect = Rect(cx - cw / 2, size.height / 2 - ch / 2, cx + cw / 2, size.height / 2 + ch / 2)
         val amount = if (quiet) 0f else shell.amount.value.coerceIn(-.42f, 1.15f) * 3.5.dp.toPx()
         val outline = themedPillPath(shellShape, Rect(0f, 0f, size.width, size.height), density, direction,

@@ -1,0 +1,1 @@
+Editing the network plan: a twice as tall area with a short gesture guide; "Departure/Arrival" springs aside to make room. Dragging a favourite onto the red zone while moving it deletes it – with "Undo". "Delete favourite" in a favourite's settings has its own red frame.
