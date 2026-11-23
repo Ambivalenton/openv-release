@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<resources>
+    <!-- Build 107: widget corners; Android 12+ uses the launcher's own radii (values-v31). -->
+    <dimen name="widget_radius_outer">24dp</dimen>
+    <dimen name="widget_radius_inner">16dp</dimen>
+</resources>

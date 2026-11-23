@@ -1,1 +1,40 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:padding="16dp" android:gravity="center" android:background="@drawable/widget_preview_bg" android:orientation="vertical"><ImageView android:layout_width="40dp" android:layout_height="40dp" android:src="@drawable/ic_widget_preview" android:contentDescription="@null"/><TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:text="@string/app_name" android:textSize="18sp" android:textColor="@color/widget_preview_foreground"/><TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:text="@string/widget_tagline" android:textSize="12sp" android:textColor="@color/widget_preview_foreground"/></LinearLayout>
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!-- Build 107: picker preview of the favourites widget (four tiles in their own colours). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools"
+    tools:ignore="UseAppTint,NestedWeights,SmallSp"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:padding="8dp" android:background="@drawable/widget_shape_outer" android:backgroundTint="#F2F0F5">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal">
+        <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center"
+            android:background="@drawable/widget_shape_inner" android:backgroundTint="#D6E3FF" android:layout_marginEnd="6dp">
+            <ImageView android:layout_width="34dp" android:layout_height="34dp" android:padding="8dp" android:src="@drawable/ic_home" android:tint="#FFFFFF"
+                android:background="@drawable/widget_symbol_squircle_fill" android:backgroundTint="#245EA8" android:contentDescription="@null"/>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="@string/widget_preview_home"
+                android:textSize="12sp" android:textStyle="bold" android:textColor="#1B1B1F" android:maxLines="1"/>
+        </LinearLayout>
+        <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center"
+            android:background="@drawable/widget_shape_inner" android:backgroundTint="#FFD9E2">
+            <ImageView android:layout_width="34dp" android:layout_height="34dp" android:padding="8dp" android:src="@drawable/ic_work" android:tint="#FFFFFF"
+                android:background="@drawable/widget_symbol_circle_fill" android:backgroundTint="#B90063" android:contentDescription="@null"/>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="@string/widget_preview_work"
+                android:textSize="12sp" android:textStyle="bold" android:textColor="#1B1B1F" android:maxLines="1"/>
+        </LinearLayout>
+    </LinearLayout>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal" android:layout_marginTop="6dp">
+        <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center"
+            android:background="@drawable/widget_shape_inner" android:backgroundTint="#B7F1B9" android:layout_marginEnd="6dp">
+            <ImageView android:layout_width="34dp" android:layout_height="34dp" android:padding="8dp" android:src="@drawable/ic_school" android:tint="#FFFFFF"
+                android:background="@drawable/widget_symbol_squircle_fill" android:backgroundTint="#1E6C2B" android:contentDescription="@null"/>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="@string/widget_preview_school"
+                android:textSize="12sp" android:textStyle="bold" android:textColor="#1B1B1F" android:maxLines="1"/>
+        </LinearLayout>
+        <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:gravity="center"
+            android:background="@drawable/widget_shape_inner" android:backgroundTint="#FFDBC8">
+            <ImageView android:layout_width="34dp" android:layout_height="34dp" android:padding="8dp" android:src="@drawable/ic_fitness_center" android:tint="#FFFFFF"
+                android:background="@drawable/widget_symbol_squircle_fill" android:backgroundTint="#9A4600" android:contentDescription="@null"/>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="@string/widget_preview_gym"
+                android:textSize="12sp" android:textStyle="bold" android:textColor="#1B1B1F" android:maxLines="1"/>
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

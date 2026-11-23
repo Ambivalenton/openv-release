@@ -6,7 +6,14 @@
     <string name="board_widget_description">Live departures at your nearest saved stop.</string>
     <string name="widget_tagline">Your places. Your journeys.</string>
     <string name="board_preview_station">Your nearest stop</string>
-    <string name="board_preview_columns">Line · Destination · Departure · Platform</string>
+    <string name="board_preview_columns">Line · Destination · Departure</string>
     <string name="board_widget_error_title">Öpen-V · Departure board</string>
     <string name="board_widget_error_message">Please open the app and refresh the departure board.</string>
+    <string name="widget_preview_home">Home</string>
+    <string name="widget_preview_work">Work</string>
+    <string name="widget_preview_school">University</string>
+    <string name="widget_preview_gym">Gym</string>
+    <string name="board_preview_first">Main Station</string>
+    <string name="board_preview_second">City Centre</string>
+    <string name="board_preview_third">Market Square</string>
 </resources>

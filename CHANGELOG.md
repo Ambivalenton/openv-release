@@ -4,6 +4,13 @@ Alle nennenswerten Änderungen an Öpen-V. Versionen folgen [Semantic Versioning
 
 ## [Unveröffentlicht]
 
+## [1.0.7] (107) · 2026-11-24
+
+- Favoriten-Widget neu gestaltet: Jeder Favorit ist eine Kachel in seiner Farbe mit Symbol und – wo Platz ist – Namen; breite Kacheln nennen auch die Haltestelle. Die Anordnung passt sich jeder Größe an: 1×1 zeigt den wichtigsten Favoriten mit Namen, flache Widgets eine Reihe, schmale hohe eine Liste, große Widgets große Kacheln mit Suchknopf. Hervorgehobene Favoriten stehen vorn in kräftiger Farbe. Widgets mit nur einer Kachelreihe scrollen nicht mehr, sondern zeigen, was hineinpasst; bisher blieb 1×1 leer und es gab nirgends Namen.
+- Behoben: Die in den Einstellungen gewählten Widget-Farben (Hintergrund, Symbole) wurden beim Speichern zurückgesetzt. Die Schalter für Schatten entfallen, das Widget ist flach.
+- Abfahrten-Widget neu gestaltet: echte Schrift statt einer gezeichneten Tafel. Oben Haltestelle, Stand und Aktualisieren; darunter so viele Abfahrten wie passen mit Linie in ihrer Farbe, Ziel, Abfahrtszeit, Gleis und Verspätung (ausgefallene Fahrten durchgestrichen); unten die Quelle der Fahrplandaten. Flache Widgets zeigen die nächste Abfahrt, schmale setzen das Ziel unter Linie und Zeit. Es bleiben Uhrzeiten statt eines Countdowns, weil ein Widget nicht jede Minute neu gezeichnet wird; der Stand zeigt, wie frisch die Daten sind. Ein Tipp auf eine Abfahrt öffnet ihren Zeitstrahl. Design- und Einstellungsknopf entfallen; die Anzeigetafel in der App behält ihre Designs.
+- Beide Widgets nehmen die Farben des App-Designs für Tag und Nacht und runden ihre Ecken wie der Launcher (ab Android 12). Die Vorschauen in der Widget-Auswahl zeigen das neue Aussehen.
+
 ## [1.0.6] (106) · 2026-11-23
 
 - Navigationsleiste: Die Auswahlkapsel landet ohne Sprung (Federimpuls statt sofortiger Stauchung). Symbole reagieren, wenn die Kapsel sie erreicht: ein kleiner Hüpfer beim Durchfahren, ein voller mit Landung am Ziel. Beim Darübergleiten nehmen sie die Farbe der Kapsel an, beim Drücken geben sie leicht nach. Zug, Lupe und Übersicht bewegen sich mit Federn statt fester Zeitkurven.
@@ -62,7 +69,8 @@ Erste Version.
 - Fahrplandaten von VRR OpenService, Haltestellenverzeichnis für Deutschland offline mitgeliefert.
 - Test-App „Öpen-V · Vorschau“ (`dev.ambivalenton.openv.next`), die sich neben der Store-App installiert.
 
-[Unveröffentlicht]: https://github.com/Ambivalenton/openv-release/compare/v1.0.6...HEAD
+[Unveröffentlicht]: https://github.com/Ambivalenton/openv-release/compare/v1.0.7...HEAD
+[1.0.7]: https://github.com/Ambivalenton/openv-release/compare/v1.0.6...v1.0.7
 [1.0.6]: https://github.com/Ambivalenton/openv-release/compare/v1.0.5...v1.0.6
 [1.0.5]: https://github.com/Ambivalenton/openv-release/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/Ambivalenton/openv-release/compare/v1.0.3...v1.0.4

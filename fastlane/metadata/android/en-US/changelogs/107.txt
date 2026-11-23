@@ -1,0 +1,4 @@
+• Widgets redesigned: colourful favourite tiles with name and stop, fitting every size from 1×1 to large.
+• Departures widget with line colours, destination, departure time, platform and delay; refresh right in the widget.
+• Both widgets follow the app design in light and dark mode.
+• Chosen widget colours are now kept.

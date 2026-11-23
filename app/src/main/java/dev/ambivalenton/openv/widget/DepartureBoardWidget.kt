@@ -18,16 +18,20 @@ import androidx.glance.action.clickable
 import androidx.glance.appwidget.*
 import androidx.glance.appwidget.action.*
 import androidx.glance.layout.*
-import androidx.glance.text.*
-import androidx.glance.semantics.semantics
 import androidx.glance.semantics.contentDescription
+import androidx.glance.semantics.semantics
+import androidx.glance.text.FontWeight
+import androidx.glance.text.TextAlign
 import androidx.glance.unit.ColorProvider
 import dev.ambivalenton.openv.MainActivity
 import dev.ambivalenton.openv.OpenVApp
 import dev.ambivalenton.openv.R
 import dev.ambivalenton.openv.data.model.*
 import dev.ambivalenton.openv.rendering.*
+import dev.ambivalenton.openv.ui.theme.TimelineInk
+import dev.ambivalenton.openv.ui.theme.createTimelinePalette
 import dev.ambivalenton.openv.ui.theme.resolveColorScheme
+import kotlin.math.floor
 import kotlinx.coroutines.flow.first
 
 class DepartureBoardWidget : GlanceAppWidget(errorUiLayout = R.layout.board_widget_error) {
@@ -69,20 +73,76 @@ fun boardRefreshIntent(context: Context) =
         flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
     }
 
-internal data class BoardGeometry(
+/**
+ * Build 107 · the departures widget's arrangement at its real size. [single]: a flat widget shows the
+ * next departure only, with stop and source in one small line below. Otherwise a header (stop, stand,
+ * refresh), as many rows as fit – two-line rows with platform and delay where there is room, rows that
+ * put the destination under line and time in narrow widgets – and the source line at the bottom.
+ */
+internal data class BoardWidgetPlan(
     val padding: Float,
-    val heading: Boolean,
+    val single: Boolean,
+    val header: Float,
+    /** A low widget's header: stop and stand in one line, a smaller refresh button. */
+    val compactHeader: Boolean,
+    val footer: Float,
     val rows: Int,
     val rowHeight: Float,
+    val twoLine: Boolean,
     val narrow: Boolean,
 )
 
-internal fun boardGeometry(width: Float, height: Float, fontScale: Float): BoardGeometry {
-    val layout =
-        boardLayout(width, (height - if (height < 180) 28 else 36).coerceAtLeast(30f), fontScale)
-    return BoardGeometry(layout.padding, false, layout.rows, layout.rowHeight, layout.narrow)
+internal fun boardWidgetPlan(width: Float, height: Float, fontScale: Float = 1f): BoardWidgetPlan {
+    val w = if (width.isFinite()) width.coerceAtLeast(48f) else 180f
+    val h = if (height.isFinite()) height.coerceAtLeast(48f) else 110f
+    val font = if (fontScale.isFinite()) fontScale.coerceIn(.85f, 1.6f) else 1f
+    val narrow = w < 190f * font
+    if (h < 108f * font) {
+        val padding = if (h < 72f) 6f else 10f
+        val footer = 15f * font
+        return BoardWidgetPlan(padding, true, 0f, false, footer, 1, (h - 2 * padding - footer).coerceAtLeast(24f), false, narrow)
+    }
+    val compactHeader = h < 176f * font
+    val padding = if (compactHeader) (if (narrow) 6f else 10f) else 12f
+    val header = (if (compactHeader) (if (narrow) 26f else 30f) else 42f) * font
+    val footer = (if (compactHeader) 14f else 16f) * font
+    val body = (h - 2 * padding - header - footer - headerGap(compactHeader)).coerceAtLeast(30f)
+    // Platform and delay get their own line only where at least three rows still fit.
+    val twoLine = !narrow && body >= 3 * 46f * font
+    val minRow = (if (narrow) 40f else if (twoLine) 46f else 30f) * font
+    val rows = floor(body / minRow).toInt().coerceIn(1, 12)
+    return BoardWidgetPlan(padding, false, header, compactHeader, footer, rows, body / rows, twoLine, narrow)
 }
 
+/** Space between the header and the first row. */
+internal fun headerGap(compact: Boolean) = if (compact) 2f else 6f
+
+/** Colours of the line badges for day and night, from the app's timeline palette. */
+private class LineInks(day: (LineType) -> TimelineInk, night: (LineType) -> TimelineInk) {
+    private val inks = LineType.entries.associateWith { type ->
+        val d = day(type); val n = night(type)
+        androidx.glance.color.ColorProvider(d.container, n.container) to androidx.glance.color.ColorProvider(d.content, n.content)
+    }
+    fun container(type: LineType) = inks.getValue(type).first
+    fun content(type: LineType) = inks.getValue(type).second
+}
+
+private fun lineInks(context: Context, settings: AppSettings): LineInks {
+    fun palette(dark: Boolean): (LineType) -> TimelineInk {
+        val scheme = resolveColorScheme(context, settings, dark)
+        val p = createTimelinePalette(normalizedTimelineTheme(settings.timelineTheme), scheme, scheme, settings.timelineSeed,
+            settings.timelineLineColors, settings.appTheme)
+        return { p[it] }
+    }
+    return LineInks(palette(false), palette(true))
+}
+
+/**
+ * Build 107 · the departures widget, rebuilt with real text instead of a drawn board: stop and stand,
+ * the next departures with line, destination, time, platform and delay, a refresh button and the
+ * source of the timetable data. Times are clock times – a widget is not redrawn every minute, so a
+ * countdown would soon be wrong; the stand says how fresh the data are.
+ */
 @Composable
 internal fun DepartureBoardContent(
     state: StoredState,
@@ -91,150 +151,138 @@ internal fun DepartureBoardContent(
 ) {
     val context = LocalContext.current
     val size = LocalSize.current
-    val systemDark =
-        context.resources.configuration.uiMode and
-            android.content.res.Configuration.UI_MODE_NIGHT_MASK ==
-            android.content.res.Configuration.UI_MODE_NIGHT_YES
-    val model =
-        boardPresentation(state, resolveColorScheme(context, state.settings, systemDark), now = now,typeface=dev.ambivalenton.openv.ui.theme.AppTypefaces.get(context,state.settings.fontId),
-            themeTypeface=dev.ambivalenton.openv.ui.theme.AppTypefaces.get(context,state.settings.appTheme?.bodyFace))
-    val hidden = state.settings.board.hideSettingsButtons
-    // M10: a fixed stop only reloads departures; the automatic choice also determines the location.
+    val palette = remember(state.settings) { widgetPalette(context, state.settings) }
+    val inks = remember(state.settings) { lineInks(context, state.settings) }
+    val systemDark = context.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK ==
+        android.content.res.Configuration.UI_MODE_NIGHT_YES
+    val model = boardPresentation(state, resolveColorScheme(context, state.settings, systemDark), now = now)
+    val plan = boardWidgetPlan(size.width.value, size.height.value, fontScale)
     val refreshLabel = dev.ambivalenton.openv.data.repository.boardRefreshLabel(state)
-    val footer = if (hidden) 0f else 24f
-    // Reserve a line for data source attribution.
-    val notice = if (TimetableProfile.sourceNotice) 20f else 0f
-    val bodyHeight = (size.height.value - footer - notice).coerceAtLeast(24f)
-    val layout = model.layout(size.width.value,bodyHeight,fontScale)
-    val bitmap =
-        remember(model, size, fontScale, bodyHeight, hidden) {
-            BoardRenderer.render(
-                model,
-                size.width.value,
-                bodyHeight,
-                fontScale,
-                headerAction = hidden,
-            )
+    val rows = model.rows.take(plan.rows)
+    Column(GlanceModifier.fillMaxSize().appWidgetBackground().widgetFill(WidgetShape.OUTER, palette.surface).padding(plan.padding.dp)) {
+        if (!plan.single) {
+            BoardHeader(model, palette, refreshLabel, plan)
+            Spacer(GlanceModifier.height(headerGap(plan.compactHeader).dp))
         }
-    Column(
-        GlanceModifier.fillMaxSize()
-            .appWidgetBackground()
-            .background(ColorProvider(androidx.compose.ui.graphics.Color(model.colors.background)))
-            .cornerRadius(20.dp)
-    ) {
-        Box(GlanceModifier.fillMaxWidth().defaultWeight()) {
-            Image(
-                ImageProvider(bitmap),
-                model.description(layout.rows),
-                GlanceModifier.fillMaxSize()
-                    .clickable(actionStartActivity(departureBoardIntent(context))),
-                contentScale = ContentScale.FillBounds,
-            )
-            Column(GlanceModifier.fillMaxSize()) {
-                Spacer(GlanceModifier.height((layout.padding+layout.header).dp))
-                model.rows.take(layout.rows).forEach {row->
-                    if(row.journey!=null) Box(GlanceModifier.fillMaxWidth().height(layout.rowHeight.dp)
-                        .clickable(actionStartActivity(boardJourneyIntent(context,row)))
-                        .semantics {contentDescription=tr("%1\$s nach %2\$s · Zeitstrahl öffnen",row.lineName+" "+clockTime(row.time),row.destination)}) {
-                        // The bitmap supplies the visible label; the overlay supplies a distinct action.
-                    } else Spacer(GlanceModifier.height(layout.rowHeight.dp))
-                }
-            }
-            if (hidden)
-                Box(
-                    GlanceModifier.fillMaxWidth().height(28.dp),
-                    contentAlignment = Alignment.CenterEnd,
-                ) {
-                    Box(
-                        GlanceModifier.size(28.dp)
-                            .clickable(actionStartActivity(boardRefreshIntent(context))),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Image(
-                            ImageProvider(R.drawable.ic_refresh),
-                            refreshLabel,
-                            GlanceModifier.size(18.dp),
-                            colorFilter =
-                                ColorFilter.tint(
-                                    ColorProvider(
-                                        androidx.compose.ui.graphics.Color(model.colors.accent)
-                                    )
-                                ),
-                        )
-                    }
-                }
+        Column(GlanceModifier.fillMaxWidth().defaultWeight()) {
+            if (rows.isEmpty()) BoardEmpty(model, palette, plan)
+            else rows.forEach { row -> DepartureRow(row, plan, palette, inks) }
         }
-        if (TimetableProfile.sourceNotice) Text(tr(dev.ambivalenton.openv.data.model.TimetableServices.active.attribution),
-            GlanceModifier.fillMaxWidth().height(20.dp).padding(horizontal=8.dp)
-                .clickable(actionStartActivity(Intent(Intent.ACTION_VIEW,dev.ambivalenton.openv.data.model.TimetableServices.active.sourceUrl.toUri()))),
-            style=TextStyle(color=ColorProvider(androidx.compose.ui.graphics.Color(model.colors.foreground)),fontSize=11.sp),
-            maxLines=1)
-        if (!hidden)
-            Row(
-                GlanceModifier.fillMaxWidth().height(footer.dp),
-                verticalAlignment = Alignment.Vertical.CenterVertically,
-            ) {
-                Box(
-                    GlanceModifier.defaultWeight()
-                        .fillMaxHeight()
-                        .clickable(actionStartActivity(boardRefreshIntent(context))),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Image(
-                        ImageProvider(R.drawable.ic_refresh),
-                        refreshLabel,
-                        GlanceModifier.size(20.dp),
-                        colorFilter =
-                            ColorFilter.tint(
-                                ColorProvider(
-                                    androidx.compose.ui.graphics.Color(model.colors.accent)
-                                )
-                            ),
-                    )
-                }
-                if (size.width.value >= 140) {
-                    Box(
-                        GlanceModifier.defaultWeight()
-                            .fillMaxHeight()
-                            .clickable(actionRunCallback<CycleBoardDesignAction>()),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Image(
-                            ImageProvider(R.drawable.ic_palette),
-                            tr("Nächstes Anzeigetafel-Design, aktuell %1\$s", model.design.title),
-                            GlanceModifier.size(20.dp),
-                            colorFilter =
-                                ColorFilter.tint(
-                                    ColorProvider(
-                                        androidx.compose.ui.graphics.Color(model.colors.accent)
-                                    )
-                                ),
-                        )
-                    }
-                    Box(
-                        GlanceModifier.defaultWeight()
-                            .fillMaxHeight()
-                            .clickable(actionStartActivity(settingsIntent(context))),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Image(
-                            ImageProvider(R.drawable.ic_settings),
-                            tr("Anzeigetafel einstellen"),
-                            GlanceModifier.size(20.dp),
-                            colorFilter =
-                                ColorFilter.tint(
-                                    ColorProvider(
-                                        androidx.compose.ui.graphics.Color(model.colors.accent)
-                                    )
-                                ),
-                        )
-                    }
-                }
-            }
+        BoardFooter(model, palette, plan, refreshLabel)
     }
 }
 
-/** A widget-side edit writes the very same setting observed by the in-app board. */
+@Composable private fun BoardHeader(model: BoardPresentation, palette: WidgetPalette, refreshLabel: String, plan: BoardWidgetPlan) {
+    val context = LocalContext.current
+    Row(GlanceModifier.fillMaxWidth().height(plan.header.dp), verticalAlignment = Alignment.Vertical.CenterVertically) {
+        val open = GlanceModifier.defaultWeight().clickable(actionStartActivity(departureBoardIntent(context)))
+            .semantics { contentDescription = tr("%1\$s. %2\$s. Abfahrten öffnen", model.title, model.caption) }
+        if (plan.compactHeader) Row(open, verticalAlignment = Alignment.Vertical.CenterVertically) {
+            WidgetText(model.title, palette.onSurface, 14.5.sp, GlanceModifier.defaultWeight(), FontWeight.Bold)
+            // Narrow: the stop's name needs the room; the stand is read aloud and shown in the app.
+            if (!plan.narrow) {
+                Spacer(GlanceModifier.width(6.dp))
+                WidgetText(model.caption, palette.muted, 11.sp)
+            }
+        } else Column(open) {
+            WidgetText(model.title, palette.onSurface, 16.sp, weight = FontWeight.Bold)
+            WidgetText(model.caption, palette.muted, 11.5.sp)
+        }
+        Spacer(GlanceModifier.width(8.dp))
+        val button = if (plan.compactHeader) 28.dp else 36.dp
+        Box(GlanceModifier.size(button).widgetFill(WidgetShape.PILL, palette.tile).clickable(actionStartActivity(boardRefreshIntent(context)))
+            .semantics { contentDescription = refreshLabel }, contentAlignment = Alignment.Center) {
+            Image(ImageProvider(R.drawable.ic_refresh), null, GlanceModifier.size(18.dp), colorFilter = ColorFilter.tint(palette.accent))
+        }
+    }
+}
+
+@Composable private fun DepartureRow(row: Departure, plan: BoardWidgetPlan, palette: WidgetPalette, inks: LineInks) {
+    val context = LocalContext.current
+    val font = LocalContext.current.resources.configuration.fontScale
+    val minutes = row.delay.minutes
+    val late = minutes != null && minutes > 0 && !row.delay.cancelled
+    val platform = platformName(row.platform, row.lineType)
+    val time = clockTime(row.time)
+    val description = listOfNotNull(
+        tr("%1\$s %2\$s nach %3\$s", row.lineType.label, row.lineName, row.destination), time, platform,
+        if (row.delay.cancelled) tr("fällt aus") else if (late) tr("%1\$s Minuten verspätet", minutes) else null,
+        if (row.journey != null) tr("Zeitstrahl öffnen") else null).joinToString(", ")
+    val action = actionStartActivity(if (row.journey != null) boardJourneyIntent(context, row) else departureBoardIntent(context))
+    val timeColor = if (row.delay.cancelled) palette.error else if (late) palette.late else palette.onSurface
+    if (plan.narrow && !plan.single) {
+        // Narrow: line and time on top, the destination below in the full width.
+        Column(GlanceModifier.fillMaxWidth().height(plan.rowHeight.dp).clickable(action).semantics { contentDescription = description },
+            verticalAlignment = Alignment.Vertical.CenterVertically) {
+            Row(GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.Vertical.CenterVertically) {
+                LineBadge(row, inks, font, height = 20f)
+                Spacer(GlanceModifier.defaultWeight())
+                if (late) WidgetText("+$minutes ", palette.late, 11.sp, weight = FontWeight.Medium)
+                WidgetText(time, timeColor, 14.5.sp, weight = FontWeight.Bold, struck = row.delay.cancelled)
+            }
+            WidgetText(if (row.delay.cancelled) tr("%1\$s · fällt aus", row.destination) else row.destination,
+                if (row.delay.cancelled) palette.error else palette.onSurface, 12.sp, GlanceModifier.padding(top = 1.dp))
+        }
+        return
+    }
+    Row(GlanceModifier.fillMaxWidth().height(plan.rowHeight.dp).clickable(action).semantics { contentDescription = description },
+        verticalAlignment = Alignment.Vertical.CenterVertically) {
+        LineBadge(row, inks, font)
+        Spacer(GlanceModifier.width(10.dp))
+        Column(GlanceModifier.defaultWeight()) {
+            WidgetText(row.destination, palette.onSurface, (if (plan.single) 14f else 14.5f).sp, weight = FontWeight.Medium, struck = row.delay.cancelled)
+            if (plan.twoLine) {
+                val second = listOfNotNull(platform, if (row.delay.cancelled) tr("fällt aus") else null).joinToString(" · ")
+                if (second.isNotEmpty()) WidgetText(second, if (row.delay.cancelled) palette.error else palette.muted, 11.5.sp)
+            }
+        }
+        Spacer(GlanceModifier.width(8.dp))
+        Column(horizontalAlignment = Alignment.Horizontal.End) {
+            WidgetText(time, timeColor, (if (plan.single) 16f else 15.5f).sp, weight = FontWeight.Bold, align = TextAlign.End,
+                struck = row.delay.cancelled)
+            if (late && plan.twoLine) WidgetText("+$minutes", palette.late, 11.5.sp, weight = FontWeight.Medium, align = TextAlign.End)
+        }
+    }
+}
+
+/** The line in its own colour: "U35", "RE3", "SB20" – the colours of the app's timeline. */
+@Composable private fun LineBadge(row: Departure, inks: LineInks, font: Float, height: Float = 22f) {
+    val name = row.lineName.ifBlank { row.lineType.label }
+    Box(GlanceModifier.width(lineBadgeWidth(name, font).coerceAtMost(76f).dp).height((height * font.coerceIn(.85f, 1.4f)).dp)
+        .widgetFill(WidgetShape.SMALL, inks.container(row.lineType)), contentAlignment = Alignment.Center) {
+        WidgetText(name, inks.content(row.lineType), 12.sp, weight = FontWeight.Bold, align = TextAlign.Center)
+    }
+}
+
+@Composable private fun BoardEmpty(model: BoardPresentation, palette: WidgetPalette, plan: BoardWidgetPlan) {
+    val context = LocalContext.current
+    Box(GlanceModifier.fillMaxSize().clickable(actionStartActivity(departureBoardIntent(context))), contentAlignment = Alignment.Center) {
+        Row(verticalAlignment = Alignment.Vertical.CenterVertically) {
+            Image(ImageProvider(R.drawable.ic_train), null, GlanceModifier.size(18.dp), colorFilter = ColorFilter.tint(palette.muted))
+            Spacer(GlanceModifier.width(8.dp))
+            WidgetText(model.emptyMessage, palette.muted, 13.sp, lines = if (plan.single) 1 else 2)
+        }
+    }
+}
+
+/** The source of the timetable data (required); in a flat widget together with the stop and the refresh. */
+@Composable private fun BoardFooter(model: BoardPresentation, palette: WidgetPalette, plan: BoardWidgetPlan, refreshLabel: String) {
+    val context = LocalContext.current
+    val service = TimetableServices.active
+    val attribution = if (TimetableProfile.sourceNotice) tr(service.attribution) else null
+    Row(GlanceModifier.fillMaxWidth().height(plan.footer.dp), verticalAlignment = Alignment.Vertical.CenterVertically) {
+        val text = if (plan.single) listOfNotNull(model.title, attribution).joinToString(" · ") else attribution.orEmpty()
+        WidgetText(text, palette.muted, 10.5.sp, GlanceModifier.defaultWeight().then(
+            if (attribution != null) GlanceModifier.clickable(actionStartActivity(Intent(Intent.ACTION_VIEW, service.sourceUrl.toUri())))
+            else GlanceModifier))
+        if (plan.single) Box(GlanceModifier.size(plan.footer.dp).clickable(actionStartActivity(boardRefreshIntent(context)))
+            .semantics { contentDescription = refreshLabel }, contentAlignment = Alignment.Center) {
+            Image(ImageProvider(R.drawable.ic_refresh), null, GlanceModifier.size((plan.footer - 2f).dp), colorFilter = ColorFilter.tint(palette.accent))
+        }
+    }
+}
+
+/** Kept so a tap on an older widget (before 1.0.7) still lands; it cycles the board design as before. */
 class CycleBoardDesignAction : ActionCallback {
     override suspend fun onAction(
         context: Context,
@@ -254,4 +302,3 @@ class CycleBoardDesignAction : ActionCallback {
         DepartureBoardWidget().updateAllBoards(context)
     }
 }
-

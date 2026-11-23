@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!-- Build 107: tiles and rows inside a widget (the launcher's inner radius). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle"><corners android:radius="@dimen/widget_radius_inner"/><solid android:color="#FFFFFFFF"/></shape>

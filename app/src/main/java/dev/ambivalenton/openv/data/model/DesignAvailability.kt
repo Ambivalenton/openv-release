@@ -9,6 +9,7 @@ val supportedBoardDesigns=listOf(BoardDesign.APP_INTEGRATED,BoardDesign.APP_THEM
 val supportedTimelineThemes=listOf(TimelineTheme.APP_THEME,TimelineTheme.ORIGINAL,TimelineTheme.VIVID,
     TimelineTheme.MONOCHROME,TimelineTheme.PASTEL,TimelineTheme.MONET,TimelineTheme.CAPSULE,TimelineTheme.SQUARED,TimelineTheme.OUTLINE)
 fun normalizedTimelineTheme(theme:TimelineTheme)=theme.takeIf {it in supportedTimelineThemes}?:TimelineTheme.APP_THEME
+/** Build 107: the widget's own look is fixed; the two colours offered in the settings (background, symbols) are kept. */
 fun WidgetStyle.fixedFavoritePresentation()=copy(opacity=0,iconsOnly=true,showSettings=false,elevation=2,glassDepth=0,
-    backgroundColor=null,tileColor=null,borderColor=null,iconColor=null,compactBackground=false,
+    tileColor=null,borderColor=null,compactBackground=false,
     design=DesignOptions(containerElevation=0f,buttonElevation=2f,containerShadow=false,tileShadow=true))

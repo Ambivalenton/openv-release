@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<resources>
+    <dimen name="widget_radius_outer">@android:dimen/system_app_widget_background_radius</dimen>
+    <dimen name="widget_radius_inner">@android:dimen/system_app_widget_inner_radius</dimen>
+</resources>

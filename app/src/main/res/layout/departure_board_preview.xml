@@ -1,5 +1,40 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools" tools:ignore="Overdraw" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="16dp" android:background="#11242A">
-    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/board_widget_name" android:textColor="#A4F2DF" android:textSize="16sp" android:fontFamily="monospace"/>
-    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/board_preview_station" android:textColor="#FFFFFF" android:textSize="14sp" android:layout_marginTop="12dp"/>
-    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/board_preview_columns" android:textColor="#C4D3D4" android:textSize="12sp" android:layout_marginTop="12dp"/>
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!-- Build 107: picker preview of the departures widget (stop, three departures, source). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools"
+    tools:ignore="UseAppTint,NestedWeights,SmallSp"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:padding="12dp" android:background="@drawable/widget_shape_outer" android:backgroundTint="#F2F0F5">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/board_preview_station"
+            android:textSize="16sp" android:textStyle="bold" android:textColor="#1B1B1F" android:maxLines="1" android:ellipsize="end"/>
+        <ImageView android:layout_width="32dp" android:layout_height="32dp" android:padding="8dp" android:src="@drawable/ic_refresh" android:tint="#3F5F90"
+            android:background="@drawable/widget_shape_pill" android:backgroundTint="#E3E1E9" android:contentDescription="@null"/>
+    </LinearLayout>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal" android:gravity="center_vertical">
+        <TextView android:layout_width="46dp" android:layout_height="22dp" android:gravity="center" android:text="U35" android:textSize="12sp" android:textStyle="bold"
+            android:textColor="#FFFFFF" android:background="@drawable/widget_shape_small" android:backgroundTint="#245EA8"/>
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="10dp" android:text="@string/board_preview_first"
+            android:textSize="14sp" android:textColor="#1B1B1F" android:maxLines="1" android:ellipsize="end"/>
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:text="08:14"
+            android:textSize="15sp" android:textStyle="bold" android:textColor="#1B1B1F"/>
+    </LinearLayout>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal" android:gravity="center_vertical">
+        <TextView android:layout_width="46dp" android:layout_height="22dp" android:gravity="center" android:text="RE3" android:textSize="12sp" android:textStyle="bold"
+            android:textColor="#FFFFFF" android:background="@drawable/widget_shape_small" android:backgroundTint="#5F6368"/>
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="10dp" android:text="@string/board_preview_second"
+            android:textSize="14sp" android:textColor="#1B1B1F" android:maxLines="1" android:ellipsize="end"/>
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:text="08:17"
+            android:textSize="15sp" android:textStyle="bold" android:textColor="#A45A00"/>
+    </LinearLayout>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal" android:gravity="center_vertical">
+        <TextView android:layout_width="46dp" android:layout_height="22dp" android:gravity="center" android:text="311" android:textSize="12sp" android:textStyle="bold"
+            android:textColor="#1B1B1F" android:background="@drawable/widget_shape_small" android:backgroundTint="#F4C430"/>
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="10dp" android:text="@string/board_preview_third"
+            android:textSize="14sp" android:textColor="#1B1B1F" android:maxLines="1" android:ellipsize="end"/>
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:text="08:21"
+            android:textSize="15sp" android:textStyle="bold" android:textColor="#1B1B1F"/>
+    </LinearLayout>
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/board_preview_columns" android:textSize="10.5sp"
+        android:textColor="#5F5E66" android:maxLines="1"/>
 </LinearLayout>

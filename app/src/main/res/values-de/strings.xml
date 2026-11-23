@@ -6,7 +6,14 @@
     <string name="board_widget_description">Live-Abfahrten deiner nächsten gespeicherten Haltestelle.</string>
     <string name="widget_tagline">Deine Orte. Deine Wege.</string>
     <string name="board_preview_station">Deine nächste Haltestelle</string>
-    <string name="board_preview_columns">Linie · Ziel · Abfahrt · Gleis</string>
+    <string name="board_preview_columns">Linie · Ziel · Abfahrt</string>
     <string name="board_widget_error_title">Öpen-V · Anzeigetafel</string>
     <string name="board_widget_error_message">Bitte die App öffnen und die Anzeigetafel aktualisieren.</string>
+    <string name="widget_preview_home">Zuhause</string>
+    <string name="widget_preview_work">Arbeit</string>
+    <string name="widget_preview_school">Uni</string>
+    <string name="widget_preview_gym">Fitness</string>
+    <string name="board_preview_first">Hauptbahnhof</string>
+    <string name="board_preview_second">Innenstadt</string>
+    <string name="board_preview_third">Marktplatz</string>
 </resources>

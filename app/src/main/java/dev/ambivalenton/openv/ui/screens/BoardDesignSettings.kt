@@ -192,18 +192,12 @@ private fun BoardDesignPreview(state: StoredState) {
 @Composable
 internal fun QuickDesignSettings(state: StoredState, vm: AppViewModel) {
     val style = state.settings.widget
-    val design = style.designOptions
     var role by rememberSaveable { mutableStateOf<String?>(null) }
     FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         ColorSelectionButton(tr("Hintergrund"), style.backgroundColor, { role = tr("Hintergrund") })
         ColorSelectionButton(tr("Symbole"), style.iconColor, { role = tr("Symbole") })
     }
-    ToggleRow(tr("Schatten der Fläche"), value = design.hasContainerShadow) { enabled ->
-        vm.quickWidgetSettings { it.copy(design = it.designOptions.copy(containerShadow = enabled)) }
-    }
-    ToggleRow(tr("Kachel-Schatten"), value = design.hasTileShadow) { enabled ->
-        vm.quickWidgetSettings { it.copy(design = it.designOptions.copy(tileShadow = enabled)) }
-    }
+    // Build 107: the widget is flat (no shadows to switch); background and symbol colours remain.
     role?.let { selectedRole ->
         ColorPickerSheet(
             tr("Favoriten · %1\$s", selectedRole),
