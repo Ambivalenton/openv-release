@@ -582,6 +582,20 @@ private fun OpenVNavigation(
             }
         }
     }
+    /** Build 117: a connection chosen at a station replaces the running journey; the outcome is told like any takeover. */
+    fun adoptChoice(expected:String,key:String) {
+        scope.launch {
+            when(val outcome=tracker.adoptChoice(expected,key)) {
+                is dev.ambivalenton.openv.data.repository.AlternativeAdoption.Adopted -> snackbar.showSnackbar(tr("Neue Fahrt aktiv: %1\$s ab %2\$s",
+                    outcome.trip.segments.firstOrNull {!it.isWalk}?.lineName ?: tr("Fußweg"),clockTime(outcome.trip.segments.firstOrNull {!it.isWalk}?.effectiveDeparture() ?: outcome.trip.startTime)))
+                dev.ambivalenton.openv.data.repository.AlternativeAdoption.Expired -> snackbar.showSnackbar(tr("Diese Verbindung ist gerade entfallen. Bisherige Fahrt bleibt aktiv."))
+                dev.ambivalenton.openv.data.repository.AlternativeAdoption.Failed -> snackbar.showSnackbar(tr("Die Alternative konnte nicht übernommen werden. Bisherige Fahrt bleibt aktiv."))
+            }
+        }
+    }
+    val choiceActions=remember(ui.store.reliability,vm) {
+        dev.ambivalenton.openv.ui.components.JourneyChoiceActions(ui.store.reliability,onChoose=::adoptChoice,onReport=vm::reportPunctuality)
+    }
     LaunchedEffect(route,homePager.settledPage,pinned.arrival?.sessionId) {
         pinned.arrival?.let { announcement ->
             if (route=="overview" && homePager.settledPage==0) arrivalShownId=announcement.sessionId
@@ -1030,7 +1044,7 @@ private fun OpenVNavigation(
                                     alpha = 1f - .12f * offset.coerceIn(0f, 1f)
                                 }
                             ) {
-                                if (page == 0)
+                                if (page == 0) CompositionLocalProvider(dev.ambivalenton.openv.ui.components.LocalJourneyChoiceActions provides choiceActions) {
                                     OverviewScreen(
                                         overview,
                                         ui.store.settings.overview,
@@ -1073,6 +1087,7 @@ private fun OpenVNavigation(
                                         onShowFavorites = { openHome(1) },
                                         onChooseStart = { startPicker = true },
                                     )
+                                }
                                 else if (page == 2) DeparturesScreen(ui, vm, requestPermission,active=route=="departures"&&!isPinned,onJourney={query,trip->
                                     overviewPreview=JourneyPreviewRequest(query,trip,comparisons=boardJourneyGallery(ui.store.departureBoard.departures,query))
                                 },onComparison={query,trips->vm.openKnownJourneys(query,trips);nav.navigate("results"){launchSingleTop=true}})

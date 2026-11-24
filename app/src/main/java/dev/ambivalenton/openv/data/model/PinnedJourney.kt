@@ -64,7 +64,12 @@ data class PinnedJourneyState(
     val pendingDisplayKey:String?=null,
     val pendingDisplaySince:Long=0,
     val displayRouteRevision:Int=0,
+    /** Build 117: other connections from the current station, from the controller's own alternative search (not persisted). */
+    val choices:JourneyChoices?=null,
 )
+
+/** Build 117: up to three reachable connections from [query]'s origin, found for session [sessionId]. */
+data class JourneyChoices(val sessionId:String,val query:JourneyQuery,val trips:List<Trip>)
 
 /** Provider IDs/refresh tokens can change; planned service identity must not. */
 fun samePinnedJourney(a: Trip, b: Trip): Boolean {

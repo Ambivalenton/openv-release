@@ -1,0 +1,3 @@
+• At a change, up to three other connections with arrival, changes and reliability; switch after a short confirmation.
+• New: estimated reliability in five levels, from punctuality data, time of day, change time and realtime.
+• Your own "on time/late" reports refine the estimate, on the device only.

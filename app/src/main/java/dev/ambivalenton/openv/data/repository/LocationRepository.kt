@@ -389,7 +389,8 @@ class LocationRepository(private val store: androidx.datastore.core.DataStore<St
     suspend fun restoreDesign(design:PersonalDesign)=updateData{old->old.copy(settings=normalizePreferences(old.settings.withPersonalDesign(design)),launcherLogo=design.logo.currentReplacement())}
     suspend fun setLauncherLogo(logo:AppLogo)=updateData{it.copy(launcherLogo=logo.currentReplacement())}
     suspend fun replaceFromBackup(imported:StoredState,token:String)=updateData {old->
-        imported.copy(presence=old.presence,departureBoard=DepartureBoardState(),launchFeedback=null,
+        // Build 117: own punctuality reports stay on this device and are kept across an import.
+        imported.copy(presence=old.presence,departureBoard=DepartureBoardState(),launchFeedback=null,reliability=old.reliability,
             lastImportToken=token,settings=normalizePreferences(imported.settings))
     }
 
@@ -415,6 +416,13 @@ class LocationRepository(private val store: androidx.datastore.core.DataStore<St
         require(key.matches(Regex("[a-z0-9-]{1,40}")))
         if(key in old.gestureHints.learned) old else old.copy(gestureHints=old.gestureHints.copy(learned=old.gestureHints.learned+key))
     }
+    /** Build 117 · one own report on a ride (counts once per ride). */
+    suspend fun recordPunctuality(rideKey:String,lineKey:String,mode:dev.ambivalenton.openv.data.reliability.ReliabilityMode,
+        window:dev.ambivalenton.openv.data.reliability.TimeWindow,onTime:Boolean,now:Long) = updateData {old->
+        val next=old.reliability.record(rideKey.take(200),lineKey,mode,window,onTime,now)
+        if(next==old.reliability) old else old.copy(reliability=next)
+    }
+    suspend fun clearPunctuality() = updateData {if(it.reliability.isEmpty && it.reliability.reported.isEmpty()) it else it.copy(reliability=dev.ambivalenton.openv.data.reliability.ReliabilityMemory())}
     /** Build 115 · foreground time counts towards the first hours of hints. */
     suspend fun addGestureHintUse(millis:Long,now:Long) = updateData {it.copy(gestureHints=it.gestureHints.used(millis,now))}
     suspend fun restartOnboarding() = updateData {it.copy(onboardingVersion=0,onboardingDraft=null)}

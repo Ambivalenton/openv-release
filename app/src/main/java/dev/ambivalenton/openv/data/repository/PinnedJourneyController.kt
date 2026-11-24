@@ -268,17 +268,35 @@ class PinnedJourneyController(
         if(expectedAlternativeKey!=null && current.alternative?.let(::alternativeJourneyKey)!=expectedAlternativeKey)return@withLock AlternativeAdoption.Expired
         val query=current.alternativeQuery ?: return@withLock AlternativeAdoption.Expired
         val trip=availablePinnedAlternative(current,now(),mutable.value.presence) ?: return@withLock AlternativeAdoption.Expired
-        val replacement=adoptPinnedAlternative(current,query,trip,now())?.copy(query=current.query)?:return@withLock AlternativeAdoption.Expired
-        if(!archive(current,mutable.value.presence)) return@withLock AlternativeAdoption.Failed
+        replaceJourney(current,query,trip)
+    }
+
+    /**
+     * Build 117: the person chose one of the offered connections ([JourneyChoices]) at a station. It is
+     * taken only while it is still reachable (fresh, boarding ahead); otherwise [AlternativeAdoption.Expired].
+     */
+    suspend fun adoptChoice(expectedSessionId:String,key:String):AlternativeAdoption = lock.withLock {
+        val current = mutable.value.session ?: return@withLock AlternativeAdoption.Failed
+        if(current.id!=expectedSessionId)return@withLock AlternativeAdoption.Expired
+        val offered=mutable.value.choices?.takeIf {it.sessionId==current.id} ?: return@withLock AlternativeAdoption.Expired
+        val raw=offered.trips.firstOrNull {alternativeJourneyKey(it)==key} ?: return@withLock AlternativeAdoption.Expired
+        val trip=reachableAssistantAlternative(current,offered.query,raw,now(),mutable.value.presence) ?: return@withLock AlternativeAdoption.Expired
+        replaceJourney(current,offered.query,trip)
+    }
+
+    /** Called under [lock]: archives [current] and continues with [trip] from [query]'s origin. */
+    private suspend fun replaceJourney(current:PinnedJourneySession,query:JourneyQuery,trip:Trip):AlternativeAdoption {
+        val replacement=adoptPinnedAlternative(current,query,trip,now())?.copy(query=current.query)?:return AlternativeAdoption.Expired
+        if(!archive(current,mutable.value.presence)) return AlternativeAdoption.Failed
         observations=emptyList()
         // New generation prevents an in-flight response for the previous chain from replacing this one.
         lastAlternativeSearchAt=null
         val error=save(replacement)
-        if(error!=null){publish {it.copy(storageError=error)};return@withLock AlternativeAdoption.Failed}
+        if(error!=null){publish {it.copy(storageError=error)};return AlternativeAdoption.Failed}
         publish {it.copy(session = replacement, weather = null, error = null,
-            refreshing = false, visualProgress=null,storageError = null)}
+            refreshing = false, visualProgress=null,storageError = null,choices=null)}
         wakeup.trySend(Unit)
-        AlternativeAdoption.Adopted(replacement.trip)
+        return AlternativeAdoption.Adopted(replacement.trip)
     }
 
     suspend fun noteAlternativePrompt(expectedId:String)=lock.withLock {
@@ -417,11 +435,14 @@ class PinnedJourneyController(
                     }
                 }else if(!result.incomplete)committed=committed.copy(alternative=null,alternativeQuery=null)
             }
+            // Build 117: the other reachable connections of the same search, for the choice buttons (no extra request).
+            val choices=searchResult?.let {result->JourneyChoices(committed.id,result.query,result.choices.mapNotNull {
+                reachableAssistantAlternative(committed,result.query,it,timestamp,latest)}.filterNot {samePinnedJourney(it,committed.trip)})}
             if (completeArrival(committed, timestamp)) return@commit
             val progress=resolvedJourneyProgress(committed,timestamp,latest)
             val storageError = save(committed)
             publish {it.copy(session = committed, presence = latest, weather = forecast,
-                visualProgress=progress,
+                visualProgress=progress,choices=choices ?: it.choices?.takeIf {old->old.sessionId==committed.id},
                 alert=smartJourneyAlert(committed,timestamp,latest,progress),
                 arrivalPhase=pinnedArrivalPhase(committed,timestamp,observations),
                 refreshing = false, error = quietLiveWarning(committed), storageError = storageError)}

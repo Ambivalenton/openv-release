@@ -1,0 +1,3 @@
+• Am Umstieg bis zu drei andere Verbindungen mit Ankunft, Umstiegen und Verlässlichkeit; Wechsel nach kurzer Rückfrage.
+• Neu: geschätzte Verlässlichkeit in fünf Stufen, aus Pünktlichkeitsdaten, Tageszeit, Umstiegszeit und Echtzeit.
+• Eigene Rückmeldung „pünktlich/verspätet“ verfeinert die Schätzung, nur auf dem Gerät.

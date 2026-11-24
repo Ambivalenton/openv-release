@@ -304,6 +304,8 @@ data class StoredState(
     val usageTips:UsageTipProgress=UsageTipProgress(),
     /** Build 115 · progress of the wordless first-use hints. */
     val gestureHints:GestureHintProgress=GestureHintProgress(),
+    /** Build 117 · own punctuality reports for the reliability estimate; local only, never in backups. */
+    val reliability:dev.ambivalenton.openv.data.reliability.ReliabilityMemory=dev.ambivalenton.openv.data.reliability.ReliabilityMemory(),
     val personalThemes:List<PersonalTheme> = emptyList(),
     val personalThemesIntroduced:Boolean=false,
     val launcherLogo:AppLogo?=null,

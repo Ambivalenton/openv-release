@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.font.FontWeight
@@ -67,16 +68,24 @@ import dev.ambivalenton.openv.localization.tr
                 if(headerActions==null)IconButton(onRemove,Modifier.size(42.dp).testTag("remove-pinned-card")){AppIcon(R.drawable.ic_close,tr("Reisebegleiter beenden"))}
             }
             // Build 116: every fact once – the step in focus, the onward ride with its platform, the arrival only when it moves.
-            PinnedJourneyBriefView(pinnedJourneyBrief(session,focus,now,alert),nextColor,arrivalColor,expanded)
+            val brief=pinnedJourneyBrief(session,focus,now,alert)
+            PinnedJourneyBriefView(brief,nextColor,arrivalColor,expanded)
             val quietStatus=navigationError?:if(state.status==PinnedTrackingStatus.PAUSED)tr("Reisebegleitung pausiert")else summary.notice?.takeIf {alert==null}
             if(!quietStatus.isNullOrBlank())Text(quietStatus,Modifier.fillMaxWidth().testTag("card-status"),style=t.bodySmall,
                 color=scheme.onSurfaceVariant)
             // The page: the facts at the top, the rest of the way in the middle, correction and progress at the bottom.
             if(expanded) {
-                Spacer(Modifier.height(8.dp))
-                JourneyRemainingSteps(session,focus.legIndex ?: 0)
-                Spacer(Modifier.weight(1f))
+                // The rest of the way takes the free middle; on a short screen it is cut at the bottom, never the actions below.
+                Box(Modifier.fillMaxWidth().weight(1f).clipToBounds()) {
+                    Column {Spacer(Modifier.height(8.dp));JourneyRemainingSteps(session,focus.legIndex ?: 0)}
+                }
+                JourneyReliabilityLine(session)
+                // Build 117: the person's own report on the ride in focus (once it is under way or due).
+                session.trip.segments.getOrNull(focus.legIndex ?: -1)?.takeIf {!it.isWalk && (!focus.boarding || now>=it.plannedStartTime) &&
+                    stationRideKey(it) !in session.completedRideKeys}?.let {RideFeedbackRow(session,it)}
             }
+            // Build 117: at a station (start, change or on the way to it) up to three other connections.
+            if(choicePoint(brief)) JourneyChoicesRow(state,visibleJourneyChoices(state,now),expanded)
             // Sparse manual correction: only for a fresh alighting hypothesis or a clearly overdue ride.
             val correction=alightingCorrection(session,now)
             if(onCorrectAlighting!=null && (correction.offerStillAboard || correction.offerAlighted))

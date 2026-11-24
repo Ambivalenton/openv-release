@@ -4,7 +4,9 @@ package dev.ambivalenton.openv.data.repository
 import dev.ambivalenton.openv.data.model.*
 import kotlinx.coroutines.*
 
-data class AlternativeSearchResult(val query:JourneyQuery,val trip:Trip?,val requests:Int,val incomplete:Boolean,val board:List<Departure> = emptyList())
+data class AlternativeSearchResult(val query:JourneyQuery,val trip:Trip?,val requests:Int,val incomplete:Boolean,val board:List<Departure> = emptyList(),
+    /** Build 117: the reachable connections found, earliest arrival first (at most three). */
+    val choices:List<Trip> = emptyList())
 
 /** Search current and delayed earlier departures without loading another six-hour window.
  * A departure board supplies targeted planned times; bounded lookback probes fill provider gaps. */
@@ -44,7 +46,7 @@ suspend fun TransitRepository.findReachableAlternative(session:PinnedJourneySess
         }
         true
     }==true
-    val best=found.values.minWithOrNull(compareBy<Trip> {it.effectiveArrival()}.thenBy {it.transfers}
+    val ranked=found.values.sortedWith(compareBy<Trip> {it.effectiveArrival()}.thenBy {it.transfers}
         .thenBy {it.segments.filter {leg->leg.isWalk}.sumOf {leg->leg.endTime-leg.startTime}})
-    return AlternativeSearchResult(query,best,calls,!finished || failures>0,board)
+    return AlternativeSearchResult(query,ranked.firstOrNull(),calls,!finished || failures>0,board,ranked.take(3))
 }

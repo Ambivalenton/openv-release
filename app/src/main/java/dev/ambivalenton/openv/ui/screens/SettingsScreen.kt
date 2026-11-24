@@ -135,6 +135,9 @@ fun SettingsScreen(ui: AppUiState, vm: AppViewModel,navigation: SettingsNavigati
                             TextButton({provider=true}) {Text(tr("Fahrplandienst wählen"))}
                             TextButton({services=true}) {Text(tr("Server, Ortssuche & Karten"))}
                             TextButton(vm::clearHistory) {Text(tr("Suchverlauf löschen"))}
+                            // Build 117: own punctuality reports (reliability estimate), local only.
+                            if(!ui.store.reliability.isEmpty)TextButton(vm::clearPunctuality,Modifier.testTag("clear-punctuality")) {
+                                Text(tr("Eigene Pünktlichkeitsangaben löschen (%1\$s)",ui.store.reliability.reports))}
                         }
                         SettingsPage.INFO,SettingsPage.LEGAL,SettingsPage.HELP -> {
                             InfoHelpContent(onDocument={legalDocument=it},onGlossary={glossary=true},
