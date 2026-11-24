@@ -110,6 +110,8 @@ data class NetworkPlanActions(
     val onAmbiguousTap: ((List<String>, List<String>) -> Unit)? = null,
     /** Build 104: a moved favourite was let go above the delete zone of the edit bar. */
     val onDelete: (String) -> Unit = {},
+    /** Build 119: a line held in edit mode bursts and is removed (the screen offers to bring it back). */
+    val onEdgeDelete: (String) -> Unit = {},
 )
 
 private enum class Press { TAP, DRAG, CANCEL }
@@ -251,6 +253,12 @@ fun NetworkPlan(
     var undoGesture by remember { mutableIntStateOf(0) }
     /** Live mode: names show only while a finger rests on a free spot of the plan (build 68). */
     var labelsHeld by remember { mutableStateOf(false) }
+    // Build 119: holding a line in edit mode builds up a tremble, then it bursts into confetti and is removed.
+    var tensedEdge by remember { mutableStateOf<String?>(null) }
+    val tension = remember { Animatable(0f) }
+    val bursts = remember { androidx.compose.runtime.mutableStateListOf<ConfettiBurst>() }
+    // Build 119: every vehicle runs on a clock of its own and yields at crossings.
+    val traffic = remember { PlanTraffic() }
     /** A hold in live mode switched to edit mode and still carries its favourite. The
      * mode change must not end that gesture, so the reset below leaves the move alone. */
     var holdToEdit by remember { mutableStateOf(false) }
@@ -408,6 +416,11 @@ fun NetworkPlan(
                     val free = if (node == null && edge == null && editing) freePointAt(down.position) else null
                     // Live mode also watches free spots: holding one shows the names.
                     if (node == null && edge == null && free == null && editing) return@awaitEachGesture
+                    // Build 119: a held line trembles more and more until it bursts.
+                    val tensing = editing && edge != null && !quiet
+                    val tremble = if (tensing) scope.launch {
+                        tensedEdge = edge; tension.snapTo(0f); tension.animateTo(1f, tween(hold.toInt(), easing = LinearEasing))
+                    } else null
                     // null = long-press timeout without movement
                     val press: Press? = withTimeoutOrNull(hold) {
                         var result: Press? = null
@@ -429,6 +442,7 @@ fun NetworkPlan(
                         }
                         result
                     }
+                    if (tremble != null) { tremble.cancel(); tensedEdge = null; scope.launch { tension.snapTo(0f) } }
                     when {
                         press == Press.CANCEL -> return@awaitEachGesture
                         !editing && press == Press.TAP && latestActions.onAmbiguousTap != null && closeTargets(down.position) != null -> {
@@ -524,6 +538,22 @@ fun NetworkPlan(
                         }
                         editing && node != null && press == Press.TAP -> { hintState?.learn(GestureHintKeys.PLAN_TAP); latestActions.onNodeTap(node) }
                         editing && edge != null && press == Press.TAP -> latestActions.onEdgeMenu(edge)
+                        editing && edge != null && press == null -> {
+                            // Build 119: held long enough – the line bursts into confetti in its colour and is removed.
+                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                            val pts = routesPx[edge]
+                            if (!quiet && pts != null) {
+                                val burst = ConfettiBurst(System.nanoTime(), confettiAlong(pts, lineColors[edge] ?: scheme.primary, scheme.primary, lineWidth, edge.hashCode()))
+                                bursts += burst
+                                scope.launch {
+                                    burst.time.animateTo(CONFETTI_SECONDS, tween((CONFETTI_SECONDS * 1000).toInt(), easing = LinearEasing))
+                                    bursts.remove(burst)
+                                }
+                            }
+                            latestActions.onEdgeDelete(edge)
+                            // The finger is still down: nothing else happens until it lifts.
+                            do { val event = awaitPointerEvent(); event.changes.forEach { it.consume() } } while (event.changes.any { it.pressed })
+                        }
                         editing && free != null && press == Press.TAP -> {
                             if (trayPick != null) latestActions.onMove(trayPick, free) else latestActions.onFreePoint(free)
                         }
@@ -601,7 +631,8 @@ fun NetworkPlan(
                         if (settlingRun?.edgeId == edge.id) return@forEachIndexed
                         val pts = routes[edge.id]?.map { geometry.center(it) } ?: return@forEachIndexed
                         val moved = moving?.let { m -> if (edge.touches(m)) true else null } == true
-                        val points = if (moved) listOfNotNull(centerOf(edge.aId), centerOf(edge.bId)) else pts
+                        val straight = if (moved) listOfNotNull(centerOf(edge.aId), centerOf(edge.bId)) else pts
+                        val points = if (edge.id == tensedEdge) lineTremble(straight, tension.value, lineWidth, tension.value * 9f) else straight
                         val color = lineColors[edge.id] ?: scheme.primary
                         val alpha = if (edge.id in active) 1f else .35f
                         val dash = if (settings.monochrome) monochromeDash(index)?.map { it * density.density }?.toFloatArray()?.let { PathEffect.dashPathEffect(it) } else null
@@ -706,8 +737,32 @@ fun NetworkPlan(
                     }
                 }
             }
+            // Build 119: where lines cross, the later-drawn line lies on top. Vehicles of the lower line pass
+            // underneath it (cut out under the upper line's band), and vehicles never meet in the middle.
+            val drawOrder = drawn.map { it.id }
+            val crossings = remember(tracks, drawOrder, nodePx, lineWidth) {
+                lineCrossings(drawOrder, tracks.mapValues { (_, m) -> sampleTrack(m.length, (lineWidth * .8f).coerceAtLeast(3f)) { m.getPosition(it) } },
+                    skip = nodePx * .6f)
+            }
+            val underpasses = remember(crossings, lineWidth, vehicleWidth, density) {
+                val across = lineWidth * .5f + with(density) { 1.5.dp.toPx() }
+                crossings.groupBy { it.lower }.mapValues { (_, list) -> Path().apply { list.forEach { addUnderpass(it, vehicleWidth * 2.4f, across) } } }
+            }
             if (vehiclesOn || vehiclesStill) Canvas(Modifier.matchParentSize().graphicsLayer { alpha = 1f - PLAN_DIM * dim }.testTag("network-vehicles")) {
                 val clock = if (vehiclesOn) vehicleClock else 0f
+                // Each run's own clock: brakes before a crossing another vehicle is about to use, speeds up after.
+                if (vehiclesOn) traffic.advance(clock, drawn.withIndex().flatMap { (index, edge) ->
+                    if (edge.id !in active || settlingRun?.edgeId == edge.id || rippleRun?.edgeId == edge.id) return@flatMap emptyList()
+                    val track = tracks[edge.id] ?: return@flatMap emptyList()
+                    val kind = vehicleKinds[edge.id] ?: VehicleKind.TRAIN
+                    val inset = nodePx * .5f + lineWidth
+                    val fields = (track.length - 2 * inset) / pitch
+                    if (fields <= .2f) return@flatMap emptyList()
+                    val tail = maxConsistLength(kind, fields) * vehicleWidth
+                    vehicleRuns(edge.direction, index).map { run ->
+                        TrafficRun("${edge.id}:${run.forward}", edge.id, run.forward, tail) { c -> vehiclePassage(track.length, tail, pitch, c, run)?.distance }
+                    }
+                }, crossings, zone = lineWidth * .5f + vehicleWidth * .4f)
                 clipPath(nodeOutlines, androidx.compose.ui.graphics.ClipOp.Difference) {
                 drawn.forEachIndexed { index, edge ->
                     if (edge.id !in active || settlingRun?.edgeId == edge.id || rippleRun?.edgeId == edge.id) return@forEachIndexed
@@ -717,8 +772,10 @@ fun NetworkPlan(
                     val inset = nodePx * .5f + lineWidth
                     val length = track.length
                     val fields = (length - 2 * inset) / pitch
+                    clipPath(underpasses[edge.id] ?: Path(), androidx.compose.ui.graphics.ClipOp.Difference) {
                     vehicleRuns(edge.direction, index).forEach { run ->
-                        val place = (if (vehiclesOn) vehiclePassage(length, maxConsistLength(kind, fields) * vehicleWidth, pitch, clock, run)
+                        val own = if (vehiclesOn) traffic.clock("${edge.id}:${run.forward}", clock) else clock
+                        val place = (if (vehiclesOn) vehiclePassage(length, maxConsistLength(kind, fields) * vehicleWidth, pitch, own, run)
                                 .takeIf { fields > .2f }
                             else stillVehiclePlacement(length, inset, pitch, run)) ?: return@forEach
                         // Each trip draws its own length; every body follows the line on its own,
@@ -738,6 +795,7 @@ fun NetworkPlan(
                             drawVehicleCar(kind, car, i, at + lane, heading, vehicleWidth, place.alpha, scheme.surface, scheme.onSurface, color)
                         }
                     }
+                    }
                 }
                 }
             }
@@ -747,6 +805,10 @@ fun NetworkPlan(
                         lineColors[journey.edgeId] ?: scheme.primary,
                         Modifier.matchParentSize().zIndex(1f))
                 }
+            }
+            // Build 119: a removed line's confetti, above the plan; only while a burst flies.
+            if (bursts.isNotEmpty()) Canvas(Modifier.matchParentSize().zIndex(3f).testTag("network-confetti")) {
+                bursts.forEach { drawConfetti(it.pieces, it.time.value, lineWidth) }
             }
             // Nodes: the favourite's shape with contour and shadow; lines end inside it.
             val order = placed.keys.sortedWith(compareByDescending<String> { it == anchorId }.thenByDescending { (scales[it] ?: 1f) > 1f }

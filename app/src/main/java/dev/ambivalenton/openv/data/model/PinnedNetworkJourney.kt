@@ -29,6 +29,27 @@ fun planPlaceMatches(favorite: Location, place: Location): Boolean {
     return meters <= STATION_ENTER_METERS && stationName(favorite) == stationName(place)
 }
 
+/**
+ * Build 119 · the plan's own, broader reading of "this favourite is a place of the journey" (only for the
+ * progress train; routing and timelines keep [planPlaceMatches]). A home or work address and the place
+ * the person starts from (GPS) lie tens of metres apart; within [PLAN_PLACE_METERS] they count as one.
+ * A station favourite also matches a platform of it close by, and a station name with or without its
+ * town ("Hauptbahnhof" / "Dortmund Hbf").
+ */
+fun planFavoriteOnJourney(favorite: Location, place: Location): Boolean {
+    if (planPlaceMatches(favorite, place)) return true
+    val meters = distanceMeters(favorite, place) ?: return false
+    if (favorite.kind != LocationKind.STOP || place.kind != LocationKind.STOP) return meters <= PLAN_PLACE_METERS
+    if (meters <= PLAN_PLATFORM_METERS) return true
+    if (meters > STATION_ENTER_METERS) return false
+    val a = stationName(favorite); val b = stationName(place)
+    return a.isNotEmpty() && b.isNotEmpty() && (a.endsWith(b) || b.endsWith(a))
+}
+/** A favourite that is not a stop (home, work) and where the journey starts or ends. */
+const val PLAN_PLACE_METERS = 250.0
+/** Platform coordinates of a station lie this close to its saved point. */
+const val PLAN_PLATFORM_METERS = 80.0
+
 private fun stationDhid(value: String): String? = value.split(':').takeIf { it.size >= 3 }?.take(3)?.joinToString(":")
 /** Normalised words ("Hauptbahnhof" = "Hbf", "Straße" = "Str."), so spellings of one station meet. */
 private fun stationName(place: Location) = noticeWords(place.name).joinToString("")
@@ -101,7 +122,7 @@ fun pinnedNetworkJourney(store: StoredState, state: PinnedJourneyState?, now: Lo
     val favorites = store.favorites.associateBy { it.id }
     val placed = store.network.placed
     data class Section(val edge: NetworkEdge, val forward: Boolean, val from: Double, val to: Double, val direct: Boolean)
-    fun matches(f: Favorite, p: Location) = planPlaceMatches(f.location, p)
+    fun matches(f: Favorite, p: Location) = planFavoriteOnJourney(f.location, p)
     fun positions(f: Favorite): List<Double> = buildList {
         if (matches(f, session.query.origin)) add(0.0)
         legStops.forEachIndexed { i, calls -> calls.forEachIndexed { j, call ->

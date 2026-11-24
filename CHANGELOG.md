@@ -4,6 +4,12 @@ Alle nennenswerten Änderungen an Öpen-V. Versionen folgen [Semantic Versioning
 
 ## [Unveröffentlicht]
 
+## [1.1.9] (119) · 2026-11-24
+
+- Netzplan, Linien löschen: Im Bearbeitungsmodus lässt sich eine Verbindungslinie gedrückt halten. Sie zittert erst immer stärker und zerspringt dann wie Konfetti in ihrer Farbe; die Linie ist gelöscht. „Rückgängig“ unter dem Plan bringt sie zurück. Ein kurzer Tipp öffnet wie bisher das Linienmenü; mit „Bewegung reduzieren“ verschwindet die Linie ohne Konfetti.
+- Netzplan, Kreuzungen: Wo sich zwei Linien kreuzen, liegt eine oben. Züge der unteren Linie fahren jetzt sichtbar unter ihr hindurch, statt über sie hinweg. Würden sich zwei Züge an einer Kreuzung treffen, bremst der, der später ankäme, sanft ab und beschleunigt wieder, sobald der andere durch ist.
+- Netzplan, Fortschrittszug: Eine angepinnte Fahrt zwischen zwei Favoriten wird zuverlässiger erkannt. Bisher fehlte der Zug, wenn die Fahrt am eigenen Standort begann, der nur wenige Dutzend Meter von der gespeicherten Adresse („Zuhause“) entfernt lag, oder wenn ein Bahnhof ohne Ortsnamen gespeichert war („Hauptbahnhof“ statt „Dortmund Hbf“). Für den Netzplan gelten Adressen und der eigene Standort jetzt im Umkreis von 250 Metern als derselbe Ort, Bahnhöfe auch mit nahem Gleis oder ohne Ortsnamen; Suche und Zeitstrahl bleiben bei ihrer genauen Zuordnung.
+
 ## [1.1.8] (118) · 2026-11-24
 
 - Behoben: Ein Tipp auf „Suchen“ landete nach kurzer Pause auf „Abfahrten“, und von „Abfahrten“ aus schien „Suchen“ gar nicht zu reagieren. Ursache war das Verhalten der verwendeten Compose-Version: Bat ein Element auf einer Seite darum, ins Bild geholt zu werden (etwa beim Fokus), rastete die Seitenleiste eine ganze Seite weiter. Solche Anfragen enden jetzt an der jeweiligen Seite; die Seiten wechseln nur noch durch Wischen oder einen Tab. Außerdem führt die Suche „Ziel ändern“ und „Start wählen“ nur noch einmal aus, statt bei jeder Rückkehr auf die Seite erneut den Fokus zu setzen, und ein Tab gilt nur dann als bereits geöffnet, wenn seine Seite tatsächlich dort steht.

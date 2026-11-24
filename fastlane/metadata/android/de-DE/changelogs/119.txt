@@ -1,0 +1,3 @@
+• Netzplan: Linie im Bearbeitungsmodus gedrückt halten – sie zerspringt wie Konfetti und ist gelöscht (mit Rückgängig).
+• Züge fahren an Kreuzungen unter der oberen Linie durch und bremsen, statt zusammenzustoßen.
+• Der Fortschrittszug einer angepinnten Fahrt erscheint wieder zuverlässig.

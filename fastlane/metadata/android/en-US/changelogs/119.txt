@@ -1,0 +1,3 @@
+• Network plan: hold a line in edit mode – it bursts like confetti and is removed (with undo).
+• Trains pass under the upper line at crossings and brake instead of colliding.
+• The progress train of a pinned journey shows up reliably again.

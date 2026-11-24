@@ -617,6 +617,8 @@ fun SearchScreen(
                         onAmbiguousTap = { nodes, lines -> targetChoice = nodes to lines },
                         // Build 104: let go above the delete zone – deleted at once, "Rückgängig" brings it back.
                         onDelete = { id -> vm.deleteFavoriteWithUndo(id)?.let(onFavoriteRemoved) },
+                        // Build 119: a held line bursts and is removed; "Rückgängig" below the plan brings it back.
+                        onEdgeDelete = { id -> removedEdge = vm.removeEdge(id); edgeMenu = null },
                     ), pinnedState=pinnedState ?: activePin?.let {PinnedJourneyState(session=it)}, deleteZone = deleteZone)
                 NetworkPlanFooter(ui.store, editing, trayPick, { id -> trayPick = if (trayPick == id) null else id },
                     removedEdge?.let { removed -> { vm.restoreEdge(removed.first, removed.second); removedEdge = null } })
