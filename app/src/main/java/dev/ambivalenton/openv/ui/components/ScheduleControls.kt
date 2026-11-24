@@ -197,8 +197,12 @@ private val TimeModeMinPadding = 6.dp
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
     val direction = LocalLayoutDirection.current
-    val head by animateFloatAsState(index.toFloat(), if (quiet) snap() else spring(PILL_HEAD_DAMPING, 700f), label = "mode-capsule-head")
-    val tail by animateFloatAsState(index.toFloat(), if (quiet) snap() else spring(PILL_TAIL_DAMPING, 300f), label = "mode-capsule-tail")
+    // Build 118: dragged, the capsule leans towards the finger and clicks over past the middle (a mechanical switch).
+    var lean by remember { mutableFloatStateOf(0f) }
+    var slotPx by remember { mutableFloatStateOf(0f) }
+    val aim = index + lean
+    val head by animateFloatAsState(aim, if (quiet) snap() else spring(PILL_HEAD_DAMPING, if (lean != 0f) 1400f else 700f), label = "mode-capsule-head")
+    val tail by animateFloatAsState(aim, if (quiet) snap() else spring(PILL_TAIL_DAMPING, if (lean != 0f) 900f else 300f), label = "mode-capsule-tail")
     val shell = remember { PillShellMotion() }
     val roundness = if (visuals.theme?.shapeStyle in setOf(ThemeShape.CUT, ThemeShape.BEVEL)) .15f else visuals.radiusScale.coerceIn(0f, 1f)
     val shellShape = appCorner(20.dp)
@@ -236,7 +240,11 @@ private val TimeModeMinPadding = 6.dp
                         maxFontSize = labelStyle.fontSize, stepSize = .25.sp))
             }
         }
-    }, modifier = Modifier.height(pillHeight).selectableGroup().testTag("time-mode-pill").drawBehind {
+    }, modifier = Modifier.height(pillHeight).selectableGroup().testTag("time-mode-pill")
+        .onSizeChanged { slotPx = (it.width - 2 * with(density) { ModePillInset.toPx() }) / 2f }
+        // The capsule is drawn left to right in both directions, so the lever is too.
+        .detentSwipe(true, options.size, { index }, { slotPx }, rtl = false, onLean = { lean = it }, onCommit = { choose(it) })
+        .drawBehind {
         val inset = ModePillInset.toPx()
         val inner = Rect(inset, inset, size.width - inset, size.height - inset)
         val slot = inner.width / 2

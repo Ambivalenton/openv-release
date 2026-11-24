@@ -257,10 +257,19 @@ fun SearchScreen(
             ?.takeIf { it.hasCoordinates }?.copy(isDevicePosition = true)
     }
     val startMissing = effectiveStart == null && (settings.originMode == OriginMode.MANUAL || !locationPermissionGranted(context))
+    // Build 118: each request is carried out once. The page is rebuilt whenever the pager returns to it;
+    // a request repeated then took the focus again and could pull the pages along.
+    var handledDestinationFocus by rememberSaveable { mutableIntStateOf(0) }
+    var handledStartRequest by rememberSaveable { mutableIntStateOf(0) }
     LaunchedEffect(focusDestination) {
-        if (focusDestination > 0) { kotlinx.coroutines.delay(120); runCatching { destinationFocus.requestFocus() } }
+        if (focusDestination > handledDestinationFocus) {
+            handledDestinationFocus = focusDestination
+            kotlinx.coroutines.delay(120); runCatching { destinationFocus.requestFocus() }
+        }
     }
     LaunchedEffect(askForStart) {
+        if (askForStart <= handledStartRequest) return@LaunchedEffect
+        handledStartRequest = askForStart
         if (askForStart > 0 && planner) {
             // Planermodus: the start field above the destination takes the focus.
             startHint = tr("Wähle einen Start für diese Fahrt."); kotlinx.coroutines.delay(120); runCatching { plannerStartFocus.requestFocus() }

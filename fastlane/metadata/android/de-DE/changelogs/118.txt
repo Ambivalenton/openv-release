@@ -1,0 +1,2 @@
+• Behoben: „Suchen“ rutschte von selbst zu „Abfahrten“ weiter; die Seiten wechseln nur noch per Wischen oder Tab.
+• Abfahrt/Ankunft und die Kapsel der Navigationsleiste lassen sich ziehen und rasten wie ein mechanischer Schalter ein.

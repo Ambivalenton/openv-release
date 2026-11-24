@@ -1,0 +1,2 @@
+• Fixed: "Search" slid on to "Departures" by itself; pages now change only by swiping or a tab.
+• Departure/arrival and the navigation capsule can be dragged and click into place like a mechanical switch.

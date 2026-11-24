@@ -29,6 +29,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.MotionDurationScale
 import androidx.compose.ui.geometry.*
 import androidx.compose.ui.graphics.Path
@@ -128,7 +129,11 @@ internal val PillNavigationTop=PillNavigationPadding+PillNavigationInset
     var sawScroll by remember {mutableStateOf(false)}
     val selected=(selectedOverride ?: pager.currentPage).coerceIn(tabs.indices)
     val position=(selectedOverride?.toFloat() ?: (pager.currentPage+pager.currentPageOffsetFraction)).coerceIn(0f,tabs.lastIndex.toFloat())
-    val destination=(target ?: requested)?.toFloat() ?: position
+    // Build 118: dragged along the pill, the capsule leans towards the finger and clicks into each tab (a mechanical switch).
+    var lean by remember {mutableFloatStateOf(0f)}
+    var tabPx by remember {mutableFloatStateOf(0f)}
+    val aimed=target ?: requested
+    val destination=(aimed?.toFloat() ?: position)+lean
     var reduced by remember {mutableStateOf(!ValueAnimator.areAnimatorsEnabled())}
     val head by animateFloatAsState(destination,if(quiet) snap() else spring(dampingRatio=PILL_HEAD_DAMPING,stiffness=650f),label="capsule-leading-edge")
     val tail by animateFloatAsState(destination,if(quiet) snap() else spring(dampingRatio=PILL_TAIL_DAMPING,stiffness=285f),label="capsule-trailing-edge")
@@ -320,7 +325,12 @@ internal val PillNavigationTop=PillNavigationPadding+PillNavigationInset
                 }
             }
             val labelWidth=(capsuleWidth-5.dp*2).coerceAtLeast(24.dp)
-            Row(Modifier.fillMaxSize()) {
+            Row(Modifier.fillMaxSize().onSizeChanged {tabPx=it.width.toFloat()/tabs.size}
+                .detentSwipe(true,tabs.size,{aimed ?: selected},{tabPx},rtl=direction==androidx.compose.ui.unit.LayoutDirection.Rtl,
+                    onLean={lean=it},onCommit={index->
+                        if(!quiet) view.performHapticFeedback(if(Build.VERSION.SDK_INT>=34) HapticFeedbackConstants.SEGMENT_FREQUENT_TICK else HapticFeedbackConstants.CLOCK_TICK)
+                        requested=index;onSelect(index)
+                    })) {
                 tabs.forEachIndexed {index,tab->
                     val interactions=remember {MutableInteractionSource()}
                     LaunchedEffect(interactions) {interactions.interactions.collect {event->

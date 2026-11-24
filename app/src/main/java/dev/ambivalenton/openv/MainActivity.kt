@@ -40,6 +40,7 @@ import androidx.compose.runtime.*
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.relocation.bringIntoViewResponder
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -348,7 +349,10 @@ private fun OpenVNavigation(
     fun goToPage(page: Int, animate: Boolean = !quiet) {
         tabJob[0]?.cancel()
         tabTarget = page
-        tabJob[0] = scope.launch {
+        // Build 118: the target is cleared however the change ends – also when it is cancelled before it
+        // ever ran (then its finally block never runs). A left-over target made the tab count as open.
+        lateinit var change: kotlinx.coroutines.Job
+        change = scope.launch {
             try {
                 var attempt = 0
                 while (homePager.settledPage != page || homePager.currentPage != page || homePager.currentPageOffsetFraction != 0f) {
@@ -366,6 +370,8 @@ private fun OpenVNavigation(
                 }
             } finally { if (tabTarget == page) tabTarget = null }
         }
+        change.invokeOnCompletion { if (tabTarget == page && tabJob[0] === change) tabTarget = null }
+        tabJob[0] = change
     }
     LaunchedEffect(pagerDragged.value) { if (pagerDragged.value) { tabJob[0]?.cancel(); tabTarget = null } }
     LaunchedEffect(planner) { if (planner && homePager.currentPage != 1) goToPage(1, animate = false) }
@@ -383,8 +389,13 @@ private fun OpenVNavigation(
     val keyboard=androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
     fun selectHomeTab(page:Int) {
         // M12: the active tab keeps the current task visible (details, results, settings page).
-        val active=activeHomeTab(destinationRoute,homePager.settledPage,homePager.isScrollInProgress,tabTarget)
-        if(page==active && !isPinned) return
+        val active=activeHomeTab(destinationRoute,homePager.settledPage,homePager.isScrollInProgress,
+            tabTarget?.takeIf {tabJob[0]?.isActive==true})
+        // Build 118: on the pages a tab only counts as open when its page visibly rests there; a tap is
+        // never swallowed by a change that is no longer running.
+        val resting=destinationRoute!="search" || (homePager.settledPage==page && homePager.currentPage==page &&
+            kotlin.math.abs(homePager.currentPageOffsetFraction)<.01f && !homePager.isScrollInProgress)
+        if(page==active && !isPinned && resting) return
         pinAnimation.cancel()
         overlays.dismissForTab()
         pendingPin=null;removingPinnedId=null;overviewPreview=null
@@ -1035,7 +1046,8 @@ private fun OpenVNavigation(
                             key = { it },
                         ) { page ->
                             Box(
-                                Modifier.fillMaxSize().graphicsLayer {
+                                // Build 118: requests to bring something into view end at the page.
+                                Modifier.fillMaxSize().bringIntoViewResponder(HomePageBringIntoView).graphicsLayer {
                                     val offset =
                                         kotlin.math.abs(
                                             (homePager.currentPage - page) +
@@ -1221,6 +1233,19 @@ private fun OpenVNavigation(
     }
     }
     }
+}
+
+/**
+ * Build 118 · a request to bring something into view (focus, a text field, a revealed list entry) ends at
+ * its home page: the pager only sees the page itself, which is in view. The pager of the current Compose
+ * foundation otherwise answered such a request by settling a whole page on – "Suchen" slid on to
+ * "Abfahrten", and from "Abfahrten" the tab "Suchen" seemed not to answer. Scrolling inside a page is
+ * unaffected (its lists handle the request before it arrives here); the pages change only by a swipe or a tab.
+ */
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+internal object HomePageBringIntoView : androidx.compose.foundation.relocation.BringIntoViewResponder {
+    override fun calculateRectForParent(localRect: androidx.compose.ui.geometry.Rect) = androidx.compose.ui.geometry.Rect.Zero
+    override suspend fun bringChildIntoView(localRect: () -> androidx.compose.ui.geometry.Rect?) = Unit
 }
 
 /** Build 106: the navigation pill coming back – a lively spring with one small swing above its place. */

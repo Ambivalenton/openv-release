@@ -4,6 +4,12 @@ Alle nennenswerten Änderungen an Öpen-V. Versionen folgen [Semantic Versioning
 
 ## [Unveröffentlicht]
 
+## [1.1.8] (118) · 2026-11-24
+
+- Behoben: Ein Tipp auf „Suchen“ landete nach kurzer Pause auf „Abfahrten“, und von „Abfahrten“ aus schien „Suchen“ gar nicht zu reagieren. Ursache war das Verhalten der verwendeten Compose-Version: Bat ein Element auf einer Seite darum, ins Bild geholt zu werden (etwa beim Fokus), rastete die Seitenleiste eine ganze Seite weiter. Solche Anfragen enden jetzt an der jeweiligen Seite; die Seiten wechseln nur noch durch Wischen oder einen Tab. Außerdem führt die Suche „Ziel ändern“ und „Start wählen“ nur noch einmal aus, statt bei jeder Rückkehr auf die Seite erneut den Fokus zu setzen, und ein Tab gilt nur dann als bereits geöffnet, wenn seine Seite tatsächlich dort steht.
+- Abfahrt/Ankunft wie ein Kippschalter: Die Kapsel lässt sich mit dem Finger ziehen. Sie neigt sich erst etwas mit, rastet hinter der Mitte spürbar auf die andere Seite um und federt beim Loslassen in ihre Raste. Antippen funktioniert wie bisher.
+- Navigationsleiste: Auch die Kapsel unten lässt sich ziehen. Sie rastet mit einem kurzen Ticken in jeden Tab ein, die Seiten folgen; ein schneller Wisch springt eine Raste weiter.
+
 ## [1.1.7] (117) · 2026-11-24
 
 - Andere Verbindungen am Umstieg: Steht die angepinnte Reise an einem Bahnhof – vor dem Einsteigen, auf dem Weg dorthin oder kurz vor einem Umstieg –, zeigt die Reisekarte unten bis zu drei andere erreichbare Verbindungen. Jeder Knopf nennt die neue Ankunftszeit, die Umstiege und die geschätzte Verlässlichkeit. Antippen öffnet eine kurze Rückfrage mit „Ankunft 16:39 statt 16:33“ und der kompakten Zusammenfassung der ganzen neuen Verbindung; erst „Wechseln“ ersetzt die laufende Reisebegleitung. Die Verbindungen stammen aus der Alternativsuche, die die Reisebegleitung ohnehin regelmäßig ausführt – es entstehen keine zusätzlichen Abfragen. Angeboten werden nur Verbindungen, die höchstens drei Minuten alt sind und noch erreichbar sind.
