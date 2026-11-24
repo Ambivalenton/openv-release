@@ -219,7 +219,8 @@ import kotlin.math.*
      Spacer(Modifier.width(10.dp))
      // One line that grows or shrinks with the space; the button widens before the text gets smaller.
      FittedText(labelText,Modifier.weight(1f,fill=false).testTag("search-submit-label")
-      .onGloballyPositioned {labelCenter=it.positionInRoot()+Offset(it.size.width/2f,it.size.height/2f)},color=ink,style=labelStyle,maxLines=1)
+      .onGloballyPositioned {labelCenter=it.positionInRoot()+Offset(it.size.width/2f,it.size.height/2f)},color=ink,style=labelStyle,
+      textAlign=androidx.compose.ui.text.style.TextAlign.Center,maxLines=1)
     }
    }
   }

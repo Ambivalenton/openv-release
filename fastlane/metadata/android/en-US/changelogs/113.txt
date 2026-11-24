@@ -1,0 +1,3 @@
+• Every design has its own colour world: favourite and design colours from the design's own hues, each readable and named.
+• Large system font: labels stay inside capsules and buttons; words never break, long button labels take a second line.
+• Navigation bar: all labels inside the capsule and the same size, hexagonal capsules included.

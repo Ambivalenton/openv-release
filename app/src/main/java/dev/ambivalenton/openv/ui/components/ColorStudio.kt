@@ -491,6 +491,9 @@ internal fun Modifier.checkerboard(): Modifier = drawBehind { drawCheckers(Offse
     }
 }
 
+/** Name of a curated swatch; generated colour worlds name their colours from the colour itself. */
+internal fun dev.ambivalenton.openv.data.model.DesignSwatch.label(): String = if (nameKey.isEmpty()) colorName(color) else tr(nameKey)
+
 /** A friendly entry to the colour studio: its rainbow mark, what it offers, and the colour chosen there. */
 @Composable internal fun CustomColorEntry(color: Long?, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Surface(onClick, modifier.fillMaxWidth().heightIn(min = 64.dp).pressScale(.97f), shape = RoundedCornerShape(20.dp),

@@ -365,12 +365,12 @@ fun DepartureRow(departure: Departure, showNotices: Boolean = false) {
                 contentColor = Color(departure.lineType.contentArgb),
                 shape = RoundedCornerShape(10.dp),
             ) {
-                Text(
+                // A line name is never cut off: it shrinks (and may take a second line between words).
+                dev.ambivalenton.openv.ui.components.FittedText(
                     departure.lineName,
                     Modifier.widthIn(min = 42.dp, max = 85.dp).padding(8.dp),
                     style = MaterialTheme.typography.labelLarge,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                 )
             }
             Column(Modifier.weight(1f)) {

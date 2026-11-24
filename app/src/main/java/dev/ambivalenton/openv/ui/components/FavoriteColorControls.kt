@@ -44,7 +44,7 @@ import dev.ambivalenton.openv.localization.tr
         presets.chunked(5).forEachIndexed {row,colors->
             Row(Modifier.fillMaxWidth().testTag("favorite-color-row-$row"),horizontalArrangement=Arrangement.SpaceBetween) {
                 colors.forEachIndexed {column,color->
-                    ColorSwatch(color.color,tr(color.nameKey),selected==color.color,
+                    ColorSwatch(color.color,color.label(),selected==color.color,
                         Modifier.testTag("favorite-color-${row*5+column}")) {choose(color.color)}
                 }
             }

@@ -267,7 +267,31 @@ internal val PillNavigationTop=PillNavigationPadding+PillNavigationInset
                 if(lang.language==DesignLanguage.TERMINAL) drawPath(outline,scheme.primary.copy(alpha=.7f),style=Stroke(1.dp.toPx(),
                     pathEffect=PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(),4.dp.toPx()))))
             }
-            Row(Modifier.fillMaxSize().padding(7.dp)) {
+            BoxWithConstraints(Modifier.fillMaxSize().padding(7.dp)) {
+            // Build 113: the space a label has inside the capsule at rest (see elasticCapsuleRect):
+            // below the symbol, at least 3 dp clear of the capsule's lower edge, and away from its sides
+            // as far as its corners recede at the label's baseline (round, cut, hexagonal). Symbol and
+            // label are centred together, so a smaller label sits higher, where the capsule is wider.
+            // One size for all labels.
+            val capsuleWidth=maxWidth/tabs.size*.82f
+            val capsuleHeight=maxHeight*.70f
+            val labelHeight=(capsuleHeight-24.dp-3.dp*2).coerceAtLeast(10.dp)
+            val labelStyle=MaterialTheme.typography.labelMedium
+            val measurer=androidx.compose.ui.text.rememberTextMeasurer()
+            val labels=tabs.map {it.label}
+            val labelSize=remember(labels,capsuleWidth,capsuleHeight,labelStyle,density,selectionShape) {
+                with(density) {
+                    val w=capsuleWidth.toPx();val h=capsuleHeight.toPx();val icon=24.dp.toPx()
+                    sharedLabelSize(measurer,labels,labelStyle.copy(fontWeight=FontWeight.SemiBold,
+                        lineHeight=androidx.compose.ui.unit.TextUnit.Unspecified),labelHeight.roundToPx()) {line->
+                        val baseline=(h-icon-line)/2f+line*.2f
+                        val inset=maxOf(capsuleSideInset(selectionShape,w,h,density,baseline),3.dp.toPx())+2.dp.toPx()
+                        (w-2*inset).toInt()
+                    }
+                }
+            }
+            val labelWidth=(capsuleWidth-5.dp*2).coerceAtLeast(24.dp)
+            Row(Modifier.fillMaxSize()) {
                 tabs.forEachIndexed {index,tab->
                     val interactions=remember {MutableInteractionSource()}
                     LaunchedEffect(interactions) {interactions.interactions.collect {event->
@@ -297,11 +321,17 @@ internal val PillNavigationTop=PillNavigationPadding+PillNavigationInset
                             translationY=-5.dp.toPx()*pose.lift
                             scaleX=pose.scaleX;scaleY=pose.scaleY
                         }.testTag("pill-icon-$index-${if(tab.timeline) "timeline" else "default"}"),selected=index==selected)
-                        Text(tab.label,style=MaterialTheme.typography.labelMedium,
-                            fontWeight=if(index==selected) FontWeight.SemiBold else FontWeight.Normal,
-                            maxLines=1,overflow=TextOverflow.Ellipsis,color=ink)
+                        // Build 113: the label stays inside the capsule with large type instead of running
+                        // past its edges; a single word is never broken.
+                        Box(Modifier.width(labelWidth).heightIn(max=labelHeight),contentAlignment=Alignment.Center) {
+                            FittedText(tab.label,style=labelStyle,fontSize=labelSize,
+                                fontWeight=if(index==selected) FontWeight.SemiBold else FontWeight.Normal,
+                                textAlign=androidx.compose.ui.text.style.TextAlign.Center,maxLines=1,color=ink,
+                                modifier=Modifier.testTag("pill-label-$index"))
+                        }
                     }
                 }
+            }
             }
         }
     }

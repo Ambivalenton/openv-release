@@ -28,6 +28,7 @@ import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.*
 import dev.ambivalenton.openv.R
@@ -138,13 +139,13 @@ fun hasWalkingLocationPermission(context: Context): Boolean =
         val actionHeight=maxOf(48.dp,t.labelLarge.slotHeight(2)+8.dp)
         if(model.permissionRequired || model.paused || model.alternative)Row(Modifier.fillMaxWidth().height(actionHeight),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
             if(model.permissionRequired) ThemedOutlinedButton(onLocationPermission,Modifier.weight(1f).fillMaxHeight(),contentPadding=PaddingValues(horizontal=8.dp,vertical=4.dp)) {
-                Text(tr("Standort freigeben"),maxLines=2,overflow=TextOverflow.Ellipsis)
+                FittedText(tr("Standort freigeben"),textAlign=TextAlign.Center)
             }
             if(model.paused) ThemedTonalButton(onResume,Modifier.weight(1f).fillMaxHeight(),contentPadding=PaddingValues(horizontal=8.dp,vertical=4.dp)) {
-                Text(tr("Fortsetzen"),maxLines=2,overflow=TextOverflow.Ellipsis)
+                FittedText(tr("Fortsetzen"),textAlign=TextAlign.Center)
             }
             if(model.alternative) ThemedTonalButton(onAlternative,Modifier.weight(1f).fillMaxHeight(),contentPadding=PaddingValues(horizontal=8.dp,vertical=4.dp)) {
-                Text(tr("Alternative verfolgen"),maxLines=2,overflow=TextOverflow.Ellipsis)
+                FittedText(tr("Alternative verfolgen"),textAlign=TextAlign.Center)
             }
         }
     }

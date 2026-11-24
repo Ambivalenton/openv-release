@@ -1,0 +1,3 @@
+• Eigene Farbwelt je Design: Favoriten- und Designfarben aus den Farbtönen des Designs, jede lesbar und mit Namen.
+• Große Systemschrift: Beschriftungen bleiben in Kapseln und Knöpfen; Wörter werden nie getrennt, lange Knopftexte nehmen eine zweite Zeile.
+• Navigationsleiste: alle Beschriftungen in der Kapsel und in gleicher Größe, auch bei Sechseck-Kapseln.

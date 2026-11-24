@@ -59,7 +59,8 @@ data class PaletteField(val key:String,val title:String,val initial:Long,val def
     fun colors(v:Map<String,Long>)=AppThemeColors(v.getValue("background"),v.getValue("surface"),v.getValue("accent"),v.getValue("secondary"),v.getValue("text"))
     val fields=current.values().map {(key,color)->PaletteField(key,names.getValue(key),color,defaults.values().getValue(key))}
     DesignPaletteDialog("app-${theme.name}",tr("Palette · %1\$s",theme.title),fields,onDismiss,
-        {field->designColors(theme.title,appColorFamily(theme),paletteRole(field.key),field.default,theme.dark)},{v->
+        // Build 113: the design's own colour world, not a family shared with many designs.
+        {field->ThemeColorWorld.set(theme,paletteRole(field.key),field.default)},{v->
         val chosen=colors(v)
         update {it.copy(appTheme=theme,appThemeColors=if(chosen==defaults) it.appThemeColors-theme else it.appThemeColors+(theme to chosen))}
     },origin) {v->AppThemeThumbnail(settings.copy(appTheme=theme,appThemeColors=settings.appThemeColors+(theme to colors(v))))}
@@ -91,8 +92,9 @@ data class PaletteField(val key:String,val title:String,val initial:Long,val def
     val fields=LineType.entries.map {type->PaletteField(type.name,type.label,argb(current[type].container),argb(defaults[type].container))}
     fun overrides(v:Map<String,Long>)=TimelinePaletteOverride(saved.seed,LineType.entries.associateWith {v.getValue(it.name)})
     DesignPaletteDialog("timeline-${theme.name}",tr("Palette · %1\$s",theme.title),fields,onDismiss,
-        {field->designColors(theme.title,timelineColorFamily(theme,settings.appTheme),DesignColorRole.ACCENT,field.default,
-            dark)},{v->
+        {field->settings.appTheme?.takeIf {theme==TimelineTheme.APP_THEME || theme==TimelineTheme.MONET}
+            ?.let {app->ThemeColorWorld.set(app,DesignColorRole.ACCENT,field.default)}
+            ?: designColors(theme.title,timelineColorFamily(theme,settings.appTheme),DesignColorRole.ACCENT,field.default,dark)},{v->
         val reset=fields.all {v[it.key]==it.default}
         update {it.withTimelinePalette(theme,if(reset) null else overrides(v))}
     },origin) {v->TimelineDesignPreview(settings.withTimelinePalette(theme,overrides(v)).selectTimelineTheme(theme))}

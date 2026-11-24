@@ -11,7 +11,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.ambivalenton.openv.R
 import dev.ambivalenton.openv.data.model.AppSettings
@@ -41,8 +40,7 @@ import dev.ambivalenton.openv.ui.theme.appFrameShadow
                         }
                         Column(Modifier.weight(1f)) {
                             FittedText(tr("Nach Hause"),style=MaterialTheme.typography.titleSmall)
-                            Text(tr("12 Min. · Direktverbindung"),style=MaterialTheme.typography.bodySmall,
-                                maxLines=2,overflow=TextOverflow.Ellipsis)
+                            FittedText(tr("12 Min. · Direktverbindung"),style=MaterialTheme.typography.bodySmall)
                         }
                     }
                 }

@@ -3,7 +3,15 @@ package dev.ambivalenton.openv.ui.components
 
 import androidx.compose.animation.core.*
 import androidx.compose.runtime.*
+import androidx.compose.foundation.shape.CornerBasedShape
+import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.sp
 import kotlin.math.*
 
 internal const val PILL_FLASH_MILLIS=180
@@ -58,3 +66,49 @@ internal const val PILL_PASS_HOP=.45f
 internal data class HopPose(val lift:Float,val scaleX:Float,val scaleY:Float)
 internal fun hopPose(hop:Float,press:Float=1f):HopPose =
     HopPose(lift=hop.coerceAtLeast(0f),scaleX=press*(1f-.08f*hop),scaleY=press*(1f+.14f*hop))
+
+/**
+ * Build 113 · how far the outline of [shape] (a capsule of [width] × [height] px) lies inside its box
+ * at [edgeDistance] px from its upper or lower edge – on the side where it lies furthest inside. A
+ * label that reaches that low must stay this far from both sides to stay inside a round, cut or
+ * hexagonal capsule. Cut corners recede in a straight line, all others like a circle (the most
+ * receding of the convex corners the designs use).
+ */
+internal fun capsuleSideInset(shape: CornerBasedShape, width: Float, height: Float, density: Density, edgeDistance: Float): Float {
+    val box = Size(width, height)
+    val cut = shape is CutCornerShape
+    return listOf(shape.topStart, shape.topEnd, shape.bottomEnd, shape.bottomStart).maxOf { corner ->
+        val r = corner.toPx(box, density).coerceIn(0f, min(width, height) / 2f)
+        val dy = edgeDistance.coerceAtLeast(0f)
+        when {
+            dy >= r -> 0f
+            cut -> r - dy
+            else -> r - sqrt(r * r - (r - dy) * (r - dy))
+        }
+    }
+}
+
+/**
+ * Build 113 · one size for all labels of the pill: the largest (at most the style's own size) at which
+ * every label fits on one line – measured in the selected (wider) weight, so a tap never changes the
+ * size. [widthFor] gives the room a label has at a given line height (a lower label sits nearer the
+ * capsule's receding lower corners); [maxHeight] is the room below the symbol. The longest word
+ * decides, so "Suchen" never stands larger than "Übersicht" beside it.
+ */
+internal fun sharedLabelSize(measurer: TextMeasurer, labels: List<String>, style: TextStyle, maxHeight: Int,
+    widthFor: (lineHeight: Int) -> Int): TextUnit {
+    fun fits(label: String, size: Float): Boolean {
+        val layout = measurer.measure(label, style.copy(fontSize = size.sp), maxLines = 1, softWrap = false)
+        return layout.size.height <= maxHeight && layout.size.width <= widthFor(layout.size.height)
+    }
+    var size = style.fontSize.value
+    for (label in labels) {
+        if (fits(label, size)) continue
+        // Largest fitting size below the current one, in steps of 0.25 sp.
+        var low = 0; var high = ((size - .5f) / .25f).toInt() - 1
+        if (high < 0 || !fits(label, .5f)) { size = .5f; continue }
+        while (low < high) { val mid = (low + high + 1) / 2; if (fits(label, .5f + mid * .25f)) low = mid else high = mid - 1 }
+        size = .5f + low * .25f
+    }
+    return size.sp
+}

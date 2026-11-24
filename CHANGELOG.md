@@ -4,6 +4,13 @@ Alle nennenswerten Änderungen an Öpen-V. Versionen folgen [Semantic Versioning
 
 ## [Unveröffentlicht]
 
+## [1.1.3] (113) · 2026-11-24
+
+- Jedes Design hat seine eigene Farbwelt: Die Farbvorschläge für Favoriten und für die Farben des Designs (Akzent, Hintergrund, Flächen, Text) kommen jetzt aus den Farbtönen des Designs selbst – sein Akzent und seine Zweitfarbe in helleren, tieferen und ruhigeren Formen, ihre Nachbarn, Gegenfarben und Dreiklang-Partner. Bisher teilten sich bis zu dreißig Designs dieselben zehn Farben. Jeder Vorschlag ist auf dem Grund des Designs lesbar (Akzente mindestens 3:1, Textfarben 7:1), Hintergründe behalten die Helligkeit des Designs, und jede Farbe trägt ihren Namen („Dunkles Blau“, „Helles Grün“).
+- Schrift passt sich ihrem Platz an: Bei großer Systemschrift bleiben Beschriftungen in ihren Kapseln, Knöpfen und Feldern, statt hinauszuragen oder abgeschnitten zu werden. Ein einzelnes Wort wird kleiner, aber nie getrennt; ein langer Knopftext wie „Verbindung suchen, damit du am Mittwoch um 08:15 ankommst“ nimmt eine zweite Zeile (nur zwischen Wörtern), bevor er schwer lesbar würde. Knöpfe behalten dabei ihre Form.
+- Navigationsleiste: „Übersicht“, „Suchen“ und „Abfahrten“ stehen immer innerhalb der Kapsel – auch in sechseckigen und abgeschrägten Kapseln – und in einer gemeinsamen Größe, damit kein Wort größer wirkt als sein Nachbar.
+- Auch „Haltestellen-Liste“ und „Design“ unter der Anzeigetafel, die Knöpfe der angepinnten Reise, Liniennamen in der Abfahrtsliste und die Titel im Favoriten-Studio werden bei großer Schrift kleiner statt abgeschnitten.
+
 ## [1.1.2] (112) · 2026-11-24
 
 - Farbwahl neu aufgebaut: Beim Scrollen ändert sich keine Farbe mehr. Farbfläche, Farbton- und Deckkraft-Streifen liegen nie mehr in einem scrollenden Bereich; nur die Vorschläge darunter scrollen. Bisher konnte ein Finger, der scrollen wollte, auf der Fläche landen und die Farbe verstellen.

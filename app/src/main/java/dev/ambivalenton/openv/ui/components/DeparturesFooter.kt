@@ -12,7 +12,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.ambivalenton.openv.R
@@ -27,8 +26,7 @@ import dev.ambivalenton.openv.localization.tr
             Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
                 AppIcon(R.drawable.ic_list,null,Modifier.size(18.dp))
                 Spacer(Modifier.width(4.dp))
-                Text(tr("Haltestellen-Liste"),style=MaterialTheme.typography.labelSmall.copy(fontSize=12.sp),
-                    maxLines=1,overflow=TextOverflow.Ellipsis)
+                FittedText(tr("Haltestellen-Liste"),style=MaterialTheme.typography.labelSmall.copy(fontSize=12.sp),maxLines=1)
             }
         }
         TextButton(onDesign,Modifier.weight(1f).heightIn(min=48.dp).testTag("footer-design")
@@ -36,8 +34,7 @@ import dev.ambivalenton.openv.localization.tr
             Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.End,verticalAlignment=Alignment.CenterVertically) {
                 AppIcon(R.drawable.ic_palette,null,Modifier.size(18.dp))
                 Spacer(Modifier.width(4.dp))
-                Text(tr("Design"),style=MaterialTheme.typography.labelSmall.copy(fontSize=12.sp),maxLines=1,
-                    overflow=TextOverflow.Ellipsis)
+                FittedText(tr("Design"),style=MaterialTheme.typography.labelSmall.copy(fontSize=12.sp),maxLines=1)
             }
         }
     }

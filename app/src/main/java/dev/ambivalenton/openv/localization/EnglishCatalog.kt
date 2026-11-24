@@ -1267,7 +1267,6 @@ internal val englishStrings: Map<String, String> = buildMap {
     put("Grau, Weiß und Hellgrün als ruhige Bento-Kacheln", "Grey, white and light green as calm bento tiles")
     put("Graues LCD", "Grey LCD")
     put("Graues Papier, schwarze Konturen und feine Titelstreifen", "Original Macintosh · Klassik inspired colours, surfaces and vector motifs")
-    put("Graustufe %1\$s", "Gray shade %1\$s")
     put("Große Endpunkte mit einer feinen Verbindung", "Large endpoints joined by a slim connector")
     put("Große Gate-Marken und präzise Abflugtafeln für die nächste Fahrt", "Large gate badges and precise departure panels for your next journey")
     put("Große Rasterpunkte, kräftiges Pink und grafische Farbflächen", "Large halftone dots, vivid pink and graphic colour planes")

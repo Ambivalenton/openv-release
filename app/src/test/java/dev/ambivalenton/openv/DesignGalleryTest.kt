@@ -50,7 +50,8 @@ class DesignGalleryTest {
     private val fixture = object : ExternalResource() {
         override fun before() {
             val app = RuntimeEnvironment.getApplication() as OpenVApp
-            RuntimeEnvironment.setFontScale(1f)
+            // OPENV_FONT_SCALE checks large system type (e.g. 1.6 or 2.0).
+            RuntimeEnvironment.setFontScale(System.getenv("OPENV_FONT_SCALE")?.toFloatOrNull() ?: 1f)
             runCatching { androidx.work.WorkManager.initialize(app, androidx.work.Configuration.Builder().build()) }
             shadowOf(app).denyPermissions(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
             val manager = app.getSystemService(LocationManager::class.java)

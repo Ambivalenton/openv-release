@@ -31,8 +31,10 @@ import androidx.compose.ui.unit.sp
  val max=if(fontSize!=TextUnit.Unspecified)fontSize else if(resolved.fontSize!=TextUnit.Unspecified)resolved.fontSize else 16.sp
  resolved=resolved.copy(fontSize=max,lineHeight=TextUnit.Unspecified,color=if(color!=Color.Unspecified)color else if(resolved.color!=Color.Unspecified)resolved.color else LocalContentColor.current,
   fontWeight=fontWeight?:resolved.fontWeight,textAlign=textAlign?:resolved.textAlign)
- if(maxLines<=1) BasicText(text,modifier,style=resolved,maxLines=1,softWrap=false,overflow=TextOverflow.Clip,
-  autoSize=TextAutoSize.StepBased(minFontSize=.5.sp,maxFontSize=max,stepSize=.1.sp),onTextLayout=onTextLayout)
+ // Build 113: "one line" means one line while it stays readable. A single word only shrinks (never
+ // breaks); several words shrink down to a reading floor and then take a second line between words.
+ if(maxLines<=1) BasicText(text,modifier,style=resolved,maxLines=2,softWrap=true,overflow=TextOverflow.Clip,
+  autoSize=ReadableAutoSize(max.value,readingFloor(max.value)),onTextLayout=onTextLayout)
  else BasicText(text,modifier,style=resolved,maxLines=maxLines,softWrap=true,overflow=TextOverflow.Clip,
   autoSize=WordSafeAutoSize(max.value,maxLines),onTextLayout=onTextLayout)
 }
@@ -65,5 +67,35 @@ private data class WordSafeAutoSize(val maxSp:Float,val maxLines:Int):TextAutoSi
    if(fits(.5f+mid*.25f)) low=mid else high=mid-1
   }
   return (.5f+low*.25f).sp
+ }
+}
+
+/** The smallest size a running label may shrink to before it takes a second line: 80 % of its size, at least 11 sp. */
+internal fun readingFloor(maxSp:Float):Float=minOf(maxSp,maxOf(11f,maxSp*.8f))
+
+/**
+ * One line at the largest size down to [floorSp]; below that, two lines broken only between words
+ * (down to the floor again); only when even that does not fit does the text shrink further – in
+ * whichever of one or two lines keeps it larger – so nothing ever runs out of its box. Sizes in steps of 0.25 sp, found by binary search.
+ */
+private data class ReadableAutoSize(val maxSp:Float,val floorSp:Float):TextAutoSize {
+ override fun TextAutoSizeLayoutScope.getFontSize(constraints:Constraints,text:AnnotatedString):TextUnit {
+  fun fits(size:Float,lines:Int):Boolean {
+   val layout=performLayout(constraints,text,size.sp)
+   return !layout.didOverflowWidth && !layout.didOverflowHeight && layout.lineCount<=lines && breaksOnlyBetweenWords(layout)
+  }
+  fun largest(from:Float,lines:Int):Float? {
+   if(fits(maxSp,lines)) return maxSp
+   if(!fits(from,lines)) return null
+   var low=0;var high=((maxSp-from)/.25f).toInt()
+   while(low<high) {val mid=(low+high+1)/2;if(fits(from+mid*.25f,lines)) low=mid else high=mid-1}
+   return from+low*.25f
+  }
+  val words=text.text.trim().contains(' ')
+  largest(floorSp,1)?.let {return it.sp}
+  if(words) largest(floorSp,2)?.let {return it.sp}
+  // Not even the floor fits: the larger of one line and (between words) two lines.
+  val one=largest(.5f,1);val two=if(words) largest(.5f,2) else null
+  return (listOfNotNull(one,two).maxOrNull() ?: .5f).sp
  }
 }

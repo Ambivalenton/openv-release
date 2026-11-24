@@ -333,7 +333,7 @@ private fun placeLine(place: Location): String = listOfNotNull(place.name.takeIf
                             contentAlignment = Alignment.Center) {
                             AppIcon(choice.resource(), null, Modifier.size(26.dp), tint = ink)
                         }
-                        Text(choice.title, style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                        dev.ambivalenton.openv.ui.components.FittedText(choice.title, style = MaterialTheme.typography.labelMedium, maxLines = 1,
                             textAlign = TextAlign.Center, color = if (chosen) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }

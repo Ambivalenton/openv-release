@@ -181,7 +181,7 @@ fun ColorPickerSheet(
         colors.swatches.chunked(5).forEachIndexed {row,swatches->
             Row(Modifier.fillMaxWidth().testTag("design-color-row-$row")) {
                 swatches.forEach {swatch->
-                    ColorSwatch(swatch.color,tr(swatch.nameKey),chosen==swatch.color,Modifier.weight(1f)) {onChoose(swatch.color)}
+                    ColorSwatch(swatch.color,swatch.label(),chosen==swatch.color,Modifier.weight(1f)) {onChoose(swatch.color)}
                 }
             }
         }
