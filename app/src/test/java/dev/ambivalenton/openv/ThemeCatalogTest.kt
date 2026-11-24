@@ -17,9 +17,10 @@ class ThemeCatalogTest {
         val large=setOf(AppThemeGroup.GAMING,AppThemeGroup.PETS)
         for(group in catalogThemeGroups){
             val themes=groups.single {it.first==group}.second
-            if(group in large) assertTrue(group.name,themes.size>=20) else assertEquals(group.name,10,themes.size)
+            // Build 109: curated to ten (gaming, pets) and seven (the others).
+            assertEquals(group.name,if(group in large) 10 else 7,themes.size)
             assertTrue(themes.all {it.texture.name.startsWith("CATALOG_")})
-            if(group in large) assertTrue(themes.map {it.texture}.distinct().size>=4) else assertEquals(5,themes.map {it.texture}.distinct().size)
+            assertTrue(group.name,themes.map {it.texture}.distinct().size>=4)
             assertTrue(themes.any {it.dark});assertTrue(themes.any {!it.dark})
         }
         // At least three cat and three dog designs among the pets.
@@ -29,8 +30,9 @@ class ThemeCatalogTest {
     }
     @Test fun everyThemeIsListedExactlyOnceAndOldQuietModeAndVivaldiOrderSurvive() {
         val listed=groupedAppThemes().flatMap {it.second}
-        assertEquals(AppTheme.entries.size,listed.size)
-        assertEquals(AppTheme.entries.toSet(),listed.toSet())
+        val kept=AppTheme.entries.filterNot {it.retired}
+        assertEquals(kept.size,listed.size)
+        assertEquals(kept.toSet(),listed.toSet())
         assertEquals(quietAppThemes.toSet(),groupedAppThemes(true).flatMap {it.second}.toSet())
         val seasons=groupedAppThemes().single {it.first==AppThemeGroup.SEASONS}.second
         assertEquals(listOf(AppTheme.VIVALDI_PRIMAVERA,AppTheme.VIVALDI_PRIMAVERA_II,

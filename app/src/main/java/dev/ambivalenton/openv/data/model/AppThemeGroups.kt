@@ -11,7 +11,7 @@ enum class AppThemeGroup(private val titleKey:String,private val descriptionKey:
     SEASONS("Le quattro stagioni · Vivaldi","Vier Konzerte mit jeweils drei Sätzen: zwölf originale Titel und eigene Farbwelten."),
     FESTIVALS("Feste der Welt","Von Festen und Traditionen weltweit inspirierte Farben und Lichtmotive."),
     RAINBOWS("Regenbögen","Farbige Bänder, sanfte Übergänge und kleine Geschichten aus Licht."),
-    SYSTEMS("Betriebssysteme","Legendäre Oberflächen mit eigenen Glas-, Kachel- und Fenster-Motiven neu interpretiert."),
+    SYSTEMS("Bildschirm-Epochen","Fenster, Glas und Kacheln aus vier Jahrzehnten Bildschirmgeschichte, frei nachempfunden."),
     CLEAN("Klar & reduziert","Linien-UI, Bento-Kacheln, E-Ink und tonale Flächen: Struktur statt Dekor."),
     // Ten design languages, listed in this order directly after "Klar & reduziert".
     NEO_BRUTAL("Neo-Brutalismus","Kräftige Konturen, harte Schlagschatten und plakative Farbflächen ohne Verläufe."),
@@ -26,7 +26,7 @@ enum class AppThemeGroup(private val titleKey:String,private val descriptionKey:
     GLOW_EDGE("Nacht & Leuchtkante","Tiefe dunkle Flächen, haarfeine Lichtkanten und ein einzelner leuchtender Akzent."),
     SOFT("Weich & taktil","Soft UI und Clay: erhabene Flächen, weiche Schatten und griffige runde Formen."),
     GLASS("Glas & Licht","Milchglas, Lichtkanten und Verlaufsglut über ruhigen Farbräumen."),
-    BOLD("Kante & Kontrast","Neo-Brutalismus und Swiss Style: dicke Konturen, harte Schatten, strenge Raster."),
+    BOLD("Kante & Kontrast","Swiss Style, Industrie und Comic: strenge Raster, Signalfarben und Tuschkonturen."),
     NATURE("Natur & Weite","Organische Blattformen, Leuchtkanten und ein weiter Horizont in Naturfarben."),
     PAPER("Papier & Satz","Editorial-Satz, feine Regeln, Tinte und geschichtete Papierlagen."),
     CITY("Stadt & Technik","Terminal, Blaupause, Dashboard-Kacheln und Neon für die Nachtstadt."),
@@ -81,6 +81,9 @@ internal val languageGroupMembers:Map<AppThemeGroup,List<AppTheme>> = mapOf(
         AppTheme.KITE_POST,AppTheme.JELLY_SPACE,AppTheme.RIBBON_PLAY,AppTheme.PIXEL_DAWN),
     AppThemeGroup.ART to listOf(AppTheme.REN_LUMEN,AppTheme.BAROQUE_INK,AppTheme.ROMANTIC_HAZE,AppTheme.IMPRESSION_GARDEN,AppTheme.NOUVEAU_BOTANIC,
         AppTheme.EXPRESSION_VIVID,AppTheme.CONSTRUCT_RED,AppTheme.SURREAL_DREAM,AppTheme.POP_PRINT,AppTheme.ART_DECO,AppTheme.MEMPHIS),
+    // Build 109: the screen eras in the order of their year.
+    AppThemeGroup.SYSTEMS to listOf(AppTheme.OS_MAC_CLASSIC,AppTheme.OS_AMIGA,AppTheme.OS_CDE,AppTheme.OS_WIN_95,AppTheme.OS_BEOS,
+        AppTheme.OS_MAC_AQUA,AppTheme.OS_WIN_XP,AppTheme.OS_WIN_7,AppTheme.OS_ANDROID_HOLO,AppTheme.OS_WIN_8),
     AppThemeGroup.RETRO to listOf(AppTheme.DECADE_70,AppTheme.DECADE_80,AppTheme.SYNTHWAVE,AppTheme.DECADE_90,AppTheme.DECADE_00,
         AppTheme.DECADE_10,AppTheme.RETRO_ARCADE,AppTheme.VINTAGE_TRANSIT,AppTheme.POCKET_CONSOLE),
 )
@@ -102,7 +105,8 @@ fun appThemeGroup(t:AppTheme):AppThemeGroup=t.themeLanguage.themeGroup ?: when {
     else->languageGroupOf[t] ?: AppThemeGroup.CLEAN
 }
 fun groupedAppThemes(quiet:Boolean=false):List<Pair<AppThemeGroup,List<AppTheme>>> {
-    val themes=if(quiet)quietAppThemes else AppTheme.entries
+    // Build 109: retired near copies stay stored-compatible but leave the picker (ThemeCuration.kt).
+    val themes=if(quiet)quietAppThemes else AppTheme.entries.filter {!it.retired}
     val tail = listOf(AppThemeGroup.SYSTEMS) + catalogThemeGroups +
         listOf(AppThemeGroup.SEASONS, AppThemeGroup.RAINBOWS, AppThemeGroup.FESTIVALS)
     return (AppThemeGroup.entries.filter { it !in tail } + tail).map { group ->

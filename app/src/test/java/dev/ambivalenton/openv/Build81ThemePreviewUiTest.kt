@@ -31,7 +31,7 @@ class Build81ThemePreviewUiTest {
         val view=compose.activity.window.decorView
         val bitmap=Bitmap.createBitmap(view.width,view.height,Bitmap.Config.ARGB_8888)
         view.draw(Canvas(bitmap))
-        val card=compose.onNodeWithTag("theme-group-SOFT").fetchSemanticsNode().boundsInWindow
+        val card=compose.onNodeWithTag("theme-group-SOFT_RELIEF").fetchSemanticsNode().boundsInWindow
         val x=card.center.x.toInt()
         // Darkest pixel of a short band just below the card: the shadow of the incoming design.
         val result=(card.bottom.toInt()+2..card.bottom.toInt()+12).minOf {y->
@@ -42,10 +42,10 @@ class Build81ThemePreviewUiTest {
 
     @Test fun theShadowOfTheNextDesignFadesInWithTheDesign() {
         val settings=AppSettings(appTheme=AppTheme.CLASSIC_LIGHT)
-        val themes=groupedAppThemes().first {it.first==AppThemeGroup.SOFT}.second
+        val themes=groupedAppThemes().first {it.first==AppThemeGroup.SOFT_RELIEF}.second
         compose.mainClock.autoAdvance=false
         compose.setContent {OpenVTheme(settings){Column(Modifier.fillMaxSize().padding(28.dp)){
-            ThemeGroupHeader(AppThemeGroup.SOFT,themes,settings,false,null){}
+            ThemeGroupHeader(AppThemeGroup.SOFT_RELIEF,themes,settings,false,null){}
         }}}
         compose.mainClock.advanceTimeBy(500)
         val page=compose.runOnIdle {

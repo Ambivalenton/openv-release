@@ -1,0 +1,4 @@
+• App designs curated: 240 carefully reviewed designs instead of 345, without near duplicates.
+• If your design was removed, the update switches to its closest sibling and keeps your colours.
+• "Screen eras": ten interfaces from 1984 to 2012, in order of their year.
+• Departure boards: delayed times are no longer cut off, text appears at full size.

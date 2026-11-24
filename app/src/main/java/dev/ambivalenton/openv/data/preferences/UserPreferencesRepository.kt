@@ -80,8 +80,10 @@ fun mergeSearchHistory(rows: List<SearchHistory>): List<SearchHistory> =
         )
         .take(50)
 
-internal fun normalizePreferences(settings: AppSettings): AppSettings =
-    TimetableProfile.normalize(settings.normalizedQuietAppearance().let {s->val t=normalizedTimelineTheme(s.timelineTheme);if(t==s.timelineTheme)s else s.selectTimelineTheme(t)}).copy(
+internal fun normalizePreferences(stored: AppSettings): AppSettings {
+    // Build 109: designs taken out of the catalogue continue as their closest kept sibling.
+    val settings = stored.curatedThemes()
+    return TimetableProfile.normalize(settings.normalizedQuietAppearance().let {s->val t=normalizedTimelineTheme(s.timelineTheme);if(t==s.timelineTheme)s else s.selectTimelineTheme(t)}).copy(
         searchResultOrder=normalizedSearchOrder(settings.searchResultOrder),
         showTicketPurchase=false,
         footprints=settings.footprints.normalized(),
@@ -121,6 +123,7 @@ internal fun normalizePreferences(settings: AppSettings): AppSettings =
                     },
             ),
     )
+}
 
 /** Persist integer metres; a 1,000 m tick must never become 999 m through Float truncation. */
 fun normalizeRadius(meters: Int): Int =

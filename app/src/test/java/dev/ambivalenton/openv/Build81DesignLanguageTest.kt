@@ -52,7 +52,9 @@ class Build81DesignLanguageTest {
         assertTrue(order.indexOf(AppThemeGroup.GLASS)>clean+10)
         for(group in designLanguageThemeGroups) {
             val themes=groupedAppThemes().single {it.first==group}.second
-            assertEquals(group.name,10,themes.size)
+            // Build 109: six to eight of each ten remain in the picker; the rest moved to a sibling.
+            assertEquals(group.name,AppTheme.entries.count {it.themeLanguage.themeGroup==group && !it.retired},themes.size)
+            assertTrue(group.name,themes.size in 6..8)
             assertEquals(group.name,1,themes.map {it.themeLanguage}.distinct().size)
             assertEquals(group,themes.first().themeLanguage.themeGroup)
             assertTrue(group.name,themes.any {it.dark})

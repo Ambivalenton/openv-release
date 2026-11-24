@@ -52,11 +52,12 @@ internal fun drawThemeDisplay(c: Canvas, m: BoardPresentation, w: Float, h: Floa
             pen.text(row.destination, left, top + rh / 2, cw, 17 * fontScale, rh * .74f, ink, bold = true)
             c.restore(); top += l.rowHeight; return@forEachIndexed
         }
-        val clockWidth = min(if (l.singleLine) 64 * scale else 74 * scale, cw * .32f)
         val lineWidth = min(46 * scale, cw * .2f)
         val cancelled = row.delay.cancelled
         val clock = if (cancelled) tr("Fällt aus") else clockTime(row.time)
         val late = row.delay.minutes?.takeIf { it > 0 && !cancelled }?.let { "+$it" }.orEmpty()
+        // Build 109: a delay widens the time column; the destination gives way, the time never does.
+        val clockWidth = min((if (l.singleLine) 64 * scale else 74 * scale) + if (late.isEmpty()) 0f else 16 * scale, cw * .38f)
         val detail = row.platform?.let { platformName(it, row.lineType) } ?: row.lineType.label
         fun time(x: Float, cy: Float, width: Float, height: Float) {
             val timeInk = if (cancelled) delayInk else accent
@@ -65,12 +66,12 @@ internal fun drawThemeDisplay(c: Canvas, m: BoardPresentation, w: Float, h: Floa
             if (segments && !cancelled) {
                 val digitHeight = min(16 * scale, min(height * .8f, (width - if (late.isEmpty()) 0f else 18 * scale) / 2.85f))
                 drawDisplayDigits(c, clock, x, cy - digitHeight / 2, digitHeight, timeInk, d.light)
-                if (late.isNotEmpty()) pen.text(late, x + digitHeight * 2.9f, cy, width - digitHeight * 2.9f, 9.5f * scale, height, delayInk, bold = true)
+                if (late.isNotEmpty()) pen.text(late, x + digitHeight * 2.9f, cy, width - digitHeight * 2.9f, 9.5f * scale, height, delayInk, bold = true, fit = true)
             } else if (late.isNotEmpty()) {
-                val lateWidth = min(width * .36f, 24 * scale)
-                pen.text(clock, x, cy, width - lateWidth, 12.5f * scale, height, timeInk, bold = true, alignEnd = true)
-                pen.text(late, x + width - lateWidth + 2, cy, lateWidth - 2, 10 * scale, height, delayInk, bold = true)
-            } else pen.text(clock, x, cy, width, 12.5f * scale, height, timeInk, bold = true, alignEnd = true)
+                val lateWidth = min(width * .36f, 26 * scale)
+                pen.text(clock, x, cy, width - lateWidth, 12.5f * scale, height, timeInk, bold = true, alignEnd = true, fit = true)
+                pen.text(late, x + width - lateWidth + 2, cy, lateWidth - 2, 10 * scale, height, delayInk, bold = true, fit = true)
+            } else pen.text(clock, x, cy, width, 12.5f * scale, height, timeInk, bold = true, alignEnd = true, fit = !cancelled)
         }
         when {
             l.singleLine -> {
@@ -130,25 +131,32 @@ internal class DisplayPen(private val canvas: Canvas, private val d: DisplayProf
         else -> 0f
     }
 
+    /**
+     * [fit]: never shortened – a departure time or delay is scaled down until it fits instead of
+     * losing digits ("23:…" would hide the real time); names and details keep their ellipsis.
+     */
     fun text(value: String, x: Float, cy: Float, width: Float, size: Float, height: Float, color: Int,
-        bold: Boolean = false, center: Boolean = false, alignEnd: Boolean = false, role: DisplayRole = DisplayRole.TEXT) {
+        bold: Boolean = false, center: Boolean = false, alignEnd: Boolean = false, role: DisplayRole = DisplayRole.TEXT,
+        fit: Boolean = false) {
         if (width <= 1f || height <= 1f || value.isEmpty()) return
         if ((d.face == DisplayFace.DOTS || d.face == DisplayFace.PIXELS) && role != DisplayRole.SYMBOL) {
-            dots(value, x, cy, width, min(size * .92f, height * .9f), color, center, alignEnd); return
+            dots(value, x, cy, width, min(size * .92f, height * .9f), color, center, alignEnd, fit); return
         }
         paint.reset(); paint.isAntiAlias = true; paint.isSubpixelText = true
         paint.color = color; paint.textSize = size
         paint.typeface = Typeface.create(face, if (bold) Typeface.BOLD else Typeface.NORMAL)
         if (d.material == DisplayMaterial.ENAMEL || d.motif == DisplayMotif.DECO_FAN) paint.letterSpacing = .03f
-        val fh = paint.fontMetrics.descent - paint.fontMetrics.ascent
+        val fh = min(paint.fontMetrics.descent - paint.fontMetrics.ascent, paint.textSize * LETTER_BOX)
         if (fh > height) paint.textSize *= height / fh
         if (d.material == DisplayMaterial.SPLIT_FLAP && (role == DisplayRole.TEXT)) {
+            if (fit) { val pitch = max(paint.measureText("M") * .86f + 1.2f, 2f); if (value.length * pitch > width) paint.textSize *= width / (value.length * pitch) }
             flaps(value, x, cy, width, alignEnd); paint.clearShadowLayer(); return
         }
+        if (fit) paint.measureText(value).let { if (it > width) paint.textSize *= width / it }
         val shown = TextUtils.ellipsize(value, paint, width, TextUtils.TruncateAt.END).toString()
         val measured = paint.measureText(shown)
         val xx = when { center -> x + (width - measured) / 2; alignEnd -> x + width - measured; else -> x }
-        val baseline = cy - (paint.fontMetrics.ascent + paint.fontMetrics.descent) / 2
+        val baseline = letterBaseline(paint, cy)
         canvas.save(); canvas.clipRect(x - 3, cy - height / 2 - 2, x + width + 3, cy + height / 2 + 2)
         when {
             d.material == DisplayMaterial.CHALKBOARD -> {
@@ -201,10 +209,11 @@ internal class DisplayPen(private val canvas: Canvas, private val d: DisplayProf
         paint.textAlign = Paint.Align.LEFT
     }
 
-    private fun dots(raw: String, x: Float, cy: Float, width: Float, height: Float, color: Int, center: Boolean, alignEnd: Boolean) {
-        // The hand-set matrix font (mixed case, umlauts); [height] is the cap height.
-        val dot = height / MatrixFont.CAP
-        val fitted = MatrixFont.fit(raw, floor(width / dot).toInt().coerceAtLeast(1))
+    private fun dots(raw: String, x: Float, cy: Float, width: Float, height: Float, color: Int, center: Boolean, alignEnd: Boolean,
+        fit: Boolean = false) {
+        // The hand-set matrix font (mixed case, umlauts); [height] is the cap height. A time gets smaller dots, never fewer digits.
+        val dot = (height / MatrixFont.CAP).let { if (fit) min(it, width / MatrixFont.width(raw.trim()).coerceAtLeast(1)) else it }
+        val fitted = MatrixFont.fit(raw, floor(width / dot + .01f).toInt().coerceAtLeast(1))
         if (fitted.isBlank()) return
         val bitmap = DotMatrixArtwork.text(fitted, color, d.face == DisplayFace.PIXELS)
         val drawnWidth = dot * bitmap.width / DotMatrixArtwork.DOT

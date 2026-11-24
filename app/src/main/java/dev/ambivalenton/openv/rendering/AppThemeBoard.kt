@@ -48,12 +48,14 @@ internal fun drawAppThemeBoard(c: Canvas, m: BoardPresentation, w: Float, h: Flo
         if (width <= 1f || height <= 1f || value.isEmpty()) return
         text.reset(); text.isAntiAlias = true; text.color = color; text.textSize = size
         text.typeface = Typeface.create(face, if (bold) Typeface.BOLD else Typeface.NORMAL)
-        val fh = text.fontMetrics.descent - text.fontMetrics.ascent
+        // Build 109: fitted and centred on the letters, not on the font's line box – typefaces with a
+        // tall line box (Source Sans 3, Baloo 2, …) otherwise shrank to two thirds and sat too high.
+        val fh = min(text.fontMetrics.descent - text.fontMetrics.ascent, text.textSize * LETTER_BOX)
         if (fh > height) text.textSize *= height / fh
         val shown = TextUtils.ellipsize(value, text, width, TextUtils.TruncateAt.END).toString()
         val measured = text.measureText(shown)
         val xx = when { center -> x + (width - measured) / 2; end -> x + width - measured; else -> x }
-        c.drawText(shown, xx, cy - (text.fontMetrics.ascent + text.fontMetrics.descent) / 2, text)
+        c.drawText(shown, xx, letterBaseline(text, cy), text)
     }
     // Card body: container colour plus exactly the motif the app paints on its own panels.
     c.drawColor(bg)
@@ -209,4 +211,12 @@ internal fun themeCornerPath(r: RectF, radius: Float, style: ThemeShape): Path =
         }
         ThemeShape.SHARP -> addRect(r, Path.Direction.CW)
     }
+}
+
+/** Line height that letters with ascenders and descenders really need, in text sizes. */
+internal const val LETTER_BOX = 1.24f
+private val capBounds = Rect()
+/** Baseline that centres the capital letters of [paint] on [cy], whatever line box the typeface declares. */
+internal fun letterBaseline(paint: Paint, cy: Float): Float {
+    synchronized(capBounds) { paint.getTextBounds("H", 0, 1, capBounds); return cy - capBounds.exactCenterY() }
 }

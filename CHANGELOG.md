@@ -4,6 +4,12 @@ Alle nennenswerten Änderungen an Öpen-V. Versionen folgen [Semantic Versioning
 
 ## [Unveröffentlicht]
 
+## [1.0.9] (109) · 2026-11-24
+
+- App-Designs kuratiert: Alle Designs wurden mit Übersicht, beiden Anzeigetafeln, Balkendiagramm und Netzplan nebeneinander geprüft. 105 Designs, die einem Geschwister nahezu glichen, sind aus der Auswahl genommen; 240 bleiben, jede Sammlung weiterhin mit hellen und dunklen Varianten. „Weich & taktil“ geht in „Sanftes Relief“ und „Knete & Clay“ auf, der Neo-Brutalismus aus „Kante & Kontrast“ in seine eigene Sammlung. Wer ein entferntes Design nutzt, behält beim Update das nächstverwandte (gleiche Helligkeit, meist dieselbe Sammlung) samt eigener Farben; auch Tag/Nacht, Zufallsdesign und gespeicherte eigene Designs werden umgestellt.
+- „Betriebssysteme“ heißt jetzt „Bildschirm-Epochen“: zehn deutlich verschiedene Oberflächen von 1984 bis 2012, nach Jahr geordnet und ohne Markennamen (etwa „2001 · Hügelblau“, „1995 · Systemgrau“).
+- Anzeigetafeln „Display“ und „App-Theme“: Uhrzeiten werden nie mehr abgeschnitten („23:…+2“) – bei Verspätung bekommt die Zeit mehr Platz und wird notfalls kleiner, das Ziel weicht. Schriften mit hoher Zeilenbox (etwa Source Sans 3, Baloo 2) erscheinen in voller Größe und sitzen mittig, statt auf zwei Drittel zu schrumpfen.
+
 ## [1.0.8] (108) · 2026-11-24
 
 - „Eigene Farbe“ neu gestaltet: eine große Farbfläche (links blass, rechts kräftig, oben hell, unten dunkel) und ein Farbton-Regenbogen folgen dem Finger sofort – das Farbrad mit Gedrückthalten und die vier Schieberegler entfallen. Deckkraft als eigener Streifen, wo eine Farbe durchscheinen darf. Oben „Vorher“ und neue Farbe nebeneinander mit Leseprobe „Aa“ (ein Tipp auf „Vorher“ setzt zurück) und das Feld für den Hex-Code. Darunter mit einem Tipp: hellere und dunklere Stufen derselben Farbe, passende Farben (Nachbarn, Gegenfarbe, Dreiklang), der Akzent des App-Designs und zuletzt gewählte Farben. Klare Knöpfe „Abbrechen“ und „Übernehmen“ (in der gewählten Farbe). TalkBack: Fläche und Streifen nennen ihre Werte und lassen sich ohne Ziehen verstellen.
@@ -76,7 +82,8 @@ Erste Version.
 - Fahrplandaten von VRR OpenService, Haltestellenverzeichnis für Deutschland offline mitgeliefert.
 - Test-App „Öpen-V · Vorschau“ (`dev.ambivalenton.openv.next`), die sich neben der Store-App installiert.
 
-[Unveröffentlicht]: https://github.com/Ambivalenton/openv-release/compare/v1.0.8...HEAD
+[Unveröffentlicht]: https://github.com/Ambivalenton/openv-release/compare/v1.0.9...HEAD
+[1.0.9]: https://github.com/Ambivalenton/openv-release/compare/v1.0.8...v1.0.9
 [1.0.8]: https://github.com/Ambivalenton/openv-release/compare/v1.0.7...v1.0.8
 [1.0.7]: https://github.com/Ambivalenton/openv-release/compare/v1.0.6...v1.0.7
 [1.0.6]: https://github.com/Ambivalenton/openv-release/compare/v1.0.5...v1.0.6

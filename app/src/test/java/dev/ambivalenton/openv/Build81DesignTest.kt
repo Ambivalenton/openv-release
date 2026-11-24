@@ -44,7 +44,8 @@ class Build81DesignTest {
         assertEquals(DesignLanguage.entries.toSet()-DesignLanguage.MATERIAL,redesigned.map {it.language}.toSet())
         // Every theme is listed exactly once.
         val listed=groupedAppThemes().flatMap {it.second}
-        assertEquals(AppTheme.entries.size,listed.size);assertEquals(AppTheme.entries.toSet(),listed.toSet())
+        val kept=AppTheme.entries.filterNot {it.retired}
+        assertEquals(kept.size,listed.size);assertEquals(kept.toSet(),listed.toSet())
         assertEquals(AppThemeGroup.CITY,appThemeGroup(AppTheme.SPACE_TERMINAL))
     }
 

@@ -80,6 +80,7 @@ object StateSerializer : Serializer<StoredState> {
                 .let { state ->
                     state.copy(
                         settings = normalizePreferences(state.settings),
+                        personalThemes = state.personalThemes.map { it.copy(design = it.design.copy(appearance = it.design.appearance.curatedThemes())) },
                         onboardingDraft = state.onboardingDraft?.let {draft ->
                             require(draft.favorites.size + state.favorites.size <= 80)
                             require(draft.favorites.all {it.hasValidRoutingOptions() && it.label.isNotBlank() && it.label.length <= 80 && it.location.routable})
