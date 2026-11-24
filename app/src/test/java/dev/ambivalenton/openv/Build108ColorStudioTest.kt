@@ -122,10 +122,10 @@ class Build108ColorStudioTest {
         studio(onConfirm = { confirmed = it })
         compose.onNodeWithText("Heller und dunkler").assertExists()
         compose.onNodeWithText("Passt dazu").assertExists()
-        compose.onNodeWithContentDescription("Akzent des App-Designs, #6750A4").performScrollTo().performClick()
+        compose.onNodeWithContentDescription("Akzent des App-Designs, ${colorName(0xFF6750A4L)}").performScrollTo().performClick()
         compose.onNodeWithTag("advanced-color-apply").performClick()
         compose.runOnIdle { assertEquals(0xFF6750A4L, confirmed) }
-        compose.onNodeWithContentDescription("#C2185B").performScrollTo().performClick()
+        compose.onNodeWithContentDescription(colorName(0xFFC2185BL)).performScrollTo().performClick()
         compose.onNodeWithTag("advanced-color-apply").performClick()
         compose.runOnIdle { assertEquals(0xFFC2185BL, confirmed) }
     }
@@ -134,9 +134,9 @@ class Build108ColorStudioTest {
     @Test fun opacityStrip() {
         var confirmed: Long? = null
         studio(alpha = true, onConfirm = { confirmed = it })
-        compose.onNodeWithTag("alpha-strip").performScrollTo().performTouchInput { down(Offset(1f, center.y)); moveTo(Offset(width * .5f, center.y)); up() }
+        compose.onNodeWithTag("alpha-strip").performTouchInput { down(Offset(1f, center.y)); moveTo(Offset(width * .5f, center.y)); up() }
         compose.onNodeWithTag("color-hex").performScrollTo().performTextReplacement("00A86B")
-        compose.onNodeWithTag("advanced-color-apply").performScrollTo().performClick()
+        compose.onNodeWithTag("advanced-color-apply").performClick()
         compose.runOnIdle {
             assertEquals("colour from the code", 0x00A86BL, confirmed!! and 0xFFFFFFL)
             assertEquals("about half clear", 128f, (confirmed!! ushr 24).toFloat(), 14f)
@@ -216,7 +216,7 @@ class Build108ColorStudioTest {
         compose.onNodeWithTag("color-hex").performTextReplacement("12AB34")
         compose.onNodeWithTag("advanced-color-apply").performClick()
         compose.runOnIdle { assertEquals(0xFF12AB34L, selected); assertFalse(open) }
-        compose.onNodeWithText("Gemischt: #12AB34").assertExists()
+        compose.onNodeWithText("Gemischt: ${colorName(0xFF12AB34L)}").assertExists()
         compose.runOnIdle {
             val v = compose.activity.window.decorView
             val b = Bitmap.createBitmap(v.width, v.height / 2, Bitmap.Config.ARGB_8888).also { v.draw(android.graphics.Canvas(it)) }

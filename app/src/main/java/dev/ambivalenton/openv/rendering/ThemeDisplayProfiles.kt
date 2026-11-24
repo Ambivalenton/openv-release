@@ -137,6 +137,17 @@ private fun collectionDisplay(t: AppTheme, s: Seed): DisplayProfile? = when {
         AppTheme.GAME_DUNGEON -> s.game(DisplayMotif.HANDHELD, 0xFFCFC6B4.toInt(), 0xFF1E1712.toInt(), 0xFF6E2A1A.toInt(), 0xFFB8562F.toInt(), DisplayFace.MONO)
         AppTheme.GAME_RHYTHM -> s.game(DisplayMotif.OUTRUN, 0xFFFFE9F3.toInt(), 0xFF2A0F4F.toInt(), 0xFFD1006F.toInt(), 0xFF00B7C7.toInt())
         AppTheme.GAME_PLATFORMER -> s.game(DisplayMotif.NES, 0xFF16206B.toInt(), Color.WHITE, 0xFFFFE36E.toInt(), 0xFFB13425.toInt())
+        // Build 112 · each screen era shows the board on the screen of its year (counter-brightness kept).
+        AppTheme.OS_MAC_CLASSIC -> profile(DisplayMaterial.CRT, DisplayMotif.NONE, 0xFF0D0E0D.toInt(), 0xFFF2F2EA.toInt(), 0xFFFFFFFF.toInt(), DisplayFace.PIXELS)
+        AppTheme.OS_AMIGA -> profile(DisplayMaterial.CRT, DisplayMotif.NONE, 0xFF0050A8.toInt(), Color.WHITE, 0xFFFFA347.toInt(), DisplayFace.PIXELS, 0xFFFF8800.toInt())
+        AppTheme.OS_CDE -> profile(DisplayMaterial.CRT, DisplayMotif.NONE, 0xFF120B02.toInt(), 0xFFFFB000.toInt(), 0xFFFFD27A.toInt(), DisplayFace.MONO)
+        AppTheme.OS_WIN_95 -> profile(DisplayMaterial.CRT, DisplayMotif.NONE, 0xFF050505.toInt(), 0xFFC8C8C8.toInt(), 0xFF55FFFF.toInt(), DisplayFace.MONO, 0xFF00A8A8.toInt())
+        AppTheme.OS_BEOS -> profile(DisplayMaterial.CRT, DisplayMotif.NONE, 0xFF15171D.toInt(), 0xFFECEFF4.toInt(), 0xFFFFCB3D.toInt(), DisplayFace.SANS)
+        AppTheme.OS_MAC_AQUA -> profile(DisplayMaterial.STATION_TFT, DisplayMotif.NONE, 0xFF0B2447.toInt(), 0xFFF4F8FF.toInt(), 0xFF7CC6FF.toInt(), DisplayFace.SANS)
+        AppTheme.OS_WIN_XP -> profile(DisplayMaterial.STATION_TFT, DisplayMotif.NONE, 0xFF0A2A5C.toInt(), 0xFFF2F6FF.toInt(), 0xFF9BDB76.toInt(), DisplayFace.SANS, 0xFF3C8531.toInt())
+        AppTheme.OS_WIN_7 -> profile(DisplayMaterial.OLED, DisplayMotif.NONE, 0xFF061A33.toInt(), 0xFFF1F7FF.toInt(), 0xFF8FD3FF.toInt(), DisplayFace.SANS)
+        AppTheme.OS_ANDROID_HOLO -> profile(DisplayMaterial.E_PAPER, DisplayMotif.NONE, 0xFFE9E7E0.toInt(), 0xFF141414.toInt(), 0xFF0A6283.toInt(), DisplayFace.SANS)
+        AppTheme.OS_WIN_8 -> profile(DisplayMaterial.LIGHT_LCD, DisplayMotif.NONE, 0xFFF5F2F8.toInt(), 0xFF1C1020.toInt(), 0xFF6B2C91.toInt(), DisplayFace.SANS)
         AppTheme.GAME_CARD_DUEL -> s.game(DisplayMotif.POCKET, 0xFFDCCFEE.toInt(), 0xFF22113A.toInt(), 0xFF5A2290.toInt(), 0xFF9A6CC9.toInt())
         else -> null
     }

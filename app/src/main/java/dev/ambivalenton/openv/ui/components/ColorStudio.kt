@@ -22,6 +22,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,16 +31,15 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -48,44 +48,41 @@ import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import dev.ambivalenton.openv.R
 import dev.ambivalenton.openv.color.utilities.Hct
+import dev.ambivalenton.openv.data.model.reduceMotion
 import dev.ambivalenton.openv.localization.tr
 import dev.ambivalenton.openv.ui.theme.LocalAppSettings
-import dev.ambivalenton.openv.data.model.reduceMotion
 import dev.ambivalenton.openv.ui.theme.colorHex
 import dev.ambivalenton.openv.ui.theme.contrastContentColor
 import dev.ambivalenton.openv.ui.theme.parseColorHex
+import kotlin.math.abs
+import kotlin.math.floor
 import kotlin.math.roundToInt
 
-/**
- * Build 108 · "Eigene Farbe" as a colour studio anyone can use: one large field for strength and
- * brightness and a rainbow strip for the hue – both follow the finger at once – a before/after
- * preview with a readability sample, the hex code for those who have one, and colours that go with
- * the current one (its own lighter and darker steps, neighbours and opposite). A tap on any of them
- * takes it over; "Übernehmen" confirms, "Abbrechen" leaves everything as it was.
+/*
+ * Build 112 · the colour studio, rebuilt around one rule: what you touch to mix is never inside
+ * something that scrolls. The field and the strips stand still; only the suggestions below them
+ * scroll. So a finger that wants to scroll can never change the colour by accident, and a finger
+ * that wants to mix gets the colour at once – no long press, no guessing.
+ *
+ * The pieces are shared by the colour sheet ("Auswahl" | "Mischen") and the stand-alone dialog
+ * ("Eigene Farbe"): ColorDraft (the colour being mixed), ColorHero (what is chosen, with its name),
+ * ColorMixer (field and strips) and ColorMixerExtras (hex code, partners, recent colours).
  */
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-internal fun ColorStudioDialog(
-    seed: Long,
-    allowAlpha: Boolean,
-    onConfirm: (Long) -> Unit,
-    onDismiss: () -> Unit,
-    previewContent: (@Composable (Long?) -> Unit)? = null,
-    themeAccentColor: Long? = null,
-    recentColors: List<Long> = emptyList(),
-) {
-    val start = remember(seed) { if (allowAlpha) seed else seed or 0xff000000L }
-    val initial = remember(seed) { FloatArray(3).also { android.graphics.Color.colorToHSV(start.toInt(), it) } }
-    var hue by rememberSaveable(seed) { mutableFloatStateOf(initial[0]) }
-    var saturation by rememberSaveable(seed) { mutableFloatStateOf(initial[1]) }
-    var brightness by rememberSaveable(seed) { mutableFloatStateOf(initial[2]) }
-    var alpha by rememberSaveable(seed) { mutableFloatStateOf((start ushr 24 and 255) / 255f) }
-    val working = studioColor(hue, saturation, brightness, if (allowAlpha) alpha else 1f)
-    /** Takes a colour over; its opacity only when it brings its own (the "Vorher" field, an 8-digit code). */
+
+/** The colour being mixed, as hue, saturation, brightness and opacity. Survives rotation. */
+@Stable internal class ColorDraft(hue: Float, saturation: Float, brightness: Float, alpha: Float, val allowAlpha: Boolean) {
+    var hue by mutableFloatStateOf(hue)
+    var saturation by mutableFloatStateOf(saturation)
+    var brightness by mutableFloatStateOf(brightness)
+    var alpha by mutableFloatStateOf(alpha)
+    val value: Long get() = studioColor(hue, saturation, brightness, if (allowAlpha) alpha else 1f)
+
+    /** Takes a colour over; its opacity only when it brings its own (the "Vorher" colour, an 8-digit code). */
     fun choose(color: Long, withAlpha: Boolean = false) {
         val hsv = FloatArray(3).also { android.graphics.Color.colorToHSV(color.toInt(), it) }
         // A grey keeps the hue the strip shows, so the next drag does not jump to red.
@@ -93,43 +90,21 @@ internal fun ColorStudioDialog(
         saturation = hsv[1]; brightness = hsv[2]
         if (allowAlpha && withAlpha) alpha = (color ushr 24 and 255) / 255f
     }
-    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-        ReleaseDialogWindowOnDispose()
-        Surface(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 24.dp).widthIn(max = 520.dp).testTag("advanced-color-dialog"),
-            shape = RoundedCornerShape(30.dp), color = MaterialTheme.colorScheme.surfaceContainerLow, tonalElevation = 2.dp) {
-            Column(Modifier.imePadding().verticalScroll(rememberScrollState()).padding(start = 20.dp, end = 20.dp, top = 18.dp, bottom = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    FittedText(tr("Eigene Farbe"), Modifier.weight(1f).semantics { heading() }, style = MaterialTheme.typography.headlineSmall)
-                    IconButton(onDismiss) { AppIcon(R.drawable.ic_close, tr("Farbauswahl schließen")) }
-                }
-                previewContent?.invoke(working)
-                BeforeAfter(start, working, allowAlpha) { color, withAlpha -> choose(color, withAlpha) }
-                SaturationBrightnessField(hue, saturation, brightness) { s, v -> saturation = s; brightness = v }
-                GradientStrip(tr("Farbton"), hue / 360f, { hue = (it * 360f).coerceIn(0f, 359.99f) },
-                    Brush.horizontalGradient((0..6).map { Color.hsv((it * 60f).coerceAtMost(359.99f), 1f, 1f) }),
-                    Color.hsv(hue, 1f, 1f), "hue-strip", describe = { tr("%1\$s Grad", (it * 360).roundToInt()) })
-                if (allowAlpha) GradientStrip(tr("Deckkraft"), alpha, { alpha = it },
-                    Brush.horizontalGradient(listOf(Color(working).copy(alpha = 0f), Color(working).copy(alpha = 1f))),
-                    Color(working), "alpha-strip", checker = true, describe = { tr("%1\$s Prozent", (it * 100).roundToInt()) })
-                Suggestions(working, recentColors, themeAccentColor) { choose(it) }
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.End),
-                    verticalAlignment = Alignment.CenterVertically) {
-                    TextButton(onDismiss, Modifier.heightIn(min = 48.dp)) { Text(tr("Abbrechen")) }
-                    val fill = Color(working).copy(alpha = 1f)
-                    Button({ onConfirm(working) }, Modifier.heightIn(min = 52.dp).pressScale(.95f).testTag("advanced-color-apply")
-                        .semantics { stateDescription = colorHex(working, allowAlpha) },
-                        colors = ButtonDefaults.buttonColors(containerColor = fill, contentColor = contrastContentColor(fill)),
-                        contentPadding = PaddingValues(horizontal = 22.dp)) {
-                        AppIcon(R.drawable.ic_check, null, Modifier.size(20.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Text(tr("Übernehmen"), fontWeight = FontWeight.SemiBold)
-                    }
-                }
-            }
+
+    companion object {
+        fun of(color: Long, allowAlpha: Boolean): ColorDraft {
+            val start = if (allowAlpha) color else color or 0xff000000L
+            val hsv = FloatArray(3).also { android.graphics.Color.colorToHSV(start.toInt(), it) }
+            return ColorDraft(hsv[0], hsv[1], hsv[2], (start ushr 24 and 255) / 255f, allowAlpha)
         }
+        val Saver = listSaver<ColorDraft, Any>(
+            save = { listOf(it.hue, it.saturation, it.brightness, it.alpha, it.allowAlpha) },
+            restore = { ColorDraft(it[0] as Float, it[1] as Float, it[2] as Float, it[3] as Float, it[4] as Boolean) })
     }
 }
+
+@Composable internal fun rememberColorDraft(seed: Long, allowAlpha: Boolean): ColorDraft =
+    rememberSaveable(seed, allowAlpha, saver = ColorDraft.Saver) { ColorDraft.of(seed, allowAlpha) }
 
 /** HSV (and alpha) to an ARGB colour as the app stores it. */
 internal fun studioColor(hue: Float, saturation: Float, brightness: Float, alpha: Float = 1f): Long =
@@ -151,75 +126,269 @@ internal fun colorHarmonies(color: Long): List<Long> {
     }
 }
 
-/** Before and after side by side; "Aa" shows how text reads on the new colour. A tap on "Vorher" goes back. */
-@Composable private fun BeforeAfter(before: Long, after: Long, allowAlpha: Boolean, onPick: (Long, Boolean) -> Unit) {
-    var hex by remember { mutableStateOf(colorHex(after, allowAlpha).removePrefix("#")) }
-    var typing by remember { mutableStateOf(false) }
-    LaunchedEffect(after, typing) { if (!typing) hex = colorHex(after, allowAlpha).removePrefix("#") }
-    Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Row(Modifier.weight(1f).height(64.dp).clip(RoundedCornerShape(20.dp)).border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(20.dp))
-            .testTag("color-before-after"), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-            val old = Color(before)
-            Box(Modifier.weight(.36f).fillMaxHeight().checkerboard().background(old)
-                .clickable(onClickLabel = tr("Zurücksetzen"), role = Role.Button) { onPick(before, true) }
-                .semantics(mergeDescendants = true) { contentDescription = tr("Vorher %1\$s", colorHex(before, allowAlpha)) }
-                .testTag("color-before"), contentAlignment = Alignment.BottomStart) {
-                Text(tr("Vorher"), Modifier.padding(8.dp), style = MaterialTheme.typography.labelSmall, color = contrastContentColor(old.copy(alpha = 1f)))
-            }
-            val new = Color(after)
-            Box(Modifier.weight(.64f).fillMaxHeight().checkerboard().background(new)
-                .semantics(mergeDescendants = true) { contentDescription = tr("Neu %1\$s", colorHex(after, allowAlpha)) },
-                contentAlignment = Alignment.Center) {
-                Text("Aa", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = contrastContentColor(new.copy(alpha = 1f)))
-            }
-        }
-        OutlinedTextField(hex, { text ->
-            val clean = text.uppercase().filter { it in "0123456789ABCDEF" }.take(if (allowAlpha) 8 else 6)
-            hex = clean
-            parseColorHex(clean, allowAlpha)?.let { onPick(it, clean.length == 8) }
-        }, Modifier.width(128.dp).onFocusChanged { typing = it.isFocused }.testTag("color-hex"),
-            label = { Text(tr("Hex-Code")) }, prefix = { Text("#") }, singleLine = true,
-            isError = parseColorHex(hex, allowAlpha) == null,
-            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, autoCorrectEnabled = false, imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(onDone = { typing = false }))
+/**
+ * A plain-language name for [color] – "Dunkles Blau", "Helles Grün", "Rosa", "Grau" – from its HCT
+ * hue, chroma and tone, so everyone knows what they picked without reading a hex code.
+ */
+internal fun colorName(color: Long): String {
+    val hct = Hct.fromInt(color.toInt() or 0xff000000.toInt())
+    val tone = hct.tone; val chroma = hct.chroma; val hue = hct.hue
+    if (chroma < 7.0 || (chroma < 12.0 && (tone > 92.0 || tone < 12.0))) return when {
+        tone >= 95.0 -> tr("Weiß")
+        tone >= 72.0 -> tr("Hellgrau")
+        tone >= 38.0 -> tr("Grau")
+        tone >= 12.0 -> tr("Dunkelgrau")
+        else -> tr("Schwarz")
+    }
+    val warm = hue < 95.0 || hue >= 345.0
+    if (warm && tone < 46.0 && chroma < 48.0 && hue in 20.0..95.0) return if (tone < 26.0) tr("Dunkles %1\$s", tr("Braun")) else tr("Braun")
+    val base = when {
+        hue >= 345.0 || hue < 40.0 -> if (tone > 74.0) "Rosa" else "Rot"
+        hue < 80.0 -> "Orange"
+        hue < 120.0 -> "Gelb"
+        hue < 170.0 -> "Grün"
+        hue < 225.0 -> "Türkis"
+        hue < 290.0 -> "Blau"
+        hue < 320.0 -> "Violett"
+        else -> if (tone > 74.0) "Rosa" else "Pink"
+    }
+    val name = tr(base)
+    return when {
+        base == "Rosa" -> if (chroma < 22.0) tr("Gedecktes %1\$s", name) else name
+        tone > 74.0 -> tr("Helles %1\$s", name)
+        tone < 30.0 -> tr("Dunkles %1\$s", name)
+        chroma < 22.0 -> tr("Gedecktes %1\$s", name)
+        chroma > 68.0 -> tr("Kräftiges %1\$s", name)
+        else -> name
     }
 }
 
-/** Strength (left → right) and brightness (top → bottom) of the current hue, followed by the finger at once. */
-@Composable private fun SaturationBrightnessField(hue: Float, saturation: Float, brightness: Float, onChange: (Float, Float) -> Unit) {
+/**
+ * What is chosen: the new colour large, with its name and code, and the colour it started from.
+ * A tap on "Vorher" brings the old colour back. [after] null = the design's own colour.
+ */
+@Composable internal fun ColorHero(before: Long?, after: Long?, allowAlpha: Boolean, autoLabel: String, onRevert: () -> Unit,
+    modifier: Modifier = Modifier) {
+    Row(modifier.fillMaxWidth().testTag("color-hero"), verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+        Box(Modifier.size(64.dp).clip(RoundedCornerShape(20.dp)).border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(20.dp))
+            .then(if (after != null) Modifier.checkerboard().background(Color(after)) else Modifier.automaticSwatch())
+            .semantics { contentDescription = after?.let { tr("Neu %1\$s", colorHex(it, allowAlpha)) } ?: autoLabel },
+            contentAlignment = Alignment.Center) {
+            after?.let { Text("Aa", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold,
+                color = contrastContentColor(Color(it).copy(alpha = 1f))) }
+        }
+        Column(Modifier.weight(1f)) {
+            Text(after?.let { colorName(it) } ?: autoLabel, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold,
+                maxLines = 2, modifier = Modifier.testTag("color-name"))
+            Text(after?.let { colorHex(it, allowAlpha) } ?: tr("Farbe des Designs"), style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        if (before != after) Surface(onRevert, Modifier.heightIn(min = 48.dp).testTag("color-before"), shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.surfaceContainerHighest) {
+            Row(Modifier.padding(start = 8.dp, end = 12.dp, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Box(Modifier.size(28.dp).clip(CircleShape).border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
+                    .then(if (before != null) Modifier.checkerboard().background(Color(before)) else Modifier.automaticSwatch()))
+                Text(tr("Vorher"), style = MaterialTheme.typography.labelLarge)
+            }
+        }
+    }
+}
+
+/** The design's own colour, shown as a quiet diagonal stripe (no colour of its own). */
+private fun Modifier.automaticSwatch(): Modifier = drawBehind {
+    drawRect(Color(0xFFE9E9EE))
+    val step = 7.dp.toPx(); var x = -size.height
+    while (x < size.width) { drawLine(Color(0xFFB9B9C2), Offset(x, size.height), Offset(x + size.height, 0f), 1.5.dp.toPx()); x += step }
+}
+
+/**
+ * The mixing tools: a field for strength (left → right) and brightness (top → bottom), a rainbow
+ * strip for the hue and, where a colour may be see-through, a strip for its opacity. [fieldHeight]
+ * adapts to the room; nothing here may be placed inside a scrolling container.
+ */
+@Composable internal fun ColorMixer(draft: ColorDraft, onChange: () -> Unit, fieldHeight: Dp = 200.dp) {
+    val changed by rememberUpdatedState(onChange)
+    Column(Modifier.fillMaxWidth().testTag("color-mixer"), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        SaturationBrightnessField(draft.hue, draft.saturation, draft.brightness, fieldHeight) { s, v ->
+            draft.saturation = s; draft.brightness = v; changed() }
+        HueStrip(draft.hue) { draft.hue = it; changed() }
+        if (draft.allowAlpha) GradientStrip(tr("Deckkraft"), draft.alpha, { draft.alpha = it; changed() },
+            Brush.horizontalGradient(listOf(Color(draft.value).copy(alpha = 0f), Color(draft.value).copy(alpha = 1f))),
+            Color(draft.value), "alpha-strip", checker = true, describe = { tr("%1\$s Prozent", (it * 100).roundToInt()) })
+    }
+}
+
+/** Below the mixer (this part may scroll): the hex code, colours that go with it, and recent ones. */
+@Composable internal fun ColorMixerExtras(draft: ColorDraft, recent: List<Long>, accent: Long?, onChange: () -> Unit) {
+    val changed by rememberUpdatedState(onChange)
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        HexField(draft.value, draft.allowAlpha) { color, withAlpha -> draft.choose(color, withAlpha); changed() }
+        Suggestions(draft.value, recent, accent) { draft.choose(it); changed() }
+    }
+}
+
+/** Fits the mixer into [available] height: the field shrinks first, never below a comfortable size. */
+internal fun mixerFieldHeight(available: Dp, allowAlpha: Boolean): Dp {
+    val strips = if (allowAlpha) 132.dp else 74.dp
+    return if (available == Dp.Infinity) 200.dp else (available - strips - 72.dp).coerceIn(128.dp, 220.dp)
+}
+
+/**
+ * "Eigene Farbe" as its own dialog (favourites): header, the chosen colour, the mixer standing still,
+ * the extras scrolling below it, and "Abbrechen" / "Übernehmen" always in reach.
+ */
+@Composable
+internal fun ColorStudioDialog(
+    seed: Long,
+    allowAlpha: Boolean,
+    onConfirm: (Long) -> Unit,
+    onDismiss: () -> Unit,
+    previewContent: (@Composable (Long?) -> Unit)? = null,
+    themeAccentColor: Long? = null,
+    recentColors: List<Long> = emptyList(),
+) {
+    val start = remember(seed) { if (allowAlpha) seed else seed or 0xff000000L }
+    val draft = rememberColorDraft(start, allowAlpha)
+    var working by remember { mutableLongStateOf(draft.value) }
+    val sync = { working = draft.value }
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        ReleaseDialogWindowOnDispose()
+        Surface(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 20.dp).widthIn(max = 520.dp).testTag("advanced-color-dialog"),
+            shape = RoundedCornerShape(30.dp), color = MaterialTheme.colorScheme.surfaceContainerLow, tonalElevation = 2.dp) {
+            BoxWithConstraints {
+                val room = maxHeight
+                Column(Modifier.imePadding().padding(top = 14.dp, bottom = 14.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        FittedText(tr("Eigene Farbe"), Modifier.weight(1f).semantics { heading() }, style = MaterialTheme.typography.headlineSmall)
+                        IconButton(onDismiss) { AppIcon(R.drawable.ic_close, tr("Farbauswahl schließen")) }
+                    }
+                    ColorHero(start, working, allowAlpha, tr("Automatisch"), { draft.choose(start, true); sync() }, Modifier.padding(horizontal = 20.dp))
+                    Box(Modifier.padding(horizontal = 20.dp)) {
+                        ColorMixer(draft, sync, mixerFieldHeight(if (room == Dp.Infinity) room else room * .48f, allowAlpha))
+                    }
+                    Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp)
+                        .testTag("color-extras"), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        previewContent?.invoke(working)
+                        ColorMixerExtras(draft, recentColors, themeAccentColor, sync)
+                    }
+                    Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.End),
+                        verticalAlignment = Alignment.CenterVertically) {
+                        TextButton(onDismiss, Modifier.heightIn(min = 48.dp)) { Text(tr("Abbrechen")) }
+                        ApplyColorButton(working, allowAlpha, { onConfirm(working) }, Modifier.testTag("advanced-color-apply"))
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** "Übernehmen" in the chosen colour itself, so the last look before confirming is the colour. */
+@Composable internal fun ApplyColorButton(color: Long?, allowAlpha: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier,
+    fillWidth: Boolean = false) {
+    val fill = color?.let { Color(it).copy(alpha = 1f) } ?: MaterialTheme.colorScheme.primary
+    Button(onClick, modifier.heightIn(min = 52.dp).then(if (fillWidth) Modifier.fillMaxWidth() else Modifier).pressScale(.96f)
+        .semantics { stateDescription = color?.let { colorHex(it, allowAlpha) } ?: tr("Designstandard") },
+        colors = ButtonDefaults.buttonColors(containerColor = fill, contentColor = contrastContentColor(fill)),
+        contentPadding = PaddingValues(horizontal = 22.dp)) {
+        AppIcon(R.drawable.ic_check, null, Modifier.size(20.dp))
+        Spacer(Modifier.width(8.dp))
+        Text(tr("Übernehmen"), fontWeight = FontWeight.SemiBold)
+    }
+}
+
+/** The hex code for those who have one; a complete code takes over at once. */
+@Composable private fun HexField(color: Long, allowAlpha: Boolean, onPick: (Long, Boolean) -> Unit) {
+    var hex by remember { mutableStateOf(colorHex(color, allowAlpha).removePrefix("#")) }
+    var typing by remember { mutableStateOf(false) }
+    LaunchedEffect(color, typing) { if (!typing) hex = colorHex(color, allowAlpha).removePrefix("#") }
+    OutlinedTextField(hex, { text ->
+        val clean = text.uppercase().filter { it in "0123456789ABCDEF" }.take(if (allowAlpha) 8 else 6)
+        hex = clean
+        parseColorHex(clean, allowAlpha)?.let { onPick(it, clean.length == 8) }
+    }, Modifier.fillMaxWidth().onFocusChanged { typing = it.isFocused }.testTag("color-hex"),
+        label = { Text(tr("Hex-Code")) }, prefix = { Text("#") }, singleLine = true,
+        isError = parseColorHex(hex, allowAlpha) == null,
+        supportingText = if (parseColorHex(hex, allowAlpha) == null) ({ Text(tr(if (allowAlpha) "6 oder 8 Zeichen, 0–9 und A–F" else "6 Zeichen, 0–9 und A–F")) }) else null,
+        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, autoCorrectEnabled = false, imeAction = ImeAction.Done),
+        keyboardActions = KeyboardActions(onDone = { typing = false }))
+}
+
+/** Strength (left → right) and brightness (top → bottom) of the current hue; a loupe above the finger shows the colour. */
+@Composable private fun SaturationBrightnessField(hue: Float, saturation: Float, brightness: Float, height: Dp, onChange: (Float, Float) -> Unit) {
     val change by rememberUpdatedState(onChange)
     val haptics = LocalHapticFeedback.current
     val quiet = LocalAppSettings.current.reduceMotion
     var pressed by remember { mutableStateOf(false) }
-    val thumb by animateFloatAsState(if (pressed) 1.28f else 1f, if (quiet) snap() else spring(dampingRatio = .5f, stiffness = 600f), label = "field-thumb")
+    val lift by animateFloatAsState(if (pressed) 1f else 0f, if (quiet) snap() else spring(dampingRatio = .55f, stiffness = 520f), label = "field-loupe")
     val pure = Color.hsv(hue.coerceIn(0f, 359.99f), 1f, 1f)
-    Box(Modifier.fillMaxWidth().height(196.dp).clip(RoundedCornerShape(24.dp)).testTag("color-field")
-        .semantics {
-            contentDescription = tr("Farbfläche: links blass, rechts kräftig, oben hell, unten dunkel")
-            stateDescription = tr("Farbstärke %1\$s Prozent, Helligkeit %2\$s Prozent", (saturation * 100).roundToInt(), (brightness * 100).roundToInt())
-            customActions = listOf(
-                CustomAccessibilityAction(tr("Kräftiger")) { change((saturation + .1f).coerceAtMost(1f), brightness); true },
-                CustomAccessibilityAction(tr("Blasser")) { change((saturation - .1f).coerceAtLeast(0f), brightness); true },
-                CustomAccessibilityAction(tr("Heller")) { change(saturation, (brightness + .1f).coerceAtMost(1f)); true },
-                CustomAccessibilityAction(tr("Dunkler")) { change(saturation, (brightness - .1f).coerceAtLeast(0f)); true })
-        }
-        .pointerInput(Unit) {
-            fun at(p: Offset) = change((p.x / size.width).coerceIn(0f, 1f), (1f - p.y / size.height).coerceIn(0f, 1f))
-            awaitEachGesture {
-                val down = awaitFirstDown()
-                down.consume(); pressed = true
-                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                at(down.position)
-                drag(down.id) { it.consume(); at(it.position) }
-                pressed = false
+    val current = Color.hsv(hue.coerceIn(0f, 359.99f), saturation, brightness)
+    val shape = RoundedCornerShape(24.dp)
+    // Touch lives on the unclipped frame: the rounded corners must not swallow a tap on pure white or black.
+    Box(Modifier.fillMaxWidth().height(height).testTag("color-field")
+            .semantics {
+                contentDescription = tr("Farbfläche: links blass, rechts kräftig, oben hell, unten dunkel")
+                stateDescription = tr("Farbstärke %1\$s Prozent, Helligkeit %2\$s Prozent", (saturation * 100).roundToInt(), (brightness * 100).roundToInt())
+                customActions = listOf(
+                    CustomAccessibilityAction(tr("Kräftiger")) { change((saturation + .1f).coerceAtMost(1f), brightness); true },
+                    CustomAccessibilityAction(tr("Blasser")) { change((saturation - .1f).coerceAtLeast(0f), brightness); true },
+                    CustomAccessibilityAction(tr("Heller")) { change(saturation, (brightness + .1f).coerceAtMost(1f)); true },
+                    CustomAccessibilityAction(tr("Dunkler")) { change(saturation, (brightness - .1f).coerceAtLeast(0f)); true })
             }
+            .pointerInput(Unit) {
+                var edge = false
+                fun at(p: Offset) {
+                    val s = (p.x / size.width).coerceIn(0f, 1f); val v = (1f - p.y / size.height).coerceIn(0f, 1f)
+                    // A light tick when the finger reaches an edge: pure colour, white, black or grey.
+                    val atEdge = s == 0f || s == 1f || v == 0f || v == 1f
+                    if (atEdge && !edge) haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    edge = atEdge
+                    change(s, v)
+                }
+                awaitEachGesture {
+                    val down = awaitFirstDown()
+                    down.consume(); pressed = true; edge = false
+                    at(down.position)
+                    drag(down.id) { it.consume(); at(it.position) }
+                    pressed = false
+                }
+            }) {
+        Box(Modifier.matchParentSize().clip(shape)
+            .drawBehind {
+                drawRect(pure)
+                drawRect(Brush.horizontalGradient(listOf(Color.White, Color.White.copy(alpha = 0f))))
+                drawRect(Brush.verticalGradient(listOf(Color.Transparent, Color.Black)))
+                drawRoundRect(Color.Black.copy(alpha = .08f), style = Stroke(1.dp.toPx()), cornerRadius = CornerRadius(24.dp.toPx()))
+            })
+        // Thumb and loupe are drawn outside the clipped field: whole at the edges, and floating above the finger.
+        Canvas(Modifier.matchParentSize()) {
+            val thumb = Offset(saturation * size.width, (1f - brightness) * size.height)
+            drawStudioThumb(thumb, current, 1f + .2f * lift)
+            if (lift <= .01f) return@Canvas
+            val r = 26.dp.toPx() * lift
+            val above = thumb.y - 58.dp.toPx() > -24.dp.toPx()
+            val c = Offset(thumb.x.coerceIn(r, size.width - r), if (above) thumb.y - 58.dp.toPx() * lift else thumb.y + 58.dp.toPx() * lift)
+            drawCircle(Color.Black.copy(alpha = .22f * lift), r + 2.dp.toPx(), c + Offset(0f, 2.dp.toPx()))
+            drawCircle(Color.White, r + 1.5.dp.toPx(), c)
+            drawCircle(current, r - 2.dp.toPx(), c)
         }
-        .drawBehind {
-            drawRect(pure)
-            drawRect(Brush.horizontalGradient(listOf(Color.White, Color.White.copy(alpha = 0f))))
-            drawRect(Brush.verticalGradient(listOf(Color.Transparent, Color.Black)))
-            drawStudioThumb(Offset(saturation * size.width, (1f - brightness) * size.height), Color.hsv(hue.coerceIn(0f, 359.99f), saturation, brightness), thumb)
-        })
+    }
+}
+
+/** The hue as a rainbow strip; a light tick at each of the six pure colours. */
+@Composable private fun HueStrip(hue: Float, onChange: (Float) -> Unit) {
+    val haptics = LocalHapticFeedback.current
+    var sextant by remember { mutableIntStateOf(floor(hue / 60f).toInt()) }
+    GradientStrip(tr("Farbton"), hue / 360f, { position ->
+        val next = (position * 360f).coerceIn(0f, 359.99f)
+        val nearest = (next / 60f).roundToInt() % 6
+        if (abs(next - nearest * 60f).let { minOf(it, 360f - it) } < 2.5f && nearest != sextant) {
+            sextant = nearest; haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+        }
+        onChange(next)
+    }, Brush.horizontalGradient((0..6).map { Color.hsv((it * 60f).coerceAtMost(359.99f), 1f, 1f) }),
+        Color.hsv(hue.coerceIn(0f, 359.99f), 1f, 1f), "hue-strip", describe = { tr("%1\$s Grad", (it * 360).roundToInt()) })
 }
 
 /** A rounded strip with a thumb: the rainbow for the hue, the colour's own fade for the opacity. */
@@ -229,12 +398,12 @@ internal fun colorHarmonies(color: Long): List<Long> {
     val quiet = LocalAppSettings.current.reduceMotion
     var pressed by remember { mutableStateOf(false) }
     val thumb by animateFloatAsState(if (pressed) 1.25f else 1f, if (quiet) snap() else spring(dampingRatio = .5f, stiffness = 600f), label = "$tag-thumb")
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(Modifier.fillMaxWidth()) {
             Text(label, Modifier.weight(1f), style = MaterialTheme.typography.labelLarge)
             Text(describe(position), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        Box(Modifier.fillMaxWidth().height(32.dp).testTag(tag)
+        Box(Modifier.fillMaxWidth().height(36.dp).testTag(tag)
             .semantics {
                 contentDescription = label
                 progressBarRangeInfo = ProgressBarRangeInfo(position, 0f..1f)
@@ -242,7 +411,7 @@ internal fun colorHarmonies(color: Long): List<Long> {
                 setProgress { change(it.coerceIn(0f, 1f)); true }
             }
             .pointerInput(Unit) {
-                val pad = 16.dp.toPx()
+                val pad = 18.dp.toPx()
                 fun at(p: Offset) = change(((p.x - pad) / (size.width - 2 * pad)).coerceIn(0f, 1f))
                 awaitEachGesture {
                     val down = awaitFirstDown()
@@ -252,8 +421,8 @@ internal fun colorHarmonies(color: Long): List<Long> {
                 }
             }
             .drawBehind {
-                val pad = 16.dp.toPx()
-                val track = Size(size.width, 22.dp.toPx())
+                val pad = 18.dp.toPx()
+                val track = Size(size.width, 24.dp.toPx())
                 val top = (size.height - track.height) / 2
                 val radius = CornerRadius(track.height / 2)
                 if (checker) drawCheckers(Offset(0f, top), track, radius)
@@ -294,10 +463,9 @@ private fun DrawScope.checkers(topLeft: Offset, size: Size, cell: Float) {
 }
 
 /** Transparent colours show the checker pattern behind them. */
-private fun Modifier.checkerboard(): Modifier = drawBehind { drawCheckers(Offset.Zero, size, CornerRadius.Zero) }
+internal fun Modifier.checkerboard(): Modifier = drawBehind { drawCheckers(Offset.Zero, size, CornerRadius.Zero) }
 
 /** Colours to tap: the current colour's steps, its partners, the app design's accent and the recently chosen ones. */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable private fun Suggestions(color: Long, recent: List<Long>, accent: Long?, onChoose: (Long) -> Unit) {
     val steps = remember(color) { colorToneSteps(color) }
     val partners = remember(color) { colorHarmonies(color) }
@@ -311,13 +479,13 @@ private fun Modifier.checkerboard(): Modifier = drawBehind { drawCheckers(Offset
 }
 
 @OptIn(ExperimentalLayoutApi::class)
-@Composable private fun SwatchRow(title: String, colors: List<Long>, current: Long, onChoose: (Long) -> Unit, labels: List<String>? = null, tag: String? = null) {
+@Composable internal fun SwatchRow(title: String, colors: List<Long>, current: Long?, onChoose: (Long) -> Unit, labels: List<String>? = null, tag: String? = null) {
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Text(title, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
         FlowRow(Modifier.fillMaxWidth().then(if (tag != null) Modifier.testTag(tag) else Modifier), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
             colors.forEachIndexed { i, c ->
-                ColorSwatch(c, labels?.getOrNull(i)?.let { "$it, ${colorHex(c)}" } ?: colorHex(c),
-                    (c or 0xff000000L) == (current or 0xff000000L)) { onChoose(c) }
+                ColorSwatch(c, labels?.getOrNull(i)?.let { "$it, ${colorName(c)}" } ?: colorName(c),
+                    current != null && (c or 0xff000000L) == (current or 0xff000000L)) { onChoose(c) }
             }
         }
     }
@@ -336,10 +504,45 @@ private fun Modifier.checkerboard(): Modifier = drawBehind { drawCheckers(Offset
             }
             Column(Modifier.weight(1f)) {
                 Text(tr("Eigene Farbe wählen"), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-                Text(color?.let { tr("Gemischt: %1\$s", colorHex(it)) } ?: tr("Frei mischen oder Hex-Code eingeben"),
+                Text(color?.let { tr("Gemischt: %1\$s", colorName(it)) } ?: tr("Frei mischen oder Hex-Code eingeben"),
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             AppIcon(R.drawable.ic_chevron_right, null, Modifier.size(22.dp))
+        }
+    }
+}
+
+/** "Auswahl" or "Mischen": a two-part switch whose capsule glides with a spring. */
+@Composable internal fun ColorModeSwitch(mixing: Boolean, onChange: (Boolean) -> Unit, modifier: Modifier = Modifier) {
+    val quiet = LocalAppSettings.current.reduceMotion
+    val position by animateFloatAsState(if (mixing) 1f else 0f, if (quiet) snap() else spring(dampingRatio = .72f, stiffness = 520f), label = "color-mode")
+    val scheme = MaterialTheme.colorScheme
+    BoxWithConstraints(modifier.fillMaxWidth().height(48.dp).clip(CircleShape).background(scheme.surfaceContainerHighest)
+        .semantics { selectableGroup() }.testTag("color-mode")) {
+        val half = maxWidth / 2
+        Box(Modifier.padding(4.dp).width(half - 8.dp).fillMaxHeight().offset(x = half * position)
+            .clip(CircleShape).background(scheme.primaryContainer))
+        Row(Modifier.fillMaxSize()) {
+            listOf(false to tr("Auswahl"), true to tr("Mischen")).forEach { (mix, label) ->
+                val selected = mix == mixing
+                Box(Modifier.weight(1f).fillMaxHeight().clip(CircleShape)
+                    .clickable(role = Role.Tab) { if (!selected) onChange(mix) }
+                    .semantics { this.selected = selected }.testTag(if (mix) "color-mode-mix" else "color-mode-choose"),
+                    contentAlignment = Alignment.Center) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        if (mix) Canvas(Modifier.size(16.dp)) {
+                            drawCircle(Brush.sweepGradient((0..6).map { Color.hsv((it * 60f).coerceAtMost(359.99f), .85f, 1f) }))
+                        } else Canvas(Modifier.size(16.dp)) {
+                            val r = size.minDimension / 4
+                            listOf(Color(0xFFE53935), Color(0xFF43A047), Color(0xFF1E88E5), Color(0xFFFDD835)).forEachIndexed { i, c ->
+                                drawCircle(c, r * .9f, Offset(r + (i % 2) * 2 * r, r + (i / 2) * 2 * r))
+                            }
+                        }
+                        Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                            color = if (selected) scheme.onPrimaryContainer else scheme.onSurfaceVariant)
+                    }
+                }
+            }
         }
     }
 }

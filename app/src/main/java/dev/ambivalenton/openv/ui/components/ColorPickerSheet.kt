@@ -13,6 +13,8 @@ import dev.ambivalenton.openv.ui.components.AppModalBottomSheet as ModalBottomSh
 import dev.ambivalenton.openv.localization.tr
 
 import android.graphics.Color as NativeColor
+import androidx.compose.animation.*
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -50,13 +52,19 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import dev.ambivalenton.openv.OpenVApp
 import dev.ambivalenton.openv.R
 import dev.ambivalenton.openv.data.model.DesignColorSet
+import dev.ambivalenton.openv.data.model.reduceMotion
 import dev.ambivalenton.openv.data.model.DesignColorRole
 import dev.ambivalenton.openv.color.utilities.Hct
 import dev.ambivalenton.openv.ui.ColorPickerViewModel
 import dev.ambivalenton.openv.ui.theme.*
 import kotlin.math.*
 
-/** Presets first. Advanced HSV editing is an independent, cancellable dialog. */
+/**
+ * Build 112 · one colour surface, no stacked dialogs. Above, always: what is chosen (large, with its
+ * name and code) and "Vorher". Then "Auswahl" (the curated colours, recent ones and favourites) or
+ * "Mischen" (field, hue and opacity standing still – only the suggestions below them scroll, so
+ * scrolling never changes the colour). Below, always: "Übernehmen" in the chosen colour.
+ */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ColorPickerSheet(
@@ -73,117 +81,98 @@ fun ColorPickerSheet(
     val owner = LocalViewModelStoreOwner.current
     val paletteVm: ColorPickerViewModel? =
         if (designColors == null && app != null && owner != null)
-            viewModel(
-                factory =
-                    remember(app) {
-                        viewModelFactory { initializer { app.koin.get<ColorPickerViewModel>() } }
-                    }
-            )
+            viewModel(factory = remember(app) { viewModelFactory { initializer { app.koin.get<ColorPickerViewModel>() } } })
         else null
     val history = paletteVm?.history?.collectAsStateWithLifecycle()?.value
     val error = paletteVm?.error?.collectAsStateWithLifecycle()?.value
     var chosen by rememberSaveable(seed) { mutableStateOf(seed) }
-    var advanced by rememberSaveable { mutableStateOf(false) }
-    var manualColor by rememberSaveable(seed) { mutableStateOf<Long?>(null) }
-    fun confirm(color: Long?) {
-        if (paletteVm != null) paletteVm.save(color) { onSave(color) }
-        else onSave(color)
+    var mixing by rememberSaveable { mutableStateOf(false) }
+    val fallback = seed ?: designColors?.swatches?.firstOrNull()?.color ?: favoriteColorPresets.first().seed
+    val draft = rememberColorDraft(fallback, allowAlpha)
+    fun pick(color: Long?) {
+        chosen = color?.let { if (allowAlpha) it else it or 0xff000000L }
+        color?.let { draft.choose(it, withAlpha = true) }
     }
+    fun confirm(color: Long?) {
+        if (paletteVm != null) paletteVm.save(color) { onSave(color) } else onSave(color)
+    }
+    val quiet = LocalAppSettings.current.reduceMotion
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         shape = MaterialTheme.shapes.extraLarge,
     ) {
         ReleaseDialogWindowOnDispose()
-        Box(Modifier.fillMaxWidth()) {
-        Column(
-            Modifier.imePadding().fillMaxWidth().heightIn(max=LocalConfiguration.current.screenHeightDp.dp*.85f)
-                .testTag("color-picker-content"),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            // Keep the picker and close actions reachable while scrolling long colour menus.
-            Row(Modifier.fillMaxWidth().padding(start=24.dp,end=8.dp),verticalAlignment=Alignment.CenterVertically) {
-                FittedText(title,Modifier.weight(1f),style=MaterialTheme.typography.headlineSmall)
-                IconButton(onDismiss,Modifier.testTag("color-picker-close")) {
-                    AppIcon(R.drawable.ic_close,tr("Farbauswahl schließen"))
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val room = LocalConfiguration.current.screenHeightDp.dp * .88f
+            Column(Modifier.imePadding().fillMaxWidth().heightIn(max = room).testTag("color-picker-content"),
+                verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(Modifier.fillMaxWidth().padding(start = 24.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    FittedText(title, Modifier.weight(1f).semantics { heading() }, style = MaterialTheme.typography.headlineSmall)
+                    IconButton(onDismiss, Modifier.testTag("color-picker-close")) { AppIcon(R.drawable.ic_close, tr("Farbauswahl schließen")) }
                 }
-            }
-            Column(Modifier.weight(1f,fill=false).verticalScroll(rememberScrollState()).padding(start=24.dp,end=24.dp,bottom=104.dp),
-                verticalArrangement=Arrangement.spacedBy(12.dp)) {
-            previewContent?.let {preview->Box(Modifier.fillMaxWidth().testTag("color-role-preview")) {preview(chosen)}}
-            FilterChip(chosen == null, { chosen = null }, label = { Text(inheritLabel) })
-            FittedText(designColors?.let {tr("Farbwelt · %1\$s",it.title)} ?: tr("20 Material-Paletten"),
-                Modifier.testTag("color-palette-context"),style = MaterialTheme.typography.titleSmall)
-            if(designColors!=null) {
-                Text(tr(if(designColors.role==DesignColorRole.BACKGROUND || designColors.role==DesignColorRole.SURFACE)
-                    "5 Hintergrundfarben" else if(designColors.role==DesignColorRole.TEXT) "10 Textfarben" else "10 Akzentfarben"),
-                    style=MaterialTheme.typography.labelLarge)
-                DesignColorGrid(designColors,chosen) {chosen=it}
-            } else FlowRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                maxItemsInEachRow = 5,
-            ) {
-                favoriteColorPresets.forEach { preset ->
-                    ColorSwatch(preset.seed, preset.name, chosen == preset.seed) {
-                        chosen = preset.seed
-                    }
-                }
-            }
-            CustomColorEntry(manualColor, { advanced = true }, Modifier.testTag("color-picker-advanced"))
-            history?.let { colors ->
-                Section(tr("Gespeicherte Farben")) {
-                    if (colors.recent.isNotEmpty()) {
-                        FittedText(tr("Zuletzt verwendet"), style = MaterialTheme.typography.titleSmall)
-                        FlowRow {
-                            colors.recent.forEach { color ->
-                                ColorSwatch(color, colorHex(color, allowAlpha), chosen == color) {
-                                    chosen = if (allowAlpha) color else color or 0xff000000L
+                ColorHero(seed, chosen, allowAlpha, inheritLabel, { pick(seed) }, Modifier.padding(horizontal = 24.dp))
+                ColorModeSwitch(mixing, { mix ->
+                    mixing = mix
+                    // Mixing starts from what is chosen; the design's own colour starts from its first suggestion.
+                    if (mix && chosen == null) chosen = draft.value
+                }, Modifier.padding(horizontal = 24.dp))
+                Box(Modifier.weight(1f, fill = false)) {
+                    AnimatedContent(mixing, label = "color-page", transitionSpec = {
+                        if (quiet) EnterTransition.None togetherWith ExitTransition.None
+                        else (slideInHorizontally(spring(dampingRatio = .86f, stiffness = 420f)) { w -> if (targetState) w / 5 else -w / 5 } +
+                            fadeIn(spring(stiffness = 600f))) togetherWith
+                            (slideOutHorizontally(spring(dampingRatio = .86f, stiffness = 420f)) { w -> if (targetState) -w / 5 else w / 5 } +
+                                fadeOut(spring(stiffness = 900f)))
+                    }) { mix ->
+                        if (mix) BoxWithConstraints {
+                            val height = mixerFieldHeight(maxHeight, allowAlpha)
+                            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                Box(Modifier.padding(horizontal = 24.dp)) { ColorMixer(draft, { chosen = draft.value }, height) }
+                                Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()).padding(horizontal = 24.dp)
+                                    .testTag("color-extras"), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    previewContent?.let { preview -> Box(Modifier.fillMaxWidth().testTag("color-role-preview")) { preview(chosen) } }
+                                    ColorMixerExtras(draft, history?.recent.orEmpty(), designColors?.swatches?.firstOrNull()?.color) { chosen = draft.value }
+                                    Spacer(Modifier.height(4.dp))
                                 }
                             }
-                        }
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        FittedText(
-                            tr("Farb-Favoriten"),
-                            Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleSmall,
-                        )
-                        TextButton(
-                            { chosen?.let { paletteVm.toggleFavorite(it) } },
-                            enabled = chosen != null,
-                        ) {
-                            Text(if (chosen in colors.favorites) tr("★ Entfernen") else tr("☆ Merken"))
-                        }
-                    }
-                    FlowRow {
-                        colors.favorites.forEach { color ->
-                            ColorSwatch(color, colorHex(color, allowAlpha), chosen == color) {
-                                chosen = if (allowAlpha) color else color or 0xff000000L
+                        } else Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 24.dp).testTag("color-choices"),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            previewContent?.let { preview -> Box(Modifier.fillMaxWidth().testTag("color-role-preview")) { preview(chosen) } }
+                            FilterChip(chosen == null, { pick(null) }, label = { Text(inheritLabel) })
+                            FittedText(designColors?.let { tr("Farbwelt · %1\$s", it.title) } ?: tr("20 Material-Paletten"),
+                                Modifier.testTag("color-palette-context"), style = MaterialTheme.typography.titleSmall)
+                            if (designColors != null) {
+                                Text(tr(if (designColors.role == DesignColorRole.BACKGROUND || designColors.role == DesignColorRole.SURFACE)
+                                    "5 Hintergrundfarben" else if (designColors.role == DesignColorRole.TEXT) "10 Textfarben" else "10 Akzentfarben"),
+                                    style = MaterialTheme.typography.labelLarge)
+                                DesignColorGrid(designColors, chosen) { pick(it) }
+                            } else FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, maxItemsInEachRow = 5) {
+                                favoriteColorPresets.forEach { preset ->
+                                    ColorSwatch(preset.seed, preset.name, chosen == preset.seed) { pick(preset.seed) }
+                                }
                             }
+                            history?.let { colors ->
+                                if (colors.recent.isNotEmpty())
+                                    SwatchRow(tr("Zuletzt verwendet"), colors.recent, chosen, { pick(it) })
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    FittedText(tr("Farb-Favoriten"), Modifier.weight(1f), style = MaterialTheme.typography.titleSmall)
+                                    TextButton({ chosen?.let { paletteVm.toggleFavorite(it) } }, enabled = chosen != null) {
+                                        Text(if (chosen in colors.favorites) tr("★ Entfernen") else tr("☆ Merken"))
+                                    }
+                                }
+                                if (colors.favorites.isNotEmpty()) SwatchRow(tr("Gemerkt"), colors.favorites, chosen, { pick(it) })
+                            }
+                            error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                            Spacer(Modifier.height(4.dp))
                         }
                     }
                 }
+                ApplyColorButton(chosen, allowAlpha, { confirm(chosen) },
+                    Modifier.padding(start = 24.dp, end = 24.dp, bottom = 16.dp).testTag("color-picker-apply"), fillWidth = true)
             }
-            error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-            }
-        }
-        ColorApplyFab(chosen,{confirm(chosen)},Modifier.align(Alignment.BottomEnd).padding(20.dp).testTag("color-picker-apply"))
         }
     }
-    if (advanced)
-        AdvancedColorDialog(
-            chosen ?: designColors?.swatches?.firstOrNull()?.color ?: favoriteColorPresets.first().seed,
-            allowAlpha,
-            {
-                chosen = it
-                manualColor = it
-                advanced = false
-            },
-            { advanced = false },
-            previewContent,
-            recentColors = history?.recent.orEmpty(),
-        )
 }
 
 /** Fixed five equal columns. Chunked rows cannot reflow into a 4+4+2 palette on compact screens. */

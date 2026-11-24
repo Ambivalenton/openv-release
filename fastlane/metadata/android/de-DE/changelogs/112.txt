@@ -1,0 +1,4 @@
+• Farbwahl: Scrollen ändert keine Farbe mehr – Farbfläche und Streifen stehen still, nur die Vorschläge scrollen.
+• Ein Farbblatt mit „Auswahl | Mischen“, Farbname, Code, „Vorher“ und „Übernehmen“ in der gewählten Farbe.
+• Lupe über dem Finger beim Mischen; Ecken erreichen reines Weiß und Schwarz.
+• Bildschirm-Epochen: Anzeigetafel auf dem Bildschirm ihrer Zeit, von der Röhre bis E-Ink.

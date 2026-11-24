@@ -1,0 +1,4 @@
+• Colour choice: scrolling no longer changes a colour – field and strips stand still, only suggestions scroll.
+• One colour sheet with "Choose | Mix", colour name, code, "Before" and "Apply" in the chosen colour.
+• A loupe above your finger while mixing; corners reach pure white and black.
+• Screen eras: the board on the screen of its time, from tube to e-ink.

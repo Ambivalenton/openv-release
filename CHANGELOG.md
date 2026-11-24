@@ -4,6 +4,13 @@ Alle nennenswerten Änderungen an Öpen-V. Versionen folgen [Semantic Versioning
 
 ## [Unveröffentlicht]
 
+## [1.1.2] (112) · 2026-11-24
+
+- Farbwahl neu aufgebaut: Beim Scrollen ändert sich keine Farbe mehr. Farbfläche, Farbton- und Deckkraft-Streifen liegen nie mehr in einem scrollenden Bereich; nur die Vorschläge darunter scrollen. Bisher konnte ein Finger, der scrollen wollte, auf der Fläche landen und die Farbe verstellen.
+- Eine Fläche statt drei Ebenen: Das Farbblatt hat oben immer die gewählte Farbe groß mit Namen („Dunkles Blau“, „Helles Grün“), Code und „Vorher“ zum Zurücksetzen, darunter den Umschalter „Auswahl | Mischen“ und unten „Übernehmen“ in der gewählten Farbe. „Eigene Farbe wählen“ öffnet keinen zweiten Dialog mehr; die Mischpalette führt direkt hinein.
+- Mischen: Eine Lupe über dem Finger zeigt die Farbe, die der Finger verdeckt; feine Haptik an den Rändern der Fläche und bei den reinen Farbtönen. Ein Tipp in die Ecken erreicht jetzt reines Weiß, Schwarz und die volle Farbe (vorher schluckten die abgerundeten Ecken den Tipp), die Markierung bleibt auch am Rand ganz sichtbar. Der Hex-Code erklärt, welche Zeichen er erwartet.
+- Bildschirm-Epochen: Die Tafel „Display“ zeigt jede Epoche auf dem Bildschirm ihrer Zeit – Röhrenmonitor in Weiß, Blau, Bernstein und Grün für 1984 bis 1997, frühe Flachbildschirme ab 2000, E-Ink für 2011 und ein heller Kachel-Bildschirm für 2012 – statt das Systemfenster der App-Theme-Tafel zu wiederholen.
+
 ## [1.1.1] (111) · 2026-11-24
 
 - Glas-Designs schweben über farbigem Licht: Hinter den Scheiben liegen vier große, weiche Lichter in den Farbtönen des Designs (Akzent, Zweitfarbe und ihre Mischungen), sodass Karten, Leiste und Netzplan wirklich wie Glas wirken. Die Lichter bleiben nahe an der Helligkeit des Grundes; Texte darauf bleiben in jedem Glas-Design lesbar (geprüft für alle).
@@ -93,7 +100,8 @@ Erste Version.
 - Fahrplandaten von VRR OpenService, Haltestellenverzeichnis für Deutschland offline mitgeliefert.
 - Test-App „Öpen-V · Vorschau“ (`dev.ambivalenton.openv.next`), die sich neben der Store-App installiert.
 
-[Unveröffentlicht]: https://github.com/Ambivalenton/openv-release/compare/v1.1.1...HEAD
+[Unveröffentlicht]: https://github.com/Ambivalenton/openv-release/compare/v1.1.2...HEAD
+[1.1.2]: https://github.com/Ambivalenton/openv-release/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/Ambivalenton/openv-release/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/Ambivalenton/openv-release/compare/v1.0.9...v1.1.0
 [1.0.9]: https://github.com/Ambivalenton/openv-release/compare/v1.0.8...v1.0.9

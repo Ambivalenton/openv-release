@@ -47,6 +47,22 @@ class Build110DesignTest {
             .forEach { assertEquals(it.name, it.dark, displayProfile(it).light) }
     }
 
+    /** Build 112 · every screen era shows the board on the screen of its year: tubes, early flat panels, e-ink. */
+    @Test fun screenErasUseTheScreensOfTheirYear() {
+        val eras = groupedAppThemes().first { it.first == AppThemeGroup.SYSTEMS }.second
+        val tube = eras.filter { it.title.take(4).toInt() < 2000 }
+        assertTrue(tube.size >= 4)
+        tube.forEach { assertEquals(it.name, DisplayMaterial.CRT, displayProfile(it).material) }
+        eras.forEach { t ->
+            val d = displayProfile(t)
+            assertNotEquals(t.name, DisplayMaterial.OS_WINDOW, d.material)
+            assertEquals(t.name, t.dark, d.light)
+            assertTrue(t.name, ColorUtils.calculateContrast(d.ink, d.background or android.graphics.Color.BLACK) >= 4.5)
+            assertTrue(t.name, ColorUtils.calculateContrast(d.accent, d.background or android.graphics.Color.BLACK) >= 4.5)
+        }
+        assertEquals(DisplayMaterial.E_PAPER, displayProfile(AppTheme.OS_ANDROID_HOLO).material)
+    }
+
     @Test fun collectionScreensStayReadable() {
         (collection("TEXTILE_") + collection("MINERAL_") + collection("PET_") + collection("GAME_")).forEach { t ->
             val d = displayProfile(t)
