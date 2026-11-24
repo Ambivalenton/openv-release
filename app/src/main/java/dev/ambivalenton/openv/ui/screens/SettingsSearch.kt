@@ -118,8 +118,9 @@ fun settingsPath(page: SettingsPage): String = generateSequence(page) { it.paren
                     verticalAlignment = Alignment.CenterVertically) {
                     AppIcon(R.drawable.ic_search, null, Modifier.size(20.dp), tint = colors.onSurfaceVariant)
                     Box(Modifier.weight(1f).padding(start = 10.dp)) {
-                        if (query.isEmpty()) Text(tr("Einstellungen durchsuchen"), style = MaterialTheme.typography.bodyMedium,
-                            color = colors.onSurfaceVariant, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                        // The hint shrinks to fit (wide theme fonts, large type) instead of ending in "…".
+                        if (query.isEmpty()) dev.ambivalenton.openv.ui.components.FittedText(tr("Einstellungen durchsuchen"),
+                            style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 1)
                         inner()
                     }
                     if (query.isNotEmpty()) IconButton({ query = "" }) { AppIcon(R.drawable.ic_close, tr("Suche leeren"), Modifier.size(18.dp)) }

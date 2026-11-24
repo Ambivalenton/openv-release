@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import dev.ambivalenton.openv.R
 import dev.ambivalenton.openv.data.model.AppSettings
@@ -46,11 +47,12 @@ import dev.ambivalenton.openv.ui.theme.appFrameShadow
                 }
                 Row(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceContainer,MaterialTheme.shapes.large)
                     .padding(6.dp),horizontalArrangement=Arrangement.spacedBy(8.dp),verticalAlignment=Alignment.CenterVertically) {
-                    Text(tr("Übersicht"),Modifier.background(MaterialTheme.colorScheme.primaryContainer,MaterialTheme.shapes.large)
-                        .padding(horizontal=12.dp,vertical=8.dp),style=MaterialTheme.typography.labelSmall,
-                        color=MaterialTheme.colorScheme.onPrimaryContainer)
-                    Text(tr("Suchen"),style=MaterialTheme.typography.labelSmall)
-                    Text(tr("Abfahrten"),style=MaterialTheme.typography.labelSmall)
+                    // Build 113: three equal slots like the real navigation; a label shrinks, never breaks.
+                    FittedText(tr("Übersicht"),Modifier.weight(1f).background(MaterialTheme.colorScheme.primaryContainer,MaterialTheme.shapes.large)
+                        .padding(horizontal=6.dp,vertical=8.dp),style=MaterialTheme.typography.labelSmall,
+                        color=MaterialTheme.colorScheme.onPrimaryContainer,textAlign=TextAlign.Center,maxLines=1)
+                    FittedText(tr("Suchen"),Modifier.weight(1f),style=MaterialTheme.typography.labelSmall,textAlign=TextAlign.Center,maxLines=1)
+                    FittedText(tr("Abfahrten"),Modifier.weight(1f),style=MaterialTheme.typography.labelSmall,textAlign=TextAlign.Center,maxLines=1)
                 }
             }
         }

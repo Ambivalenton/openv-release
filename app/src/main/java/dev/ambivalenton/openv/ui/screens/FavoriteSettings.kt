@@ -20,8 +20,6 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.BasicText
-import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -36,7 +34,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.ambivalenton.openv.R
@@ -198,10 +195,9 @@ internal fun FavoriteRadiusSetting(meters: Int, onCommit: (Int) -> Unit) {
                         // Only the kind of text cross-fades (off / metres / always); the metres count runs live.
                         AnimatedContent(when (value) { 0 -> 0; FAVORITE_RADIUS_ALWAYS -> 2; else -> 1 },
                             transitionSpec = { fadeIn(tween(if (calm) 0 else 160)) togetherWith fadeOut(tween(if (calm) 0 else 110)) }, label = "favorite-radius-text") { kind ->
-                            BasicText(favoriteRadiusText(when (kind) { 0 -> 0; 2 -> FAVORITE_RADIUS_ALWAYS; else -> value.takeIf { it in 1..FAVORITE_RADIUS_MAX } ?: FAVORITE_RADIUS_DEFAULT }),
-                                Modifier.fillMaxWidth().testTag("favorite-radius-value"),
-                                style = MaterialTheme.typography.bodyMedium.copy(color = colors.onPrimaryContainer, textAlign = TextAlign.Center, lineHeight = TextUnit.Unspecified),
-                                maxLines = 3, autoSize = TextAutoSize.StepBased(minFontSize = 10.sp, maxFontSize = MaterialTheme.typography.bodyMedium.fontSize, stepSize = .5.sp))
+                            FittedText(favoriteRadiusText(when (kind) { 0 -> 0; 2 -> FAVORITE_RADIUS_ALWAYS; else -> value.takeIf { it in 1..FAVORITE_RADIUS_MAX } ?: FAVORITE_RADIUS_DEFAULT }),
+                                Modifier.fillMaxWidth().testTag("favorite-radius-value"), color = colors.onPrimaryContainer,
+                                textAlign = TextAlign.Center, style = MaterialTheme.typography.bodyMedium, maxLines = 3)
                         }
                     }
                 }

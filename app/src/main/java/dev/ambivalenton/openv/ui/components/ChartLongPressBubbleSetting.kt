@@ -6,8 +6,6 @@ import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.BasicText
-import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -78,7 +76,9 @@ internal class SliderSpeechShape(private val body:Shape,private val tipFraction:
                 Surface(Modifier.offset(x=left).width(width).fillMaxHeight().testTag("$tag-bubble"),shape=SliderSpeechShape(appCorner(18.dp),fraction,position<=.001f,position>=.999f),color=colors.primaryContainer,contentColor=colors.onPrimaryContainer,border=BorderStroke(.8.dp,colors.primary.copy(alpha=.45f)),shadowElevation=2.dp){
                     Box(Modifier.appPanelDecoration().padding(start=12.dp,end=12.dp,top=10.dp,bottom=20.dp),contentAlignment=Alignment.Center){
                         AnimatedContent(displayed,transitionSpec={fadeIn(tween(if(calm)0 else 160)) togetherWith fadeOut(tween(if(calm)0 else 110))},label="action-bubble-text"){index->
-                            BasicText(options[index.coerceIn(options.indices)],Modifier.fillMaxWidth().testTag("$tag-value"),style=MaterialTheme.typography.bodyMedium.copy(color=colors.onPrimaryContainer,textAlign=TextAlign.Center,lineHeight=TextUnit.Unspecified),maxLines=3,autoSize=TextAutoSize.StepBased(minFontSize=10.sp,maxFontSize=MaterialTheme.typography.bodyMedium.fontSize,stepSize=.5.sp))
+                            // Build 113: shrinks and wraps between words only ("Kompaktansicht öffnen" never as "Kompaktansich/t").
+                            FittedText(options[index.coerceIn(options.indices)],Modifier.fillMaxWidth().testTag("$tag-value"),color=colors.onPrimaryContainer,
+                                textAlign=TextAlign.Center,style=MaterialTheme.typography.bodyMedium,maxLines=3)
                         }
                     }
                 }

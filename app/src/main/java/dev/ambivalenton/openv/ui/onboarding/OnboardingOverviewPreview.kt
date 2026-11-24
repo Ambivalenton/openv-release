@@ -2,15 +2,12 @@
 package dev.ambivalenton.openv.ui.onboarding
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.BasicText
-import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.*
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.*
 import dev.ambivalenton.openv.data.model.*
 import dev.ambivalenton.openv.localization.tr
@@ -70,10 +67,9 @@ internal fun mordorOverviewExample():Pair<Favorite,Trip> {
             else->tr("Fiktives Beispiel · Reise nach Mordor")
         },style=MaterialTheme.typography.labelMedium)
         QuoteFrame(QuoteDecoration.MATERIAL_CARD,Modifier.fillMaxWidth().then(if(fillHeight)Modifier.weight(1f) else Modifier)) {color->
-            BasicText(text,Modifier.fillMaxWidth().then(if(fillHeight)Modifier.fillMaxHeight() else Modifier.height(240.dp)).testTag("onboarding-overview-text"),
-                style=MaterialTheme.typography.bodyLarge.copy(color=color,lineHeight=TextUnit.Unspecified),
-                softWrap=true,overflow=TextOverflow.Clip,
-                autoSize=TextAutoSize.StepBased(minFontSize=.5.sp,maxFontSize=22.sp,stepSize=.25.sp),onTextLayout=onTextLayout)
+            // As large as the card allows (up to 22 sp), wrapping only between words.
+            dev.ambivalenton.openv.ui.components.FittedText(text,Modifier.fillMaxWidth().then(if(fillHeight)Modifier.fillMaxHeight() else Modifier.height(240.dp)).testTag("onboarding-overview-text"),
+                color=color,fontSize=22.sp,style=MaterialTheme.typography.bodyLarge,onTextLayout=onTextLayout,maxLines=Int.MAX_VALUE)
         }
     }
 }

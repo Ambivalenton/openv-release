@@ -6,8 +6,6 @@ import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.BasicText
-import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -41,7 +39,8 @@ import kotlin.math.roundToInt
                 Surface(Modifier.offset(x=left).width(width).fillMaxHeight().testTag("walking-navigation-bubble"),shape=SliderSpeechShape(appCorner(18.dp),fraction,position<=.001f,position>=.999f),color=colors.primaryContainer,contentColor=colors.onPrimaryContainer,border=BorderStroke(.8.dp,colors.primary.copy(alpha=.45f)),shadowElevation=2.dp){
                     Box(Modifier.appPanelDecoration().padding(start=12.dp,end=12.dp,top=10.dp,bottom=20.dp),contentAlignment=Alignment.Center){
                         AnimatedContent(displayed,transitionSpec={fadeIn(tween(if(calm)0 else 160)) togetherWith fadeOut(tween(if(calm)0 else 110))},label="action-bubble-text"){index->
-                            BasicText(WalkingNavigationMode.entries[index].title,Modifier.fillMaxWidth().testTag("walking-navigation-value"),style=MaterialTheme.typography.bodyMedium.copy(color=colors.onPrimaryContainer,textAlign=TextAlign.Center,lineHeight=TextUnit.Unspecified),maxLines=3,autoSize=TextAutoSize.StepBased(minFontSize=10.sp,maxFontSize=MaterialTheme.typography.bodyMedium.fontSize,stepSize=.5.sp))
+                            FittedText(WalkingNavigationMode.entries[index].title,Modifier.fillMaxWidth().testTag("walking-navigation-value"),color=colors.onPrimaryContainer,
+                                textAlign=TextAlign.Center,style=MaterialTheme.typography.bodyMedium,maxLines=3)
                         }
                     }
                 }

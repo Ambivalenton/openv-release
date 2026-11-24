@@ -149,6 +149,17 @@ class Build113FontTest {
         }
     }
 
+    /** The choice bubbles of the settings ("Favoriten-Symbol frei bewegen") wrap between words, never inside one. */
+    @Test fun aSettingsBubbleNeverBreaksAWord() {
+        show(2f) {
+            Column(Modifier.width(360.dp)) {
+                StepBubbleSetting("Favorit im Netzplan gedrückt halten", listOf("Nichts", "Favoriten-Symbol frei bewegen", "Kompaktansicht öffnen"),
+                    1, {}, "bubble")
+            }
+        }
+        assertFits("bubble-value")
+    }
+
     /** The search button keeps its shape; a long label takes two lines between words, nothing runs out. */
     @Test fun theSearchButtonKeepsItsShapeAtTheLargestFont() {
         val label = "Verbindung suchen, damit du am Mittwoch um 08:15 ankommst"

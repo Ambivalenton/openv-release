@@ -105,6 +105,75 @@ class DesignGalleryTest {
         compose.onNode(hasText(name) and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Tab)).performClick(); settle()
     }
 
+    /**
+     * Font audit (`OPENV_FONT_AUDIT=1`, with `OPENV_FONT_SCALE`, optionally `OPENV_GALLERY` designs): every text
+     * on the three pages and on all settings pages two levels deep, reported when a word breaks in the middle
+     * or the text is cut off / runs out of its box. Writes `../audit/fonts.txt`.
+     */
+    @Test fun fontAudit() {
+        assumeTrue("set OPENV_FONT_AUDIT=1", System.getenv("OPENV_FONT_AUDIT") == "1")
+        val wanted = System.getenv("OPENV_GALLERY")?.split(',')?.map { it.trim() }?.filter { it.isNotEmpty() }
+        val themes = wanted?.map { AppTheme.valueOf(it) } ?: listOf(AppTheme.CLASSIC_LIGHT)
+        compose.waitUntil(15_000) { compose.onAllNodesWithTag("main-screen-title").fetchSemanticsNodes().isNotEmpty() }
+        val found = linkedSetOf<String>()
+        val visited = mutableListOf<String>()
+        var before = 0
+        fun audit(where: String) {
+            settle()
+            compose.onAllNodes(SemanticsMatcher.keyIsDefined(androidx.compose.ui.semantics.SemanticsActions.GetTextLayoutResult), useUnmergedTree = true)
+                .fetchSemanticsNodes().forEach { node ->
+                    val results = mutableListOf<androidx.compose.ui.text.TextLayoutResult>()
+                    runCatching { node.config[androidx.compose.ui.semantics.SemanticsActions.GetTextLayoutResult].action?.invoke(results) }
+                    val l = results.firstOrNull() ?: return@forEach
+                    val text = l.layoutInput.text.text
+                    if (text.isBlank()) return@forEach
+                    if (node.boundsInRoot.width < 1f || node.boundsInRoot.height < 1f) return@forEach
+                    val issues = listOfNotNull(
+                        "word broken".takeIf { !dev.ambivalenton.openv.ui.components.breaksOnlyBetweenWords(l) },
+                        // Whole pixels: a text measured at its intrinsic width may be a fraction wider than its box.
+                        (0 until l.lineCount).maxOf { l.getLineRight(it) - l.getLineLeft(it) }.minus(l.size.width)
+                            .takeIf { it > 2f }?.let { "cut off in width (${it.toInt()} px)" },
+                        (l.multiParagraph.height - l.size.height).takeIf { it > 2f }?.let { "cut off in height (${it.toInt()} px)" },
+                        "cut off (lines)".takeIf { l.multiParagraph.didExceedMaxLines })
+                    if (issues.isNotEmpty()) found += "$where · ${issues.joinToString("+")} · ${l.layoutInput.style.fontSize} · " +
+                        "${node.boundsInRoot.width.toInt()}×${node.boundsInRoot.height.toInt()} · \"${text.replace('\n', '⏎').take(80)}\""
+                }
+            visited += where
+            if (found.size > before) {
+                File("../audit/fonts").mkdirs()
+                val b = shot(); File("../audit/fonts/${where.replace('/', '_')}.png").outputStream().use { b.compress(Bitmap.CompressFormat.PNG, 100, it) }; b.recycle()
+                before = found.size
+            }
+        }
+        fun back() { compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }; settle() }
+        for (theme in themes) {
+            runBlocking { store.updateData { it.copy(settings = it.settings.copy(appTheme = theme)) } }
+            for (page in listOf("Übersicht", "Suchen", "Abfahrten")) { tab(page); audit("${theme.name}/$page") }
+            fun has(tag: String) = compose.onAllNodesWithTag(tag).fetchSemanticsNodes().isNotEmpty()
+            fun open(page: dev.ambivalenton.openv.ui.screens.SettingsPage) =
+                runCatching { compose.onNodeWithTag("settings-${page.name}").performScrollTo().performClick(); settle() }.isSuccess
+            fun root() {
+                repeat(4) { if (!has("settings-page-ROOT") && has("settings-app-bar")) back() }
+                if (!has("settings-app-bar")) { compose.onAllNodesWithContentDescription("Einstellungen öffnen").onFirst().performClick(); settle() }
+            }
+            root(); audit("${theme.name}/settings")
+            val top = dev.ambivalenton.openv.ui.screens.SettingsPage.ROOT.children
+            for (first in top) {
+                root(); if (!open(first)) { visited += "${theme.name}/settings/${first.name} (not reached)"; continue }
+                audit("${theme.name}/settings/${first.name}")
+                for (second in first.children) {
+                    root(); open(first)
+                    if (!open(second)) continue
+                    audit("${theme.name}/settings/${first.name}/${second.name}")
+                }
+            }
+            root(); back()
+        }
+        File("../audit").mkdirs()
+        File("../audit/fonts.txt").writeText(found.joinToString("\n") + "\n\nvisited:\n" + visited.joinToString("\n"))
+        println("FONT AUDIT ${found.size} findings")
+    }
+
     @Test fun gallery() {
         val wanted = System.getenv("OPENV_GALLERY")
         assumeTrue("set OPENV_GALLERY=all, group or theme names", !wanted.isNullOrBlank())

@@ -399,12 +399,10 @@ private fun BoxScope.DeleteZone(zone: NetworkDeleteZone, shown: Float) {
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
     ) {
         AppIcon(R.drawable.ic_delete, null, Modifier.size(22.dp).graphicsLayer { rotationZ = -14f * grow }, tint = ink)
-        androidx.compose.material3.Text(if (over) tr("Loslassen zum Löschen") else tr("Hierhin verschieben, um den Favoriten zu löschen"),
+        dev.ambivalenton.openv.ui.components.FittedText(if (over) tr("Loslassen zum Löschen") else tr("Hierhin verschieben, um den Favoriten zu löschen"),
             Modifier.padding(start = 10.dp, end = 6.dp), color = ink, maxLines = 2,
-            style = MaterialTheme.typography.labelLarge.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold),
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-            autoSize = androidx.compose.foundation.text.TextAutoSize.StepBased(minFontSize = 8.sp,
-                maxFontSize = MaterialTheme.typography.labelLarge.fontSize, stepSize = .5.sp))
+            style = MaterialTheme.typography.labelLarge, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center)
     }
 }
 
