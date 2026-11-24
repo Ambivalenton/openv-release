@@ -70,25 +70,24 @@ val timelinePreviewLines=listOf("42","U1","RE1","S1")
 @Composable fun TimelineDesignPicker(settings:AppSettings,onSelect:(TimelineTheme)->Unit,onDismiss:()->Unit,
     update:((AppSettings)->AppSettings)->Unit) {
     var palette by rememberSaveable {mutableStateOf<TimelineTheme?>(null)}
+    var display by rememberSaveable {mutableStateOf(false)}
     val paletteOrigin=remember {PaletteMorphOrigin()}
     // Hoist the drag draft so every visible style sample uses the same value before persistence.
     var labelDraft by rememberSaveable(settings.timelineLabelControl) {
         mutableFloatStateOf(normalizedTimelineLabelControl(settings.timelineLabelControl))
     }
     val previewSettings=settings.copy(timelineLabelControl=labelDraft)
-    DesignPickerWindow(tr("Balkendiagramm-Design wählen"),"timeline-design-picker",onDismiss,palette!=null,
+    DesignPickerWindow(tr("Balkendiagramm-Design wählen"),"timeline-design-picker",onDismiss,palette!=null || display,
         if(settings.timelineTheme==TimelineTheme.APP_THEME)null else ({palette=settings.timelineTheme}),paletteOrigin) {
-            item(key="timeline-display-options") {
-                SettingsDisclosure(tr("Text & Fußabdrücke"),"timeline-display-options",tr("Beschriftung und Spuren im Balkendiagramm")) {
-                    TimelineLabelControl(previewSettings,onDraftChange={labelDraft=it}){value->update {it.copy(timelineLabelControl=value)}}
-                    FootprintControls(settings,update)
-                }
-            }
+            // Build 114: a subpage of its own (now line, text in the bars, footprints) above the designs.
+            item(key="timeline-display-options") {TimelineDisplayEntry(settings) {display=true}}
+            item(key="timeline-designs-heading") {DesignListHeading(tr("Designs"))}
             items(supportedTimelineThemes.filter { !settings.quietMode || it in quietTimelineThemes },key={it.name}) {theme->
                 TimelineThemeChoice(theme,settings,previewSettings,onSelect)
             }
     }
     palette?.let {theme->TimelinePaletteDialog(previewSettings,theme,{palette=null},update,paletteOrigin)}
+    if(display) TimelineDisplaySheet(previewSettings,update,{labelDraft=it}) {display=false}
 }
 
 @Composable private fun TimelineThemeChoice(theme:TimelineTheme,settings:AppSettings,previewSettings:AppSettings,onSelect:(TimelineTheme)->Unit){

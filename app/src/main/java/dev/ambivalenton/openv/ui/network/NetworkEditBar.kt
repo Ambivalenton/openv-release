@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp
 import dev.ambivalenton.openv.data.model.reduceMotion
 import androidx.compose.ui.layout.layout
+import kotlinx.coroutines.launch
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.graphics.toArgb
@@ -122,8 +123,13 @@ fun NetworkEditBar(
     val transition = updateTransition(editing, label = "network-edit-bar")
     // Opening uses the bouncier fast spatial spring (the bar overshoots and settles); closing the
     // calmer default spring, so the check stays visible a moment longer while it collapses.
+    // Build 114: a softer, longer spring – the bar swings out and settles instead of a short, stiff jolt.
     val progress by transition.animateFloat(
-        transitionSpec = { if (targetState) motion.fastSpatialSpec() else motion.defaultSpatialSpec() },
+        transitionSpec = {
+            if (quiet) androidx.compose.animation.core.snap()
+            else if (targetState) androidx.compose.animation.core.spring(dampingRatio = .7f, stiffness = 330f)
+            else androidx.compose.animation.core.spring(dampingRatio = .92f, stiffness = 520f)
+        },
         label = "network-edit-morph",
     ) { if (it) 1f else 0f }
     val geometry = NetworkEditBarGeometry
@@ -181,7 +187,7 @@ fun NetworkEditBar(
                 val middleWidth = boxWidth
                 val leftWidth = boxWidth
                 // Build 104: the gestures of the edit mode in three short cells across the whole bar.
-                GestureBand(stagger(progress, geometry.SETTINGS_START), onContainer)
+                GestureBand(editing, full, onContainer)
                 // While a favourite is moved, the tools step back (shrink, sink, fade) and the delete zone springs in.
                 val away = zoneIn.coerceIn(0f, 1f)
                 val toolsHidden = Modifier.graphicsLayer {
@@ -341,22 +347,54 @@ class NetworkDeleteZone {
 }
 
 /** The three gestures of the edit mode, each a word and what it does, above the tools. Plain text with thin
- * separators on the bar itself – no box of its own, so it does not read as further buttons. */
+ * separators on the bar itself – no box of its own, so it does not read as further buttons.
+ *
+ * Build 114: laid out once at the open bar's width and anchored to its right end, so the growing bar only
+ * uncovers it (before, every frame measured the text anew at the bar's current width and the labels
+ * jittered). Each cell then springs in on its own, one after another. */
 @Composable
-private fun BoxScope.GestureBand(reveal: Float, ink: Color) {
+private fun BoxScope.GestureBand(open: Boolean, full: Dp, ink: Color) {
     val geometry = NetworkEditBarGeometry
+    val quiet = dev.ambivalenton.openv.ui.theme.LocalAppSettings.current.reduceMotion
     val cells = listOf(tr("Halten und schieben") to tr("Favorit verschieben"), tr("Ziehen") to tr("Linie verbinden"),
         tr("Tippen") to tr("Favorit einstellen"))
+    val arrivals = remember { List(cells.size) { androidx.compose.animation.core.Animatable(0f) } }
+    androidx.compose.runtime.LaunchedEffect(open, quiet) {
+        arrivals.forEachIndexed { index, arrival ->
+            launch {
+                if (open) {
+                    if (!quiet) kotlinx.coroutines.delay(110L + index * 75L)
+                    arrival.animateTo(1f, if (quiet) androidx.compose.animation.core.snap()
+                        else androidx.compose.animation.core.spring(dampingRatio = .58f, stiffness = 360f))
+                } else arrival.animateTo(0f, if (quiet) androidx.compose.animation.core.snap()
+                    else androidx.compose.animation.core.spring(dampingRatio = 1f, stiffness = 900f))
+            }
+        }
+    }
     androidx.compose.foundation.layout.Row(
-        Modifier.align(Alignment.TopStart).padding(start = geometry.INSET, end = geometry.INSET, top = geometry.INSET)
-            .fillMaxWidth().height(geometry.INFO_HEIGHT - geometry.INSET)
-            .graphicsLayer { alpha = (reveal * 1.6f).coerceIn(0f, 1f); translationY = (1f - reveal.coerceIn(0f, 1f)) * 8.dp.toPx() }
+        Modifier.layout { measurable, constraints ->
+                val width = (full - geometry.INSET * 2).roundToPx().coerceAtLeast(0)
+                val height = (geometry.INFO_HEIGHT - geometry.INSET).roundToPx()
+                val placeable = measurable.measure(androidx.compose.ui.unit.Constraints.fixed(width, height))
+                layout(constraints.maxWidth, height) {
+                    placeable.place(constraints.maxWidth - width - geometry.INSET.roundToPx(), geometry.INSET.roundToPx())
+                }
+            }
             .semantics(mergeDescendants = true) {}.testTag("network-gesture-band"),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         cells.forEachIndexed { index, (gesture, effect) ->
-            if (index > 0) Box(Modifier.width(1.dp).height(26.dp).background(ink.copy(alpha = .18f)))
-            androidx.compose.foundation.layout.Column(Modifier.weight(1f).padding(horizontal = 4.dp),
+            val arrival = arrivals[index]
+            if (index > 0) Box(Modifier.width(1.dp).height(26.dp).graphicsLayer { alpha = arrival.value.coerceIn(0f, 1f) }
+                .background(ink.copy(alpha = .18f)))
+            androidx.compose.foundation.layout.Column(Modifier.weight(1f).padding(horizontal = 4.dp)
+                .graphicsLayer {
+                    val a = arrival.value
+                    alpha = a.coerceIn(0f, 1f)
+                    val s = .82f + .18f * a
+                    scaleX = s; scaleY = s
+                    translationY = (1f - a) * 12.dp.toPx()
+                },
                 horizontalAlignment = Alignment.CenterHorizontally) {
                 androidx.compose.material3.Text(gesture, color = ink, maxLines = 1, softWrap = false,
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold),

@@ -1,0 +1,3 @@
+• Bar chart: duration badges by context – the shortest in view in the accent, the longest greyed out, softly animated.
+• Adjustable time line: analogue or digital clock, 12 line styles matching the design, can be hidden.
+• Clearer “Text in the bars”; the plan's edit bar opens more fluidly, shadows appear with their labels.

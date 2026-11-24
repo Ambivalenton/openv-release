@@ -1,0 +1,3 @@
+• Balkendiagramm: Dauer-Abzeichen nach Kontext – kürzeste im Blick in Akzentfarbe, längste ausgegraut, weich animiert.
+• Uhrzeitlinie einstellbar: analoge oder digitale Uhr, 12 Linienstile passend zum Design, ausblendbar.
+• „Text im Balken“ übersichtlicher; Netzplan-Leiste federt flüssiger auf, Schatten erscheinen mit ihren Schildern.

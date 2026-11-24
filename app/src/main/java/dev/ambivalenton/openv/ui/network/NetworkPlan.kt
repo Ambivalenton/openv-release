@@ -820,7 +820,7 @@ fun NetworkPlan(
                     val rim = with(density) { 1.5.dp.toPx() }
                     Box(Modifier.offset { IntOffset((center.x - view.size.width / 2).roundToInt(), (center.y - view.size.height / 2).roundToInt()) }
                         .size(with(density) { view.size.width.toDp() }, with(density) { view.size.height.toDp() })
-                        .graphicsLayer { alpha = 1f - PLAN_DIM * dim }
+                        .graphicsLayer { alpha = 1f - PLAN_DIM * dim; compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.ModulateAlpha }
                         .background(scheme.surfaceContainerHighest, shape)
                         .drawWithContent {
                             drawContent()
@@ -867,7 +867,9 @@ fun NetworkPlan(
                 placeNetworkLabels(boxes, androidx.compose.ui.geometry.Size(widthPx, heightPx), gap).forEach { (id, topLeft) ->
                     val box = boxes.first { it.id == id }
                     Text(favorites[id]?.label.orEmpty(), Modifier.offset { IntOffset(topLeft.x.roundToInt(), topLeft.y.roundToInt()) }
-                        .graphicsLayer { alpha = labelAlpha }
+                        // Build 114: fade every drawing on its own; a layer the size of the plate would cut its
+                        // shadow until the fade ends, so the shadow appeared only after the plate.
+                        .graphicsLayer { alpha = labelAlpha; compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.ModulateAlpha }
                         .size(with(density) { box.size.width.toDp() }, with(density) { box.size.height.toDp() })
                         .then(if (emphasized) Modifier.shapeShadow(RoundedCornerShape(8.dp), 3.dp) else Modifier)
                         .background(plate, RoundedCornerShape(if (emphasized) 8.dp else 6.dp))

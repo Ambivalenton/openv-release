@@ -47,6 +47,8 @@ data class AppSettings(
     val autoRefresh: Boolean = true,
     val timelineTheme: TimelineTheme = TimelineTheme.ORIGINAL,
     val timelineLabelControl: Float = 1f,
+    /** Build 114 · the bar chart's now line: shown or not, clock, stroke, weight, colour. */
+    val nowLine: NowLinePreferences = NowLinePreferences(),
     val timelineSeed: Long? = null,
     val timelinePalettes:Map<TimelineTheme,TimelinePaletteOverride> = emptyMap(),
     val timelineLineColors: Map<LineType, Long> = emptyMap(),
