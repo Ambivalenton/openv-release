@@ -140,8 +140,11 @@ internal class DisplayPen(private val canvas: Canvas, private val d: DisplayProf
         fit: Boolean = false) {
         if (width <= 1f || height <= 1f || value.isEmpty()) return
         if ((d.face == DisplayFace.DOTS || d.face == DisplayFace.PIXELS) && role != DisplayRole.SYMBOL) {
+            if (d.material == DisplayMaterial.EMBROIDERY) { crossStitch(value, x, cy, width, min(size * .92f, height * .9f), color, center, alignEnd, fit); return }
             dots(value, x, cy, width, min(size * .92f, height * .9f), color, center, alignEnd, fit); return
         }
+        // A letter board only has capitals.
+        @Suppress("NAME_SHADOWING") val value = if (d.material == DisplayMaterial.LETTERBOARD) value.uppercase() else value
         paint.reset(); paint.isAntiAlias = true; paint.isSubpixelText = true
         paint.color = color; paint.textSize = size
         paint.typeface = Typeface.create(face, if (bold) Typeface.BOLD else Typeface.NORMAL)
@@ -172,6 +175,17 @@ internal class DisplayPen(private val canvas: Canvas, private val d: DisplayProf
                 val second = paint.color; paint.color = ColorUtils.setAlphaComponent(d.tint, 190)
                 canvas.drawText(shown, xx + 1.1f, baseline + .7f, paint); paint.color = second
                 canvas.drawText(shown, xx, baseline, paint)
+            }
+            d.material == DisplayMaterial.ENGRAVED -> {
+                // Cut into the plate: a shade above-left, a catch light below-right, then the filled letter.
+                val fill = paint.color
+                paint.color = ColorUtils.setAlphaComponent(Color.BLACK, if (d.light) 110 else 170); canvas.drawText(shown, xx - .55f, baseline - .55f, paint)
+                paint.color = ColorUtils.setAlphaComponent(Color.WHITE, if (d.light) 190 else 60); canvas.drawText(shown, xx + .6f, baseline + .6f, paint)
+                paint.color = fill; canvas.drawText(shown, xx, baseline, paint)
+            }
+            d.material == DisplayMaterial.LETTERBOARD -> {
+                paint.letterSpacing = .06f
+                paint.setShadowLayer(.6f, 0f, .9f, 0x99000000.toInt()); canvas.drawText(shown, xx, baseline, paint)
             }
             d.material == DisplayMaterial.PAINTING -> {
                 val shade = if (d.light) 0x40FFFFFF else 0x66000000
@@ -207,6 +221,26 @@ internal class DisplayPen(private val canvas: Canvas, private val d: DisplayProf
             canvas.drawRect(l, cy - .3f, r, cy + .3f, tile)
         }
         paint.textAlign = Paint.Align.LEFT
+    }
+
+    /** Cross-stitch: every lit cell of the matrix alphabet becomes a small X in thread, with a hint of its shadow. */
+    private fun crossStitch(raw: String, x: Float, cy: Float, width: Float, height: Float, color: Int, center: Boolean, alignEnd: Boolean, fit: Boolean) {
+        val cell = (height / MatrixFont.CAP).let { if (fit) min(it, width / MatrixFont.width(raw.trim()).coerceAtLeast(1)) else it }
+        val fitted = MatrixFont.fit(raw, floor(width / cell + .01f).toInt().coerceAtLeast(1))
+        if (fitted.isBlank()) return
+        val (cols, lit) = MatrixFont.mask(fitted)
+        val drawn = cols * cell
+        val left = when { center -> x + (width - drawn) / 2; alignEnd -> x + width - drawn; else -> x }
+        val top = cy - height / 2
+        val stitch = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeCap = Paint.Cap.ROUND; strokeWidth = max(.55f, cell * .34f) }
+        val shade = ColorUtils.setAlphaComponent(Color.BLACK, if (d.light) 40 else 90)
+        val inset = cell * .16f
+        for (row in 0 until MatrixFont.ROWS) for (col in 0 until cols) {
+            if (!lit[row * cols + col]) continue
+            val l = left + col * cell + inset; val t = top + row * cell + inset; val r = l + cell - 2 * inset; val b = t + cell - 2 * inset
+            stitch.color = shade; canvas.drawLine(l + .3f, t + .4f, r + .3f, b + .4f, stitch); canvas.drawLine(r + .3f, t + .4f, l + .3f, b + .4f, stitch)
+            stitch.color = color; canvas.drawLine(l, t, r, b, stitch); canvas.drawLine(r, t, l, b, stitch)
+        }
     }
 
     private fun dots(raw: String, x: Float, cy: Float, width: Float, height: Float, color: Int, center: Boolean, alignEnd: Boolean,
@@ -329,6 +363,37 @@ private fun displayBackground(c: Canvas, d: DisplayProfile, theme: AppTheme, w: 
         DisplayMaterial.PAINTING -> paintingBackground(c, d, w, h, l, bg, accent, p)
         DisplayMaterial.GAME -> gameBackground(c, d, w, h, l, bg, accent, p)
         DisplayMaterial.OS_WINDOW -> c.drawColor(bg)
+        DisplayMaterial.EMBROIDERY -> {
+            // Linen: warp and weft threads with slight irregularity.
+            c.drawColor(bg)
+            val thread = if (d.light) Color.BLACK else Color.WHITE
+            var x = 0f; var i = 0
+            while (x < w && i < 600) { p.line(thread, .5f, (10 + noise(i, 3) * 10).toInt()); c.drawLine(x, 0f, x, h, p); x += 1.6f; i++ }
+            var y = 0f; i = 0
+            while (y < h && i < 600) { p.line(thread, .5f, (8 + noise(i, 7) * 8).toInt()); c.drawLine(0f, y, w, y, p); y += 1.6f; i++ }
+        }
+        DisplayMaterial.ENGRAVED -> {
+            // Polished stone: a soft highlight, two veins in the theme's second colour.
+            p.shader = RadialGradient(w * .28f, h * .18f, max(w, h) * .95f, intArrayOf(ColorUtils.blendARGB(bg, Color.WHITE, if (d.light) .55f else .12f), bg,
+                ColorUtils.blendARGB(bg, Color.BLACK, if (d.light) .1f else .35f)), floatArrayOf(0f, .55f, 1f), Shader.TileMode.CLAMP)
+            c.drawRect(0f, 0f, w, h, p); p.shader = null
+            if (decoration) repeat(2) { k ->
+                p.line(d.tint, .9f - k * .3f, if (d.light) 60 else 70); val path = Path(); path.moveTo(-4f, h * (.25f + k * .45f))
+                var x = 0f; var n = 0
+                while (x < w + 8 && n < 80) { path.lineTo(x, h * (.25f + k * .45f) + sin(x / w * 9f + k * 2f) * h * .06f + (noise(n, 11 + k) - .5f) * 4f); x += w / 24f; n++ }
+                c.drawPath(path, p)
+            }
+        }
+        DisplayMaterial.LETTERBOARD -> {
+            // Felt with grooves: a dark line and a lighter lip every few dp.
+            c.drawColor(bg)
+            var y = 2f; var i = 0
+            while (y < h && i < 400) {
+                p.solid(Color.BLACK, 70); c.drawRect(0f, y, w, y + .55f, p)
+                p.solid(Color.WHITE, 12); c.drawRect(0f, y + .55f, w, y + 1f, p)
+                y += 3.2f; i++
+            }
+        }
     }
     when (d.motif) {
         DisplayMotif.SPECTRUM -> {
@@ -751,6 +816,15 @@ private fun displayHeader(c: Canvas, d: DisplayProfile, theme: AppTheme, w: Floa
         }
         DisplayMaterial.SPLIT_FLAP -> bg
         DisplayMaterial.REFLECTIVE_LCD -> { p.solid(ink, 160); c.drawRect(pad, y, w - pad, y + .8f, p); ink }
+        DisplayMaterial.EMBROIDERY -> {
+            p.line(d.tint, 1f, 230); p.pathEffect = DashPathEffect(floatArrayOf(3.2f, 2f), 0f)
+            c.drawLine(pad, y, w - pad, y, p); p.pathEffect = null; accent
+        }
+        DisplayMaterial.ENGRAVED -> {
+            p.solid(Color.BLACK, if (d.light) 70 else 120); c.drawRect(pad, y - .6f, w - pad, y, p)
+            p.solid(Color.WHITE, if (d.light) 160 else 40); c.drawRect(pad, y, w - pad, y + .6f, p); ink
+        }
+        DisplayMaterial.LETTERBOARD -> ink
     }
 }
 
@@ -778,6 +852,10 @@ private fun displayRowBackground(c: Canvas, d: DisplayProfile, index: Int, left:
             p.solid(accent, 46); c.drawRect(left + 6, bottom - .6f, right - 6, bottom, p) }
         DisplayMaterial.GAME -> if (d.motif == DisplayMotif.POCKET) { p.solid(ink, 40); var x = left; while (x < right) { c.drawRect(x, bottom - 1.5f, x + 1.5f, bottom, p); x += 4f } }
         DisplayMaterial.REFLECTIVE_LCD -> { p.solid(ink, 34); c.drawRect(left, bottom - .7f, right, bottom, p) }
+        DisplayMaterial.EMBROIDERY -> { p.line(d.tint, .8f, 120); p.pathEffect = DashPathEffect(floatArrayOf(2.4f, 2.2f), 0f)
+            c.drawLine(left + 2, bottom - .8f, right - 2, bottom - .8f, p); p.pathEffect = null }
+        DisplayMaterial.ENGRAVED -> { p.solid(Color.BLACK, if (d.light) 40 else 90); c.drawRect(left, bottom - .9f, right, bottom - .45f, p)
+            p.solid(Color.WHITE, if (d.light) 110 else 26); c.drawRect(left, bottom - .45f, right, bottom, p) }
         else -> Unit
     }
 }
@@ -822,6 +900,22 @@ private fun displayBadge(c: Canvas, pen: DisplayPen, d: DisplayProfile, row: Dep
             p.solid(Color.BLACK, 80); c.drawRect(x, cy - .35f, x + w, cy + .35f, p)
             pen.text(row.lineName, x + 2, cy, w - 4, size, h * .9f, bg, bold = true, center = true, role = DisplayRole.TITLE)
         }
+        DisplayMaterial.EMBROIDERY -> {
+            // A sewn-on patch with a running stitch just inside its edge.
+            p.solid(d.tint); c.drawRoundRect(x, y, x + w, y + h, 2.5f, 2.5f, p)
+            p.line(bg, .7f, 200); p.pathEffect = DashPathEffect(floatArrayOf(1.6f, 1.2f), 0f)
+            c.drawRoundRect(x + 1.6f, y + 1.6f, x + w - 1.6f, y + h - 1.6f, 1.5f, 1.5f, p); p.pathEffect = null
+            val label = if (ColorUtils.calculateContrast(Color.WHITE, d.tint or Color.BLACK) >= 4.5) Color.WHITE else 0xFF1B1B1B.toInt()
+            pen.text(row.lineName, x + 2, cy, w - 4, size, h * .78f, label, bold = true, center = true, role = DisplayRole.SYMBOL)
+        }
+        DisplayMaterial.ENGRAVED -> {
+            // An inlaid plaque: bevelled edges, the line name cut into it.
+            p.solid(ColorUtils.blendARGB(bg, d.tint, .35f)); c.drawRoundRect(x, y, x + w, y + h, 1.5f, 1.5f, p)
+            p.solid(Color.WHITE, if (d.light) 150 else 50); c.drawRect(x, y + h - .7f, x + w, y + h, p)
+            p.solid(Color.BLACK, if (d.light) 90 else 140); c.drawRect(x, y, x + w, y + .7f, p)
+            pen.text(row.lineName, x + 2, cy, w - 4, size, h * .85f, ink, bold = true, center = true, role = DisplayRole.BADGE)
+        }
+        DisplayMaterial.LETTERBOARD -> pen.text(row.lineName, x, cy, w, size, h * .9f, accent, bold = true, role = DisplayRole.BADGE)
         else -> pen.text(row.lineName, x, cy, w, size, h, accent, bold = true, role = DisplayRole.BADGE)
     }
 }
@@ -848,6 +942,22 @@ private fun displayOverlay(c: Canvas, d: DisplayProfile, w: Float, h: Float, bg:
             DisplayMotif.NES, DisplayMotif.PIXEL_DUSK, DisplayMotif.PONG, DisplayMotif.RPG_WINDOW -> {
                 p.solid(Color.BLACK, 30); var y = 1f; while (y < h) { c.drawRect(0f, y, w, y + .6f, p); y += 2f } }
             else -> Unit
+        }
+        DisplayMaterial.EMBROIDERY -> {
+            // The stitched frame of a sampler.
+            p.line(d.tint, 1.1f, 220); p.pathEffect = DashPathEffect(floatArrayOf(3.4f, 2.2f), 0f)
+            c.drawRoundRect(4f, 4f, w - 4f, h - 4f, 3f, 3f, p); p.pathEffect = null
+        }
+        DisplayMaterial.ENGRAVED -> {
+            // Faceted rim: light top-left, dark bottom-right.
+            p.line(Color.WHITE, 2f, if (d.light) 170 else 50); c.drawLine(1f, 1f, w - 1f, 1f, p); c.drawLine(1f, 1f, 1f, h - 1f, p)
+            p.line(Color.BLACK, 2f, if (d.light) 90 else 160); c.drawLine(1f, h - 1f, w - 1f, h - 1f, p); c.drawLine(w - 1f, 1f, w - 1f, h - 1f, p)
+        }
+        DisplayMaterial.LETTERBOARD -> {
+            // Oak frame with a soft inner shadow on the felt.
+            p.shader = LinearGradient(0f, 0f, w, h, ColorUtils.blendARGB(d.tint, Color.WHITE, .25f), ColorUtils.blendARGB(d.tint, Color.BLACK, .22f), Shader.TileMode.CLAMP)
+            p.style = Paint.Style.STROKE; p.strokeWidth = 7f; c.drawRect(3.5f, 3.5f, w - 3.5f, h - 3.5f, p); p.shader = null
+            p.line(Color.BLACK, 1.4f, 90); c.drawRect(7.6f, 7.6f, w - 7.6f, h - 7.6f, p)
         }
         DisplayMaterial.OLED, DisplayMaterial.STATION_TFT, DisplayMaterial.LIGHT_LCD, DisplayMaterial.OS_WINDOW -> {
             // One broad reflection on the cover glass.

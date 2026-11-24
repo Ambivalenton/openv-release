@@ -15,6 +15,12 @@ import dev.ambivalenton.openv.ui.theme.toneColor
 enum class DisplayMaterial {
     OLED, LED_MATRIX, STATION_TFT, VFD, CRT, CHALKBOARD, E_PAPER, LIGHT_LCD, REFLECTIVE_LCD,
     LIGHTBOX, PAPER, ENAMEL, SPLIT_FLAP, PAINTING, GAME, OS_WINDOW,
+    /** Build 110 · linen in a stitched frame, every letter in cross-stitch (textile collection). */
+    EMBROIDERY,
+    /** Build 110 · a polished stone or metal plate with engraved letters and a faceted rim (minerals). */
+    ENGRAVED,
+    /** Build 110 · a felt letter board with grooves, white push-in letters and a wooden frame (pets, café). */
+    LETTERBOARD,
 }
 
 enum class DisplayMotif {
@@ -89,10 +95,52 @@ private fun Seed.lightbox() =
 
 /** The single source of truth for the Display design. Unknown future themes fall back by brightness. */
 fun displayProfile(t: AppTheme, colors: AppThemeColors = t.defaultColors()): DisplayProfile =
-    Seed(t, colors.accent, colors.secondary).let { s -> special(t, s) ?: grouped(t, s) }
+    Seed(t, colors.accent, colors.secondary).let { s -> collectionDisplay(t, s) ?: special(t, s) ?: grouped(t, s) }
 
 /** A hand-made screen exists for this theme (painting, game, system window or a chosen material). */
-internal fun hasCuratedDisplay(t: AppTheme): Boolean = special(t, Seed(t, t.accent, t.secondary)) != null
+internal fun hasCuratedDisplay(t: AppTheme): Boolean = Seed(t, t.accent, t.secondary).let { collectionDisplay(t, it) != null || special(t, it) != null }
+
+// Build 110 · screens made of each collection's own material.
+// Always in counter-brightness to the app (light design → dark screen, dark design → light screen).
+private fun Seed.embroidery(): DisplayProfile = if (!theme.dark)
+    profile(DisplayMaterial.EMBROIDERY, DisplayMotif.NONE, mix(0xFF22262E.toInt(), tone(16.0), .45f), mix(0xFFF4EBDD.toInt(), tone(92.0), .25f),
+        secondTone(80.0), DisplayFace.DOTS, tone(70.0))
+else profile(DisplayMaterial.EMBROIDERY, DisplayMotif.NONE, mix(0xFFF2EADB.toInt(), tone(94.0), .2f), mix(0xFF2A2522.toInt(), tone(22.0), .45f),
+    tone(36.0), DisplayFace.DOTS, secondTone(50.0))
+private fun Seed.engraved(): DisplayProfile = if (!theme.dark)
+    profile(DisplayMaterial.ENGRAVED, DisplayMotif.NONE, mix(0xFF1A1A1F.toInt(), tone(14.0), .5f), mix(0xFFE9E4D8.toInt(), tone(90.0), .3f),
+        secondTone(80.0), DisplayFace.SERIF, tone(60.0))
+else profile(DisplayMaterial.ENGRAVED, DisplayMotif.NONE, mix(0xFFEAE6E0.toInt(), tone(92.0), .3f), mix(0xFF22201E.toInt(), tone(20.0), .4f),
+    tone(32.0), DisplayFace.SERIF, secondTone(55.0))
+/** Felt letter board: black felt with white letters for light designs, white felt with black letters for dark ones. */
+private fun Seed.letterboard(): DisplayProfile = if (!theme.dark)
+    profile(DisplayMaterial.LETTERBOARD, DisplayMotif.NONE, mix(0xFF1E1D1F.toInt(), tone(16.0), .45f), 0xFFF6F3EC.toInt(), tone(80.0),
+        DisplayFace.CONDENSED, 0xFFA8743F.toInt())
+else profile(DisplayMaterial.LETTERBOARD, DisplayMotif.NONE, mix(0xFFF4F1EA.toInt(), tone(95.0), .15f), 0xFF1C1B1A.toInt(), tone(35.0),
+    DisplayFace.CONDENSED, 0xFFB98A55.toInt())
+private fun Seed.game(motif: DisplayMotif, background: Int, ink: Int, accent: Int, tint: Int, face: DisplayFace = DisplayFace.PIXELS) =
+    profile(DisplayMaterial.GAME, motif, background, ink, accent, face, tint)
+
+private fun collectionDisplay(t: AppTheme, s: Seed): DisplayProfile? = when {
+    t.name.startsWith("TEXTILE_") -> s.embroidery()
+    t.name.startsWith("MINERAL_") -> s.engraved()
+    t.name.startsWith("PET_") -> s.letterboard()
+    t.name.startsWith("CAFE_") && t.dark -> s.letterboard()
+    else -> when (t) {
+        // Dark game designs get a light handheld or arcade screen, light ones a dark console screen.
+        AppTheme.GAME_CONSOLE_NIGHT -> s.game(DisplayMotif.POCKET, 0xFF9BBC0F.toInt(), 0xFF0F380F.toInt(), 0xFF0F380F.toInt(), 0xFF306230.toInt())
+        AppTheme.GAME_PIXEL_HERO -> s.game(DisplayMotif.POCKET, 0xFFFFD9E1.toInt(), 0xFF3A1030.toInt(), 0xFF8E1E4A.toInt(), 0xFFD9668A.toInt())
+        AppTheme.GAME_HEX_STRATEGY -> s.game(DisplayMotif.RPG_WINDOW, 0xFF22311F.toInt(), 0xFFF3EFD8.toInt(), 0xFFE8C46A.toInt(), 0xFF5C7A3F.toInt())
+        AppTheme.GAME_LOOT_GOLD -> s.game(DisplayMotif.POCKET, 0xFFE9D28A.toInt(), 0xFF2B1D05.toInt(), 0xFF6B4300.toInt(), 0xFFB07A1C.toInt())
+        AppTheme.GAME_HANDHELD -> s.game(DisplayMotif.NES, 0xFF100E1C.toInt(), 0xFFF4F1FF.toInt(), 0xFFC8A6FF.toInt(), 0xFF7A52C7.toInt())
+        AppTheme.GAME_COZY_FARM -> s.game(DisplayMotif.PIXEL_DUSK, 0xFF2D2245.toInt(), 0xFFFFF4E0.toInt(), 0xFFB8E07A.toInt(), 0xFFE08A5B.toInt())
+        AppTheme.GAME_DUNGEON -> s.game(DisplayMotif.HANDHELD, 0xFFCFC6B4.toInt(), 0xFF1E1712.toInt(), 0xFF6E2A1A.toInt(), 0xFFB8562F.toInt(), DisplayFace.MONO)
+        AppTheme.GAME_RHYTHM -> s.game(DisplayMotif.OUTRUN, 0xFFFFE9F3.toInt(), 0xFF2A0F4F.toInt(), 0xFFD1006F.toInt(), 0xFF00B7C7.toInt())
+        AppTheme.GAME_PLATFORMER -> s.game(DisplayMotif.NES, 0xFF16206B.toInt(), Color.WHITE, 0xFFFFE36E.toInt(), 0xFFB13425.toInt())
+        AppTheme.GAME_CARD_DUEL -> s.game(DisplayMotif.POCKET, 0xFFDCCFEE.toInt(), 0xFF22113A.toInt(), 0xFF5A2290.toInt(), 0xFF9A6CC9.toInt())
+        else -> null
+    }
+}
 
 /**
  * "Display": the curated screens above come first. Otherwise a theme with a design language

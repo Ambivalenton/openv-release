@@ -1,3 +1,4 @@
 • Design-Sammlungen mit eigener Bauweise: Glas, Chrom, gesteppter Stoff, Swiss-Raster, Keramik-Relief, Editorial, 8-Bit, Knete.
 • Karten, Felder, Leiste, Balken und Tafel folgen der Bauweise des Designs.
 • Netzplan „App-Theme“: Kartenblatt und Stationen aus dem Material des Designs – von Glaskugeln bis Pixel-Sprites.
+• Anzeigetafel „Display“ passend zur Sammlung: Stickbild, Steinplatte mit Gravur, Letterboard, eigene Spielbildschirme.
