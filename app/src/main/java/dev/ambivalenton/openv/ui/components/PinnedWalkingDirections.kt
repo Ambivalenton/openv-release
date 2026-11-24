@@ -57,6 +57,28 @@ sealed interface WalkingDirectionsState {
     return if(!settings.ignoreWalking && settings.detailedWalkingNavigation) routes else emptyMap()
 }
 
+/**
+ * Build 116 · the walk of a change that has no walking leg of its own (the timetable only gives a
+ * transfer time): from the arrival platform to the departure platform, with the same routing service
+ * and settings as any walk. Nothing for one and the same place (under 15 m) or without routing.
+ */
+@Composable fun rememberTransferWalk(node:TransferNode):WalkingDirectionsState? {
+    val settings=LocalAppSettings.current
+    val source=LocalWalkingDirectionsSource.current
+    val from=node.arrivalLocation;val to=node.departureLocation
+    val language=if(LocalConfiguration.current.locales[0].language=="de") "de-DE" else "en-US"
+    val apart=from!=null && to!=null && (distanceMeters(from,to) ?: 0.0)>=15.0
+    val state by produceState<WalkingDirectionsState?>(null,source,from?.latitude,from?.longitude,to?.latitude,to?.longitude,
+        settings.ignoreWalking,settings.detailedWalkingNavigation,settings.walkingRoutingEndpoint,language) {
+        if(source==null || !apart || settings.ignoreWalking || !settings.detailedWalkingNavigation) {value=null;return@produceState}
+        value=WalkingDirectionsState.Loading
+        val leg=TripSegment("transfer-${node.departingLegId}",from!!,to!!,0L,0L,LineType.WALK,tr("Fußweg"))
+        value=try {WalkingDirectionsState.Ready(source.directions(leg,settings.walkingSpeed,settings.walkingRoutingEndpoint,language))}
+            catch(e:CancellationException) {throw e} catch(_:Exception) {WalkingDirectionsState.Unavailable}
+    }
+    return state
+}
+
 fun walkingSectionTitle(section:WalkingSection):String {
     val road=section.streetNames.joinToString(" / ").ifBlank {tr("Fußweg")}
     val facilities=section.facilities.mapNotNull {when(it){WalkingTurn.STAIRS->tr("Treppe");WalkingTurn.ELEVATOR->tr("Aufzug");WalkingTurn.ROUNDABOUT->tr("Kreisverkehr");else->null}}
@@ -107,7 +129,7 @@ fun walkingSectionDistance(meters:Double):String=if(meters>=1000) tr("%1\$s km f
             }
         }
     }
-    selected?.let {(title,parts)->WalkingRouteMapDialog(title,parts,{selected=null})}
+    selected?.let {(title,parts)->WalkingRouteMapDialog(title,parts,onDismiss={selected=null})}
 }
 
 /** A common axis keeps origin/destination stops, larger maps and transfer nodes connected. */

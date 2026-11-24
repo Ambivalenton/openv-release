@@ -141,6 +141,10 @@ Die Minuten-Abzeichen (`TimelineDurationHeader`, `DurationLook.kt`) messen jede 
 
 Übersicht behält die Akzentfarbe des Designs. Suchen und Abfahrten nehmen Farben des Designs (Palette und kuratierte Farbfamilie), die mindestens 70° Farbton entfernt liegen, sonst die Farbharmonie des Akzents (Triade, dann ±150°). Zwischen zwei Seiten blendet die Kapsel in OkLCh über den Farbkreis (`ui/components/PillColors.kt`). Monochrome Designs behalten drei Graustufen.
 
+## Laufende Reise (ab 1.1.6)
+
+`data/model/PinnedJourneyBrief.kt` verdichtet die angepinnte Reise auf das Nötige, jedes genau einmal: Schritt im Blick (`BOARD`, `ALIGHT`, `WALK`, `ARRIVE`) mit Ort, Zeit (aus `projectSessionTimes`, also derselbe Zeitstand wie Zeitstrahl, Benachrichtigung und Bubble), Linie, Gleis und Resthalte; die Anschlussfahrt (`BriefBoarding`) mit Gleis, Abfahrt und Umstiegsstatus; Ankunft und deren Änderung; eine kurze Warnzeile. `PinnedJourneyBriefView` zeichnet daraus Karte und Seite. `underWay(now)` (erster Abschnitt begonnen) schaltet in `MainActivity` die Übernahme: Reiter „Unterwegs“ mit `ic_navigation`, `OverviewScreen(takeover = true)` tauscht die Liste per `SharedTransitionLayout`/`AnimatedContent` gegen die feste Seite (`sharedBounds` „pinned-journey“, Feder 0,8/280). Als Bubble bleibt die Übersicht. Kompaktblätter blenden die Navigationsleiste über `RequestPillAside()` aus. Umstiegskarten (`TransferNavigationCard`) fragen ohne Fußweg-Abschnitt selbst einen Weg an (`rememberTransferWalk`); ohne Weg zeichnet `WalkingRouteMap(transit = true)` Haltestellen aus `StaticStopCatalog.nearby` (Umkreis 350 m) auf gedämpften Kacheln.
+
 ## Leitlinien
 
 - **Aktualität vor allem:** Sollzeit, Prognose, tatsächliche Zeit und lokale Schätzung bleiben getrennt; fehlende Echtzeit heißt nicht pünktlich.

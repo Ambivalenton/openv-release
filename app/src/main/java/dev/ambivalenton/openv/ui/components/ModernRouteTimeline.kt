@@ -284,11 +284,14 @@ private fun RouteSegment(rail: TimelineRail, index: Int, segment: TripSegment, s
     }
     CalmVisibility(
         stopsExpanded,
-        enter = expandVertically(spring(dampingRatio = .86f, stiffness = 360f, visibilityThreshold = androidx.compose.ui.unit.IntSize.VisibilityThreshold)) +
-            fadeIn(tween(160)),
-        exit = shrinkVertically(spring(dampingRatio = 1f, stiffness = 520f, visibilityThreshold = androidx.compose.ui.unit.IntSize.VisibilityThreshold)) +
-            fadeOut(tween(120)),
+        // Build 116: open from and close towards the top. Closing towards the bottom (the default) slid the
+        // rows up out of the clip – and with them the stop points, which the rail draws outside the clip.
+        enter = expandVertically(spring(dampingRatio = .86f, stiffness = 360f, visibilityThreshold = androidx.compose.ui.unit.IntSize.VisibilityThreshold),
+            expandFrom = Alignment.Top) + fadeIn(tween(160)),
+        exit = shrinkVertically(spring(dampingRatio = 1f, stiffness = 520f, visibilityThreshold = androidx.compose.ui.unit.IntSize.VisibilityThreshold),
+            shrinkTowards = Alignment.Top) + fadeOut(tween(120)),
     ) {
+        val closing = transition.targetState == androidx.compose.animation.EnterExitState.PostExit
         Column {
             segment.stops.forEachIndexed { k, stop ->
                 if (k == 0 || k == segment.stops.lastIndex) return@forEachIndexed
@@ -300,6 +303,10 @@ private fun RouteSegment(rail: TimelineRail, index: Int, segment: TripSegment, s
                         delay((k - 1).coerceAtMost(10) * PASS_STAGGER_MILLIS)
                         appear.animateTo(1f, spring(dampingRatio = .5f, stiffness = 520f))
                     }
+                }
+                // Closing: the points shrink away on the spot at once, instead of riding along with the rows.
+                LaunchedEffect(closing) {
+                    if (closing) appear.animateTo(0f, if (quiet) snap() else spring(dampingRatio = 1f, stiffness = 1400f))
                 }
                 DisposableEffect(rail, key) {
                     rail.appear[key] = appear

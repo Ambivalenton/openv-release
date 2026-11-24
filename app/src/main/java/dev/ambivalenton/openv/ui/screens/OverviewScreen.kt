@@ -14,6 +14,7 @@ import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -50,7 +51,7 @@ import dev.ambivalenton.openv.R
 import dev.ambivalenton.openv.ui.tutorial.tutorialTarget
 
 /** Narrative paragraphs rather than another set of cards. Every success opens its exact trip. */
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, androidx.compose.animation.ExperimentalSharedTransitionApi::class)
 @Composable
 fun OverviewScreen(
     ui: OverviewUiState,
@@ -80,6 +81,8 @@ fun OverviewScreen(
     onShowFavorites: () -> Unit = onSearch,
     /** H02: "Start wählen" opens the start picker. */
     onChooseStart: () -> Unit = onSearch,
+    /** Build 116: a pinned journey is under way – its card takes the whole page. */
+    takeover: Boolean = false,
 ) {
     val walkingSettings=dev.ambivalenton.openv.ui.theme.LocalAppSettings.current
     var header by rememberSaveable { mutableStateOf(TransitHeaderRotation.next()) }
@@ -136,6 +139,32 @@ fun OverviewScreen(
     val uri = LocalUriHandler.current
     val rowKeys=overviewRowKeys(ui.entries)
     val firstReadyIndex=ui.entries.indexOfFirst {it.trip!=null}
+    // Build 116: a running pinned journey takes the whole page. The card grows out of its place
+    // (shared bounds, a soft spring), everything else gives way; ending the companion brings the
+    // overview back the same way. In quiet mode the change is immediate.
+    val calm = dev.ambivalenton.openv.ui.theme.LocalAppSettings.current.reduceMotion
+    androidx.compose.animation.SharedTransitionLayout(Modifier.fillMaxSize()) {
+    val shared = this
+    androidx.compose.animation.AnimatedContent(takeover && pinnedState?.session != null && !pinnedAsBubble, label = "overview-takeover",
+        transitionSpec = {
+            if (calm) fadeIn(androidx.compose.animation.core.snap()) togetherWith fadeOut(androidx.compose.animation.core.snap())
+            else (fadeIn(androidx.compose.animation.core.spring(dampingRatio = .9f, stiffness = 260f)) togetherWith
+                fadeOut(androidx.compose.animation.core.spring(dampingRatio = 1f, stiffness = 520f))) using
+                androidx.compose.animation.SizeTransform(clip = false)
+        }) { full ->
+    val bounds = with(shared) { rememberSharedContentState("pinned-journey") }
+    val journeyBounds = with(shared) {
+        Modifier.sharedBounds(bounds, this@AnimatedContent,
+            boundsTransform = { _, _ -> androidx.compose.animation.core.spring(dampingRatio = .8f, stiffness = 280f) },
+            resizeMode = androidx.compose.animation.SharedTransitionScope.ResizeMode.RemeasureToBounds)
+    }
+    if (full) {
+        Box(Modifier.fillMaxSize().padding(start = 16.dp, end = 16.dp, top = 8.dp,
+            bottom = 12.dp + dev.ambivalenton.openv.ui.components.LocalNavigationClearance.current).testTag("pinned-journey-page")) {
+            PinnedJourneyCard(pinnedState!!, onPinnedOpen, onPinnedRemove, onPinnedBubble, onCorrectAlighting,
+                modifier = Modifier.fillMaxSize().then(journeyBounds), showSource = false, expanded = true)
+        }
+    } else
     JourneyPullRefresh(ui.loading,onRefresh,enabled=isActive) {
     LazyColumn(
         Modifier.fillMaxSize().testTag("overview-content"),
@@ -144,7 +173,8 @@ fun OverviewScreen(
     ) {
         // No rectangular backdrop behind the rounded card: the card draws its own shape and shadow.
         if (pinnedState?.session != null && !pinnedAsBubble) stickyHeader(key="pinned-card") {
-            PinnedJourneyCard(pinnedState,onPinnedOpen,onPinnedRemove,onPinnedBubble,onCorrectAlighting,showSource=false)
+            PinnedJourneyCard(pinnedState,onPinnedOpen,onPinnedRemove,onPinnedBubble,onCorrectAlighting,
+                modifier=Modifier.fillMaxWidth().then(journeyBounds),showSource=false)
         }
         // M03: an empty overview starts with the question and the main action, above the info text.
         if (ui.ready && !ui.loading && ui.error == null && ui.entries.isEmpty())
@@ -303,6 +333,8 @@ fun OverviewScreen(
                 }
             }
         }
+    }
+    }
     }
     }
 }

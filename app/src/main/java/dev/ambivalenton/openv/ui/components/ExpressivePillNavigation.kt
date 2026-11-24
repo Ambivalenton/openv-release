@@ -18,6 +18,7 @@ import android.animation.ValueAnimator
 import android.os.Build
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.core.*
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.interaction.*
 import androidx.compose.foundation.layout.*
@@ -75,6 +76,22 @@ data class PillDestination(val label: String,val icon: Int,val timeline:Boolean=
 fun navigationPillAside(route:String,connectionOpen:Boolean,previewOpen:Boolean,pinnedOpen:Boolean,planEditing:Boolean,
     designPage:Boolean=false):Boolean =
     (route=="results" && connectionOpen) || (previewOpen && !pinnedOpen) || planEditing || (route=="settings" && !designPage)
+
+/**
+ * Build 116 · views that need the whole height while they show (the compact view of a connection) ask
+ * the pill to step aside; it comes back when the last of them closes. App-wide, so sheets hosted in the
+ * overlay reach it too.
+ */
+object PillAsideRequests {
+    val owners = androidx.compose.runtime.mutableStateMapOf<Any, Unit>()
+    val active get() = owners.isNotEmpty()
+}
+
+/** While this is composed, the navigation pill stays aside. */
+@Composable fun RequestPillAside() {
+    val owner = remember { Any() }
+    androidx.compose.runtime.DisposableEffect(owner) { PillAsideRequests.owners[owner] = Unit; onDispose { PillAsideRequests.owners.remove(owner) } }
+}
 
 /** Geometry of the navigation pill, shared with layouts that keep a distance to it. The
  * visible pill is the box minus its inset on every side; the box sits [PillNavigationPadding] inside
@@ -327,19 +344,25 @@ internal val PillNavigationTop=PillNavigationPadding+PillNavigationInset
                         val cover=if(reduced||quiet) (if(index==selected) 1f else 0f) else (1f-abs((head+tail)/2-index)*1.3f).coerceIn(0f,1f)
                         val ink=androidx.compose.ui.graphics.lerp(idle,selectedInk,cover)
                         val hop=hops.getOrNull(index)
-                        PillDestinationIcon(tab,ink,Modifier.size(24.dp).graphicsLayer {
+                        // Build 116: a tab that changes meaning ("Übersicht" → "Unterwegs") swaps symbol and word with a spring.
+                        androidx.compose.animation.AnimatedContent(tab,transitionSpec={tabSwap(quiet)},
+                            contentKey={it.label to it.icon},label="pill-tab-$index") {shown->
+                        PillDestinationIcon(shown,ink,Modifier.size(24.dp).graphicsLayer {
                             val pose=hopPose(hop?.value ?: 0f,press)
                             transformOrigin=TransformOrigin(.5f,1f)
                             translationY=-5.dp.toPx()*pose.lift
                             scaleX=pose.scaleX;scaleY=pose.scaleY
-                        }.testTag("pill-icon-$index-${if(tab.timeline) "timeline" else "default"}"),selected=index==selected)
+                        }.testTag("pill-icon-$index-${if(shown.timeline) "timeline" else "default"}"),selected=index==selected)
+                        }
                         // Build 113: the label stays inside the capsule with large type instead of running
                         // past its edges; a single word is never broken.
                         Box(Modifier.width(labelWidth).heightIn(max=labelHeight),contentAlignment=Alignment.Center) {
-                            FittedText(tab.label,style=labelStyle,fontSize=labelSize,
+                            androidx.compose.animation.AnimatedContent(tab.label,transitionSpec={tabSwap(quiet)},label="pill-label-swap-$index") {label->
+                            FittedText(label,style=labelStyle,fontSize=labelSize,
                                 fontWeight=if(index==selected) FontWeight.SemiBold else FontWeight.Normal,
                                 textAlign=androidx.compose.ui.text.style.TextAlign.Center,maxLines=1,color=ink,
                                 modifier=Modifier.testTag("pill-label-$index"))
+                            }
                         }
                     }
                 }
@@ -377,3 +400,12 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawLanguageSelecti
         else->Unit
     }
 }
+
+/** Build 116: the old symbol or word sinks and fades while the new one springs up. */
+private fun <S> androidx.compose.animation.AnimatedContentTransitionScope<S>.tabSwap(quiet:Boolean):androidx.compose.animation.ContentTransform =
+    if(quiet) androidx.compose.animation.fadeIn(snap()) togetherWith androidx.compose.animation.fadeOut(snap())
+    else (androidx.compose.animation.fadeIn(spring(dampingRatio=.9f,stiffness=380f))+
+        androidx.compose.animation.scaleIn(spring(dampingRatio=.55f,stiffness=420f),initialScale=.6f)+
+        androidx.compose.animation.slideInVertically(spring(dampingRatio=.7f,stiffness=420f)) {it/3}) togetherWith
+        (androidx.compose.animation.fadeOut(spring(stiffness=900f))+androidx.compose.animation.slideOutVertically(spring(stiffness=700f)) {-it/3}) using
+        androidx.compose.animation.SizeTransform(clip=false)

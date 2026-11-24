@@ -37,12 +37,18 @@ import kotlinx.coroutines.*
 import kotlin.math.*
 
 val LocalWalkingMapTiles=staticCompositionLocalOf<WalkingMapTileSource?> {null}
+/** Build 116: the bundled stop catalog, for stop signs on maps (no network). */
+val LocalStopCatalog=staticCompositionLocalOf<dev.ambivalenton.openv.data.repository.StaticStopCatalog?> {null}
 
 /** Five physical pixels, regardless of Android density, as requested. */
 const val WALKING_MAP_CONTOUR_PX=5f
 
 @Composable fun WalkingRouteMap(parts:List<WalkingMapPart>,modifier:Modifier=Modifier,circular:Boolean=false,
-    turn:WalkingTurn=WalkingTurn.FORWARD,onClick:(()->Unit)?=null,interactive:Boolean=false,tag:String="walking-route-map",compactAttribution:Boolean=false) {
+    turn:WalkingTurn=WalkingTurn.FORWARD,onClick:(()->Unit)?=null,interactive:Boolean=false,tag:String="walking-route-map",compactAttribution:Boolean=false,
+    /** Build 116: public transport first – the base map is muted (its shop symbols fade), stops of the local catalog get stop signs. */
+    transit:Boolean=false,
+    /** Build 116: the places of a change: the onward platform highlighted, the arrival quietly. */
+    arrivalPoint:Location?=null,departurePoint:Location?=null) {
     var viewport by remember {mutableStateOf(IntSize.Zero)}
     var camera by remember(parts) {mutableStateOf<WalkingMapViewport?>(null)}
     var visible by remember {mutableStateOf(false)}
@@ -75,6 +81,16 @@ const val WALKING_MAP_CONTOUR_PX=5f
     val tint=MaterialTheme.colorScheme.surfaceContainerHigh
     val arrow=MaterialTheme.colorScheme.onSurface
     val shapeKey=remember(parts) {parts.hashCode()}
+    // Build 116: stops around the change from the bundled catalog (no network request).
+    val catalog=LocalStopCatalog.current
+    val centre=departurePoint ?: arrivalPoint ?: parts.flatMap {it.points}.firstOrNull()
+    val nearbyStops by produceState(emptyList<Location>(),transit,catalog,centre?.latitude,centre?.longitude) {
+        value=if(transit && catalog!=null && centre?.hasCoordinates==true) catalog.nearby(centre.latitude!!,centre.longitude!!,350) else emptyList()
+    }
+    val muted=remember(transit) {if(transit) androidx.compose.ui.graphics.ColorFilter.colorMatrix(
+        androidx.compose.ui.graphics.ColorMatrix().apply {setToSaturation(.18f)}) else null}
+    val stopFill=Color(0xFFF4C400);val stopInk=Color(0xFF1C6B35)
+    val accentPoint=MaterialTheme.colorScheme.primary
     Column(modifier) {
         Box(if(circular) Modifier.fillMaxWidth().aspectRatio(1f) else Modifier.weight(1f).fillMaxWidth()) {
             val input=if(interactive) Modifier.pointerInput(shapeKey) {
@@ -106,7 +122,8 @@ const val WALKING_MAP_CONTOUR_PX=5f
                         while(x > world/2) x-=world
                         val y=id.y*tilePixels-top
                         if(x+tilePixels>=0 && y+tilePixels>=0 && x<size.width && y<size.height)
-                            drawImage(bitmap,srcSize=IntSize(bitmap.width,bitmap.height),dstOffset=IntOffset(x.roundToInt(),y.roundToInt()),dstSize=IntSize(ceil(tilePixels).toInt()+1,ceil(tilePixels).toInt()+1))
+                            drawImage(bitmap,srcSize=IntSize(bitmap.width,bitmap.height),dstOffset=IntOffset(x.roundToInt(),y.roundToInt()),dstSize=IntSize(ceil(tilePixels).toInt()+1,ceil(tilePixels).toInt()+1),
+                                alpha=if(transit) .82f else 1f,colorFilter=muted)
                     }
                     for(part in parts) {
                         val path=Path();var valid=false
@@ -119,6 +136,21 @@ const val WALKING_MAP_CONTOUR_PX=5f
                             drawPath(path,color.copy(alpha=if(part.incoming) .62f else 1f),style=Stroke(if(circular) 3.5.dp.toPx() else 5.dp.toPx(),cap=StrokeCap.Round,join=StrokeJoin.Round))
                         }
                     }
+                    }
+                    // Build 116: stop signs (yellow disc, green H) for the stops around, then the two platforms of the change.
+                    fun at(place:Location)=mercatorPoint(place)?.let {Offset((it.x*world-left).toFloat(),(it.y*world-top).toFloat())}
+                    val sign=7.dp.toPx()
+                    for(stop in nearbyStops) at(stop)?.let {c->
+                        drawCircle(Color.Black.copy(alpha=.18f),sign+1.dp.toPx(),c+Offset(0f,1.dp.toPx()))
+                        drawCircle(stopFill,sign,c);drawCircle(stopInk,sign,c,style=Stroke(1.5.dp.toPx()))
+                        val h=sign*.55f;val w=sign*.42f;val stroke=1.6.dp.toPx()
+                        drawLine(stopInk,Offset(c.x-w,c.y-h),Offset(c.x-w,c.y+h),stroke);drawLine(stopInk,Offset(c.x+w,c.y-h),Offset(c.x+w,c.y+h),stroke)
+                        drawLine(stopInk,Offset(c.x-w,c.y),Offset(c.x+w,c.y),stroke)
+                    }
+                    arrivalPoint?.let(::at)?.let {c->drawCircle(Color.White,6.dp.toPx(),c);drawCircle(color.copy(alpha=.7f),6.dp.toPx(),c,style=Stroke(2.5.dp.toPx()))}
+                    departurePoint?.let(::at)?.let {c->
+                        drawCircle(accentPoint.copy(alpha=.22f),15.dp.toPx(),c)
+                        drawCircle(Color.White,9.dp.toPx(),c);drawCircle(accentPoint,7.dp.toPx(),c)
                     }
                     if(circular && turn!=WalkingTurn.FORWARD) {
                         drawRect(tint.copy(alpha=.6f));drawDirectionArrow(turn,arrow,Offset(size.width/2,size.height/2),size.minDimension*.32f)
@@ -149,7 +181,8 @@ const val WALKING_MAP_CONTOUR_PX=5f
     }
 }
 
-@Composable fun WalkingRouteMapDialog(title:String,parts:List<WalkingMapPart>,onDismiss:()->Unit) {
+@Composable fun WalkingRouteMapDialog(title:String,parts:List<WalkingMapPart>,transit:Boolean=false,arrivalPoint:Location?=null,
+    departurePoint:Location?=null,onDismiss:()->Unit) {
     AppDialog(onDismiss,DialogProperties(usePlatformDefaultWidth=false)) {
         Surface(Modifier.fillMaxWidth(.96f).fillMaxHeight(.88f).testTag("walking-map-dialog"),shape=MaterialTheme.shapes.large) {
             Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
@@ -157,7 +190,8 @@ const val WALKING_MAP_CONTOUR_PX=5f
                     FittedText(title,Modifier.weight(1f),style=MaterialTheme.typography.titleLarge)
                     IconButton(onDismiss) {AppIcon(R.drawable.ic_close,tr("Karte schließen"))}
                 }
-                WalkingRouteMap(parts,Modifier.weight(1f).fillMaxWidth(),interactive=true,tag="walking-map-expanded")
+                WalkingRouteMap(parts,Modifier.weight(1f).fillMaxWidth(),interactive=true,tag="walking-map-expanded",
+                    transit=transit,arrivalPoint=arrivalPoint,departurePoint=departurePoint)
             }
         }
     }

@@ -1,0 +1,3 @@
+• Once under way, the pinned journey fills the overview as a fixed page; the tab is then called "On the go".
+• Journey card without repetition: getting on and off, time and next platform once and clearly.
+• Compact view for the pinned journey too; transfer maps show the way or the stops instead of shops.

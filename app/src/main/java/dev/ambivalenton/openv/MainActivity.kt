@@ -200,6 +200,7 @@ class MainActivity : ComponentActivity() {
                 if (ui.storageError != null) StorageRecoveryScreen(ui.storageError)
                 else CompositionLocalProvider(
                     LocalWalkingMapTiles provides remember(app) {app.koin.get<dev.ambivalenton.openv.data.repository.WalkingMapTileSource>()},
+                    dev.ambivalenton.openv.ui.components.LocalStopCatalog provides remember(app) {app.koin.getOrNull<dev.ambivalenton.openv.data.repository.StaticStopCatalog>()},
                     LocalWalkingNavigationMode provides ui.store.settings.walkingNavigation,
                     LocalWalkingDirectionsSource provides remember(app) {app.koin.get<dev.ambivalenton.openv.data.repository.WalkingDirectionsSource>()},
                     LocalTutorialState provides rememberTutorialState(ui.store.completedTutorials,ui.ready && ui.storageError==null && ui.store.onboardingVersion>=1,vm::completeTutorial),
@@ -413,6 +414,9 @@ private fun OpenVNavigation(
     // bubble then stands in for the card, inside the app as well; closing it brings the card back.
     val bubbles=remember(app) {app.koin.get<dev.ambivalenton.openv.tracking.PinnedBubbleCoordinator>()}
     val bubbleShown by bubbles.shown.collectAsStateWithLifecycle()
+    // Build 116: once a pinned journey is under way it takes the overview page; title, tab name and symbol follow.
+    val journeyNow=dev.ambivalenton.openv.ui.components.rememberJourneyNow()
+    val underWay=pinned.session?.underWay(journeyNow)==true && !bubbleShown
     val planCountdown by overviewVm.countdown.collectAsStateWithLifecycle()
     var bubbleRequest by rememberSaveable { mutableStateOf<String?>(null) }
     suspend fun startBubble(id:String) {
@@ -903,7 +907,9 @@ private fun OpenVNavigation(
     val planEditingHere=planEditing && destinationRoute=="search" && homePager.currentPage==1
     val pillAside=navigationPillAside(route,ui.selectedTripId!=null,overviewPreview!=null,isPinned,planEditingHere,
         // "App-Design" is chosen on "Design & Darstellung" (and on its own page from the settings search).
-        designPage=settingsNavigation.page in setOf(dev.ambivalenton.openv.ui.screens.SettingsPage.DESIGN,dev.ambivalenton.openv.ui.screens.SettingsPage.APP_THEME))
+        designPage=settingsNavigation.page in setOf(dev.ambivalenton.openv.ui.screens.SettingsPage.DESIGN,dev.ambivalenton.openv.ui.screens.SettingsPage.APP_THEME)) ||
+        // Build 116: e.g. the compact view of a connection asks for the whole height.
+        dev.ambivalenton.openv.ui.components.PillAsideRequests.active
     val pillShown=navVisible && !pillAside
     // Planermodus: the pinned journey floats where the pill would be.
     val hoverCard=planner && !needsIntroduction && !WindowInsets.isImeVisible && hasPinnedSession && !isPinned
@@ -954,7 +960,7 @@ private fun OpenVNavigation(
                     FittedText(
                         when (route) {
                             "results" -> connectionScreenTitle(ui)
-                            "overview" -> tr("Übersicht")
+                            "overview" -> if(underWay) tr("Unterwegs") else tr("Übersicht")
                             "departures" -> if(ui.store.settings.minimalistMode)tr("Anzeigetafel") else tr("Abfahrten")
                             "settings" -> tr("Einstellungen")
                             "search" -> tr("Suchen")
@@ -1042,6 +1048,7 @@ private fun OpenVNavigation(
                                         }},
                                         pinnedState = pinned,
                                         pinnedAsBubble = bubbleShown,
+                                        takeover = underWay,
                                         onHeaderArrivalDismiss = {pinned.arrival?.let {tracker.dismissArrival(it.sessionId)}},
                                         onPinnedOpen = { navigationHiddenPin=null;scope.launch { tracker.setMinimized(false);startTracking();tracker.requestRefresh() } },
                                         onPinnedRemove = { removingPinnedId=pinned.session?.id },
@@ -1178,7 +1185,7 @@ private fun OpenVNavigation(
         }
         .then(if(!pillShown) Modifier.clearAndSetSemantics {} else Modifier)) {
         ExpressivePillNavigationTo(homePager,listOf(
-            PillDestination(tr("Übersicht"),R.drawable.ic_overview),
+            if(underWay) PillDestination(tr("Unterwegs"),R.drawable.ic_navigation) else PillDestination(tr("Übersicht"),R.drawable.ic_overview),
             PillDestination(tr("Suchen"),if(route=="results" && !ui.trips.value.isNullOrEmpty() && !ui.isListViewVisible && ui.selectedTripId==null) R.drawable.ic_dashboard else R.drawable.ic_search),
             PillDestination(tr("Abfahrten"),R.drawable.ic_train)).mapIndexed {index,tab->
                 tab.copy(timeline=(isPinned || overviewPreview!=null || ui.selectedTripId!=null) &&

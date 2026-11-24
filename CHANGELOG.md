@@ -4,6 +4,14 @@ Alle nennenswerten Änderungen an Öpen-V. Versionen folgen [Semantic Versioning
 
 ## [Unveröffentlicht]
 
+## [1.1.6] (116) · 2026-11-24
+
+- Unterwegs übernimmt die Reise die Übersicht: Sobald der erste Abschnitt einer angepinnten Verbindung begonnen hat, löst sich die Karte aus der Liste und füllt mit einer federnden Bewegung die ganze Seite zwischen Kopfzeile und Navigationsleiste – fest, ohne Scrollen. Die übrigen Inhalte der Übersicht treten so lange zurück; in der Navigationsleiste heißt der Reiter „Unterwegs“ und zeigt ein Navigationssymbol. Ist die Reise vorbei, abgelöst oder schwebt sie als Bubble, kehrt die Übersicht ebenso federnd zurück. Auf der Seite steht unter dem aktuellen Schritt der weitere Weg (Linie, von → nach, Zeiten, Fußwege).
+- Angepinnte Karte ohne Doppelungen: Der Schritt im Blick steht einmal mit Verb, Ort und Zeit („Aussteigen · Bochum Hbf · 15:42“); Linie, Ankunftsgleis und verbleibende Halte stehen ruhig darunter. Nach einem Umstieg folgt ein eigener Block „Weiter mit U35“ mit Richtung, hervorgehobenem Abfahrtsgleis, Abfahrtszeit und Umstiegszeit bzw. „Umstieg knapp“. Die Ankunft am Ziel erscheint nur einmal und rot, wenn sie sich verspätet. Bisher standen Umstiegshalt, Gleis und Ziel bis zu viermal auf der Karte.
+- Kompaktansicht der angepinnten Reise: „Minimieren“ zeigt jetzt dieselbe kompakte Zusammenfassung wie beim normalen Zeitstrahl, und die Navigationsleiste taucht dabei nach unten ab.
+- Wegkarte am Umstieg: Fehlt ein Fußweg in der Verbindung, fragt Öpen-V den Weg vom Ankunfts- zum Abfahrtspunkt selbst an (sofern Ein- und Ausstieg mindestens 15 Meter auseinanderliegen und die Wegführung eingeschaltet ist). Gibt es dennoch keinen Weg, zeigt die Karte statt Geschäften die Haltestellen der Umgebung als Haltestellenschilder aus dem mitgelieferten Katalog, dazu Ankunfts- und Abfahrtspunkt; die Kartenkacheln treten dafür etwas zurück.
+- Behoben: Beim Zuklappen der Zwischenhalte im Zeitstrahl wanderten die Kreise nach oben, bevor sie verschwanden. Die Zeilen schrumpfen jetzt nach oben weg, die Kreise vergehen an Ort und Stelle.
+
 ## [1.1.5] (115) · 2026-11-24
 
 - Bedienhinweise ohne Text: In den ersten Stunden der Nutzung zeigen kleine Animationen, was sich antippen, halten oder wischen lässt – das Zahnrad nickt, der Stift über dem Netzplan pulsiert, die Datums- und Zeitwahl und „Design“ unter der Anzeigetafel pulsieren leise, im Balkendiagramm füllt sich ein Halte-Ring auf der ersten Verbindung, über die Navigationsleiste gleitet ein Punkt (Seiten wischen). Jeder Hinweis endet für immer, sobald die Geste einmal genutzt wurde; nach etwa drei Stunden Nutzung (höchstens zwei Wochen) enden alle. Hinweise spielen kurz und ruhen dann einige Sekunden, ohne in der Pause zu zeichnen. Abschaltbar unter Modi & Verhalten („Bedienhinweise“); „Bedienhinweise erneut zeigen“ unter Info & Hilfe startet sie neu. Im Ruhe- und Stromsparmodus und neben einer Text-Anleitung erscheinen sie nicht.

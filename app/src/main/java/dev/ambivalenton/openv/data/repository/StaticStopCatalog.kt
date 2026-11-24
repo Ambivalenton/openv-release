@@ -56,6 +56,16 @@ class StaticStopCatalog internal constructor(private val databaseFile: suspend (
         ranked(candidates)
     }
 
+    /** Build 116 · stops within about [radiusMeters] of a point (bounding box), for stop signs on maps. */
+    suspend fun nearby(latitude: Double, longitude: Double, radiusMeters: Int = 300, limit: Int = 30): List<Location> = safely { db ->
+        val dLat = radiusMeters / 111_195.0
+        val dLon = dLat / kotlin.math.cos(Math.toRadians(latitude)).coerceAtLeast(.2)
+        db.rawQuery("SELECT dhid,name,city,lat,lon FROM stops WHERE retired=0 AND lat BETWEEN ? AND ? AND lon BETWEEN ? AND ? LIMIT ?",
+            arrayOf((latitude - dLat).toString(), (latitude + dLat).toString(), (longitude - dLon).toString(), (longitude + dLon).toString(), limit.toString())).use { c ->
+            buildList { while (c.moveToNext()) add(Location(c.getString(1), c.getString(0), c.getDouble(3), c.getDouble(4), PROVIDER, LocationKind.STOP, city = c.getString(2))) }
+        }
+    }
+
     /** Only proven root/alias IDs may add a municipality; never infer one from a numeric API ID. */
     suspend fun enrich(rows: List<Location>): List<Location> {
         if (rows.isEmpty()) return rows

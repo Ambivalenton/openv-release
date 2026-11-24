@@ -29,7 +29,9 @@ import dev.ambivalenton.openv.localization.tr
     testTag:String="pinned-journey-card",headerActions:(@Composable RowScope.()->Unit)?=null,
     focusTransform:((JourneyFocus,Long)->JourneyFocus)?=null,
     /** Build 102: false where the screen title already names the source (Übersicht). */
-    showSource:Boolean=true) {
+    showSource:Boolean=true,
+    /** Build 116: the running journey fills the overview – larger type and room. */
+    expanded:Boolean=false) {
     val session=state.session?:return
     val now=rememberJourneyNow();val t=MaterialTheme.typography;val scheme=MaterialTheme.colorScheme
     // [focusTransform]: the bubble's mini card names the next change or destination (build 81).
@@ -37,19 +39,18 @@ import dev.ambivalenton.openv.localization.tr
     val arrivalColor=session.favorite.accentSeed?.let {androidx.compose.ui.graphics.Color(it)}?:scheme.primary
     val nextColor=when(focus.nextPlace){session.favorite.counterpole?.name->session.favorite.originAccentSeed?.let {androidx.compose.ui.graphics.Color(it)}?:scheme.primary;session.favorite.location.name->arrivalColor;else->scheme.primary}
     val summary=assistantTravelSummary(session,now,focus)
-    val (nextPlace,railName)=pinnedStopLabel(focus,session.trip)
     val alert=state.alert?.takeIf {state.status!=PinnedTrackingStatus.PAUSED}
     val imminent=alert!=null
     val mode=LocalWalkingNavigationMode.current;val context=androidx.compose.ui.platform.LocalContext.current
     val walking=if(session.routing.ignoreWalking)null else session.trip.segments.getOrNull(focus.legIndex?:-1)?.takeIf {it.isWalk}
     var navigationError by remember(session.id){mutableStateOf<String?>(null)}
-    val status=navigationError?:alert?.message?:summary.notice?:if(state.status==PinnedTrackingStatus.PAUSED)tr("Reisebegleitung pausiert")else ""
     AppCard(onClick=onOpen,shape=dev.ambivalenton.openv.ui.theme.appCorner(24.dp),
         modifier=modifier.testTag(testTag),
         colors=CardDefaults.cardColors(containerColor=scheme.surfaceContainerHigh),
         // Shadow and background belong to the rounded card itself, never to a square parent.
         elevation=CardDefaults.cardElevation(defaultElevation=3.dp)) {
-        Column(Modifier.padding(start=18.dp,end=10.dp,top=8.dp,bottom=12.dp),verticalArrangement=Arrangement.spacedBy(5.dp)) {
+        Column(Modifier.then(if(expanded) Modifier.fillMaxSize() else Modifier).padding(start=18.dp,end=10.dp,top=8.dp,bottom=12.dp),
+            verticalArrangement=Arrangement.spacedBy(if(expanded) 10.dp else 5.dp)) {
             Row(Modifier.fillMaxWidth().heightIn(min=44.dp),verticalAlignment=Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     FittedText(session.favorite.label,style=t.labelLarge)
@@ -65,24 +66,17 @@ import dev.ambivalenton.openv.localization.tr
                     IconButton(onBubble,Modifier.size(42.dp).testTag("pinned-bubble-button")) {AppIcon(R.drawable.ic_bubble,tr("Als schwebende Reisekarte anzeigen"))}
                 if(headerActions==null)IconButton(onRemove,Modifier.size(42.dp).testTag("remove-pinned-card")){AppIcon(R.drawable.ic_close,tr("Reisebegleiter beenden"))}
             }
-            Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.Top) {
-                Column(Modifier.weight(1f).padding(end=12.dp)) {
-                    PinnedTextSlot(focus.heading(),t.titleMedium.copy(fontWeight=FontWeight.SemiBold),tag="card-action",marquee=true)
-                    PinnedTextSlot(nextPlace,t.bodyLarge,tag="card-next-place",marquee=true,fitRail=railName)
-                    PinnedTextSlot(nextBoardingInstruction(session,focus),t.labelLarge,lines=2,color=nextColor,tag="card-platform",
-                        fallback=nextBoardingPlatform(session,focus))
-                }
-                Column(Modifier.width(112.dp),horizontalAlignment=Alignment.End) {
-                    PinnedTextSlot(clockTime(focus.nextTime),t.headlineMedium.copy(fontWeight=FontWeight.Bold),color=nextColor,tag="card-time")
-                    PinnedTextSlot(focus.timeLabel,t.labelSmall,tag="card-time-label")
-                    PinnedTextSlot(focus.delay.orEmpty(),t.labelMedium,color=scheme.error,tag="card-delay")
-                }
-            }
-            if(summary.change.isNotBlank())Text(summary.change,Modifier.fillMaxWidth().testTag("card-next-change"),style=t.bodyMedium)
-            PinnedTextSlot(summary.arrival,t.titleSmall.copy(fontWeight=FontWeight.SemiBold),color=if(arrivalChangeMinutes(session,now)>0)scheme.error else arrivalColor,tag="card-arrival",marquee=true)
-            if(status.isNotBlank())Text(status,Modifier.fillMaxWidth().testTag("card-status"),style=t.bodySmall,
+            // Build 116: every fact once – the step in focus, the onward ride with its platform, the arrival only when it moves.
+            PinnedJourneyBriefView(pinnedJourneyBrief(session,focus,now,alert),nextColor,arrivalColor,expanded)
+            val quietStatus=navigationError?:if(state.status==PinnedTrackingStatus.PAUSED)tr("Reisebegleitung pausiert")else summary.notice?.takeIf {alert==null}
+            if(!quietStatus.isNullOrBlank())Text(quietStatus,Modifier.fillMaxWidth().testTag("card-status"),style=t.bodySmall,
                 color=scheme.onSurfaceVariant)
-            PinnedTextSlot(assistantStepDetail(focus),t.labelMedium,tag="card-remaining-stops")
+            // The page: the facts at the top, the rest of the way in the middle, correction and progress at the bottom.
+            if(expanded) {
+                Spacer(Modifier.height(8.dp))
+                JourneyRemainingSteps(session,focus.legIndex ?: 0)
+                Spacer(Modifier.weight(1f))
+            }
             // Sparse manual correction: only for a fresh alighting hypothesis or a clearly overdue ride.
             val correction=alightingCorrection(session,now)
             if(onCorrectAlighting!=null && (correction.offerStillAboard || correction.offerAlighted))

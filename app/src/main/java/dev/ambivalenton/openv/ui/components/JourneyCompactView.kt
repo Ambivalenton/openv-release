@@ -83,13 +83,19 @@ fun liveCompactSource(session:PinnedJourneySession):String =
         data.exceptionOrNull()?.message,journeyCompactSource(trip),onDismiss)
 }
 
+/** Build 116: the pinned journey shows the same compact summary as any connection – with its live times –
+ * instead of a card of its own; the source line names the last live update. */
 @Composable private fun LiveJourneyCompactSheet(state:PinnedJourneyState,onDismiss:()->Unit) {
     val session=state.session
     if(session==null) {LaunchedEffect(Unit) {onDismiss()};return}
+    val context=LocalContext.current
     val colors=ShareCardColors.from(MaterialTheme.colorScheme)
-    val data=remember(session,state.presence,state.weather) {liveJourneyShare(session,System.currentTimeMillis(),state.presence,state.weather)}
-    CompactCardSheet(colors,LiveJourneyShareRenderer.WIDTH,data to colors,{scale->LiveJourneyShareRenderer.render(data,colors,scale)},
-        data.plainText,null,liveCompactSource(session),onDismiss)
+    val data=remember(session.trip) {runCatching {JourneyShareData.from(session.trip)}}
+    val card=data.getOrNull()
+    CompactCardSheet(colors,JourneyShareRenderer.WIDTH,session.trip to colors,
+        card?.let {d->{scale:Float->JourneyShareRenderer.render(context,d,colors,scale)}},
+        card?.let(JourneyShareRenderer::description).orEmpty(),
+        data.exceptionOrNull()?.message,liveCompactSource(session),onDismiss)
 }
 
 /** Earlier builds exported share images into the private cache; nothing is exported any more. */
@@ -102,6 +108,8 @@ fun liveCompactSource(session:PinnedJourneySession):String =
 @Composable internal fun CompactCardSheet(colors:ShareCardColors,logicalWidth:Int,renderKey:Any,render:((Float)->Bitmap)?,
     description:String,message:String?,source:String,onDismiss:()->Unit) {
     val context=LocalContext.current
+    // Build 116: the compact view takes the whole height; the navigation pill steps aside meanwhile.
+    RequestPillAside()
     val ground=Color(colors.background)
     val ink=Color(readableForeground(colors.text.toLong() and 0xffffffffL,colors.background.toLong() and 0xffffffffL))
     val shape=MaterialTheme.shapes.extraLarge.copy(bottomStart=CornerSize(0),bottomEnd=CornerSize(0))
