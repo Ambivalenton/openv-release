@@ -230,6 +230,10 @@ fun NetworkPlan(
         if (androidx.core.graphics.ColorUtils.calculateContrast(c, paperSolid.toArgb()) >= 3.0) null
         else e.id to Color(readableLine(paletteColors[i], paperSolid.toArgb()))
     }.toMap()
+    // Build 110: the material of the App-Theme plan (sheet and stations), monochrome stays plain.
+    val finish = if (settings.monochrome) PlanFinish.PLAIN else look.finish
+    val planInk = PlanInk(paper, ink, scheme.background, scheme.primary, scheme.secondary, scheme.tertiary, scheme.outlineVariant, dark,
+        quiet || visuals.readability.contrast == AppContrast.HIGH)
     /** Mexiko-Stadt: a station takes the colour of its first line. */
     val stationLineColor = placed.keys.associateWith { id -> drawn.firstOrNull { it.touches(id) }?.let { lineColors[it.id] } }
 
@@ -370,7 +374,8 @@ fun NetworkPlan(
                 val pad = panelPad.toPx()
                 val outline = panel.createOutline(androidx.compose.ui.geometry.Size(size.width + pad * 2, size.height + pad * 2), layoutDirection, this)
                 translate(-pad, -pad) {
-                    drawOutline(outline, paper)
+                    drawSheetUnder(finish, outline, planInk)
+                    sheetFill(finish, paper, scheme.background)?.let { drawOutline(outline, it) }
                     // The sheet carries the theme's motif or system pane.
                     val theme = visuals.theme
                     if (sheetMotif && theme != null) {
@@ -384,7 +389,7 @@ fun NetworkPlan(
                             }
                         }
                     }
-                    drawOutline(outline, scheme.outlineVariant.copy(alpha = .6f), style = Stroke(1.dp.toPx()))
+                    drawSheetOver(finish, outline, planInk)
                 }
             }
             .then(if (preview != null) Modifier.clearAndSetSemantics {} else Modifier.semantics { isTraversalGroup = true })
@@ -633,6 +638,9 @@ fun NetworkPlan(
                                     LineStyle.RAIL -> drawPath(path, paper.copy(alpha = .92f), style = Stroke(lineWidth * .4f, cap = StrokeCap.Butt, join = StrokeJoin.Round,
                                         pathEffect = PathEffect.dashPathEffect(floatArrayOf(lineWidth * 1.1f, lineWidth * 1.1f))))
                                     LineStyle.GLOW -> drawPath(path, Color.White.copy(alpha = .75f * alpha), style = Stroke(lineWidth * .2f, cap = StrokeCap.Round, join = StrokeJoin.Round))
+                                    LineStyle.STITCH -> drawPath(path, lerp(color, if (color.luminance() > .5f) Color.Black else Color.White, .6f).copy(alpha = .8f * alpha),
+                                        style = Stroke(lineWidth * .14f, cap = StrokeCap.Round, join = StrokeJoin.Round,
+                                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(lineWidth * .55f, lineWidth * .4f))))
                                     LineStyle.SOLID -> Unit
                                 }
                             }
@@ -770,6 +778,7 @@ fun NetworkPlan(
                         semantics = nodeSemantics(store, favorite, editing, anchorId, overrideId, overviewPins, latestActions, placed, geometry, now),
                         mark = if (settings.monochrome) StationMark.FAVORITE else look.station, paper = paper, ink = ink,
                         tile = stationLineColor[id], stationShape = look.stationShape.takeUnless { settings.monochrome },
+                        finish = finish, planInk = planInk,
                     )
                 }
             }
@@ -879,6 +888,7 @@ private fun NetworkNodeView(
     semantics: SemanticsPropertyReceiver.() -> Unit, overview: Boolean = false,
     mark: StationMark = StationMark.FAVORITE, paper: Color = Color.White, ink: Color = Color.Black, tile: Color? = null,
     stationShape: StationShape? = null,
+    finish: PlanFinish = PlanFinish.PLAIN, planInk: PlanInk? = null,
 ) {
     val scheme = MaterialTheme.colorScheme
     val density = LocalDensity.current
@@ -889,7 +899,9 @@ private fun NetworkNodeView(
     val animated by animateFloatAsState(scale * if (lifted) 1.12f else 1f, if (quiet) snap() else spring(dampingRatio = .55f, stiffness = 320f), label = "network-node-scale")
     val colors = favoriteColors(favorite.accentSeed, dark, scheme)
     // Mexiko-Stadt draws every station as a tile; all other designs keep the favourite's shape.
-    val shape = stationShapeFor(mark, stationShape, favorite)
+    // Build 110: favourites on the App-Theme plan are built in the design's material.
+    val material = finish != PlanFinish.PLAIN && mark == StationMark.FAVORITE && planInk != null
+    val shape = stationShapeFor(mark, stationShape, favorite).let { if (material) stationShapeIn(finish, it) else it }
     // The favourite's colour, readable on the design's sheet (rings and symbols of printed-map designs).
     val accentOnPaper = Color(dev.ambivalenton.openv.ui.theme.readableForeground(colors.accent.toArgb().toLong() and 0xFFFFFFFFL,
         paper.toArgb().toLong() and 0xFFFFFFFFL, 3.0).toInt())
@@ -942,12 +954,14 @@ private fun NetworkNodeView(
             .graphicsLayer { rotationZ = -axis; scaleX = appear.value; scaleY = appear.value }
             // Own shadow, never the platform one: concave shapes (cookie, clover) crashed it, see shapeShadow.
             // Printed-map designs lie flat on their sheet; only a lifted favourite casts a shadow there.
-            .then(if (mark == StationMark.FAVORITE || lifted) Modifier.shapeShadow(shape, if (lifted) 8.dp else 3.dp, lerp(Color.Black, scheme.primary, .1f)) else Modifier)
+            .then(if (material) Modifier.stationBody(finish, shape, fill, planInk!!, lifted)
+            else Modifier.then(if (mark == StationMark.FAVORITE || lifted) Modifier.shapeShadow(shape, if (lifted) 8.dp else 3.dp, lerp(Color.Black, scheme.primary, .1f)) else Modifier)
             .background(fill, shape)
             .then(if (ring != null) Modifier.shapeContour(shape, (diameter * (.11f + .04f * pinGlow)).coerceAtLeast(2.dp), ring)
-                else Modifier.shapeContour(shape, 1.5.dp, (if (mark == StationMark.FAVORITE) scheme.surface else paper).copy(alpha = .9f))),
+                else Modifier.shapeContour(shape, 1.5.dp, (if (mark == StationMark.FAVORITE) scheme.surface else paper).copy(alpha = .9f)))),
             contentAlignment = Alignment.Center) {
-            AppIcon(favorite.icon.resource(), null, Modifier.size(diameter * if (ring != null) .5f else .55f), tint = symbol)
+            AppIcon(favorite.icon.resource(), null, Modifier.size(diameter * if (ring != null) .5f else .55f),
+                tint = if (material) stationSymbol(finish, fill, symbol, accentOnPaper, planInk!!) else symbol)
         }
         if (override) Box(Modifier.align(Alignment.TopEnd).padding(4.dp).size(18.dp).background(scheme.primary, CircleShape), contentAlignment = Alignment.Center) {
             AppIcon(R.drawable.ic_pin, null, Modifier.size(12.dp), tint = scheme.onPrimary)

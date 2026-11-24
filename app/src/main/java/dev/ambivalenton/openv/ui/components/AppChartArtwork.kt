@@ -186,6 +186,11 @@ private fun DrawScope.drawLanguageChartBar(language:DesignLanguage,path:Path,ink
                     while(y<h && row<8){var x=(row%2)*u;while(x<w){drawRect(lerp(c,Color.Black,.18f),Offset(x,y),Size(u,u));x+=u*2};y+=u;row++}}}
             DesignLanguage.CHROME->{drawRect(Brush.verticalGradient(0f to lerp(c,Color.White,.5f),.48f to lerp(c,Color.White,.12f),.5f to c,1f to lerp(c,Color.Black,.16f)))
                 if(!quiet)drawLine(Color.White.copy(alpha=.8f),Offset(3.dp.toPx(),1.5.dp.toPx()),Offset(w-3.dp.toPx(),1.5.dp.toPx()),1.dp.toPx())}
+            DesignLanguage.STITCH->{drawRect(c)
+                if(!quiet) drawWeave(onSurface.copy(alpha=if(dark).06f else .05f),3.dp.toPx())
+                val inset=min(3.dp.toPx(),min(w,h)*.2f)
+                if(w>inset*3 && h>inset*3) drawRect(lerp(c,if(dark) Color.White else Color.Black,.35f).copy(alpha=.7f),Offset(inset,inset),Size(w-2*inset,h-2*inset),
+                    style=Stroke(1.dp.toPx(),pathEffect=PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(),3.dp.toPx()))))}
             DesignLanguage.PAPER->{drawRect(c)
                 if(!quiet){val fold=min(8.dp.toPx(),min(w,h)*.22f)
                     drawPath(Path().apply {moveTo(w-fold,h);lineTo(w-fold,h-fold);lineTo(w,h-fold);close()},lerp(c,Color.Black,.18f))}}

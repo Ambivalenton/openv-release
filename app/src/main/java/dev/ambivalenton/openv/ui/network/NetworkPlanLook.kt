@@ -43,6 +43,8 @@ internal enum class LineStyle {
     DOUBLE,
     /** Neon tube: halo, coloured core and a bright centre. */
     GLOW,
+    /** Build 110 · a ribbon with a running stitch down its middle (cloth designs). */
+    STITCH,
 }
 
 /** The station outline of a design; null keeps the favourite's own shape. */
@@ -97,6 +99,8 @@ internal data class NetworkPlanLook(
     val stroke: PlanStroke = PlanStroke.SOLID,
     /** Paint the app theme's own motif (or system pane) on the sheet, like on the app's panels. */
     val motif: Boolean = false,
+    /** Build 110 · material of sheet and stations (App-Theme design only). */
+    val finish: PlanFinish = PlanFinish.PLAIN,
 )
 
 /* Line colours as published by the operators (rounded to sRGB); order = assignment order. */
@@ -144,7 +148,7 @@ private val osakaColors = listOf(0xFFE5171F, 0xFF522886, 0xFF0078BA, 0xFF019A66,
 
 /** The look as drawn: the App-Theme design is derived from the active theme, all others are fixed. */
 internal fun NetworkPlanDesign.lookFor(theme: AppTheme?): NetworkPlanLook =
-    if (this == NetworkPlanDesign.APP_THEME && theme != null) appThemePlanLook(theme) else look
+    if (this == NetworkPlanDesign.APP_THEME && theme != null) appThemePlanLook(theme).copy(finish = planFinishFor(theme)) else look
 
 private val pixelThemes = setOf(AppTheme.POCKET_CONSOLE, AppTheme.PIXEL_DAWN, AppTheme.RETRO_ARCADE, AppTheme.DECADE_90)
 private val neonThemes = setOf(AppTheme.SYNTHWAVE, AppTheme.CYBERPUNK_NEON, AppTheme.DECADE_80, AppTheme.NEON_ORIGAMI,
@@ -295,6 +299,7 @@ internal fun appThemeNetworkLook(theme: dev.ambivalenton.openv.data.model.AppThe
         DesignLanguage.GLASS, DesignLanguage.CHROME -> NetworkPlanLook(null, palette, 1.2f, corner, casing = LineCasing.PAPER, sheen = true, station = StationMark.FAVORITE)
         DesignLanguage.SOFT, DesignLanguage.CLAY -> NetworkPlanLook(null, palette, 1.45f, .85f, casing = LineCasing.PAPER, station = StationMark.FAVORITE)
         DesignLanguage.PAPER -> NetworkPlanLook(null, palette, 1.15f, corner, line = LineStyle.DOUBLE, station = StationMark.FAVORITE)
+        DesignLanguage.STITCH -> NetworkPlanLook(null, palette, 1.35f, corner, line = LineStyle.STITCH, station = StationMark.FAVORITE)
         DesignLanguage.BENTO, DesignLanguage.FLAT -> NetworkPlanLook(null, palette, 1.2f, corner, station = StationMark.FAVORITE)
         DesignLanguage.MATERIAL -> NetworkPlanLook(null, palette, 1.05f, corner, casing = LineCasing.PAPER, station = StationMark.ACCENT_RING)
     }

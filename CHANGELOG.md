@@ -4,6 +4,11 @@ Alle nennenswerten Änderungen an Öpen-V. Versionen folgen [Semantic Versioning
 
 ## [Unveröffentlicht]
 
+## [1.1.0] (110) · 2026-11-24
+
+- Design-Sammlungen bauen die App jetzt grundlegend verschieden auf, nicht nur in anderen Farben. Acht Sammlungen, die bisher nur Farbe und Muster wechselten, haben eine eigene Bauweise: Kosmos aus Glas über den Sternkarten, Minerale aus poliertem Chrom mit facettierten Ecken, Textil mit gesteppten Nähten (neue Bauweise „Naht & Stoff“), Architektur im Swiss-Raster mit farbigem Kopfband und kantigen Flächen, Café als Keramik-Relief, Druck als Editorial mit feinen Regeln, Gaming in 8-Bit mit Pixelecken und Stufenschatten, Haustiere aus weicher Knete. Karten, Felder, Knöpfe, Navigationsleiste, Balkendiagramm und Anzeigetafel folgen der Bauweise; die Motive der Sammlungen bleiben darunter sichtbar.
+- Netzplan „App-Theme“: Kartenblatt und Stationen sind aus dem Material des Designs gebaut – Glasscheibe mit Lichtkante und Glaskugeln, Neonröhre mit Leuchtrand, Pixel-Sprites auf Rasterpunkten, Plakat mit Tuschkontur und Versatzschatten, pralle Knete, poliertes Chrom mit Fassung, geprägtes Relief, Papierlagen, gesteppter Stoff, Linienzeichnung, Druckringe, Terminalrahmen oder Swiss-Raster. Bisher sahen Blatt und Stationen in jedem Design gleich aus. Im Ruhemodus und bei hohem Textkontrast entfallen Glanz, Leuchten und Texturen; Formen und Konturen bleiben.
+
 ## [1.0.9] (109) · 2026-11-24
 
 - App-Designs kuratiert: Alle Designs wurden mit Übersicht, beiden Anzeigetafeln, Balkendiagramm und Netzplan nebeneinander geprüft. 105 Designs, die einem Geschwister nahezu glichen, sind aus der Auswahl genommen; 240 bleiben, jede Sammlung weiterhin mit hellen und dunklen Varianten. „Weich & taktil“ geht in „Sanftes Relief“ und „Knete & Clay“ auf, der Neo-Brutalismus aus „Kante & Kontrast“ in seine eigene Sammlung. Wer ein entferntes Design nutzt, behält beim Update das nächstverwandte (gleiche Helligkeit, meist dieselbe Sammlung) samt eigener Farben; auch Tag/Nacht, Zufallsdesign und gespeicherte eigene Designs werden umgestellt.
@@ -82,7 +87,8 @@ Erste Version.
 - Fahrplandaten von VRR OpenService, Haltestellenverzeichnis für Deutschland offline mitgeliefert.
 - Test-App „Öpen-V · Vorschau“ (`dev.ambivalenton.openv.next`), die sich neben der Store-App installiert.
 
-[Unveröffentlicht]: https://github.com/Ambivalenton/openv-release/compare/v1.0.9...HEAD
+[Unveröffentlicht]: https://github.com/Ambivalenton/openv-release/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/Ambivalenton/openv-release/compare/v1.0.9...v1.1.0
 [1.0.9]: https://github.com/Ambivalenton/openv-release/compare/v1.0.8...v1.0.9
 [1.0.8]: https://github.com/Ambivalenton/openv-release/compare/v1.0.7...v1.0.8
 [1.0.7]: https://github.com/Ambivalenton/openv-release/compare/v1.0.6...v1.0.7

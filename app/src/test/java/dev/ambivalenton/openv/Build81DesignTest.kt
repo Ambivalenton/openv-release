@@ -31,8 +31,15 @@ class Build81DesignTest {
             assertTrue(t.name,t.headFont in fontIds && t.bodyFont in fontIds)
             assertNotNull("${t.name} title",englishStrings[t.titleKey]);assertNotNull("${t.name} description",englishStrings[t.detailKey])
         }
-        // Catalog collections, operating systems and the quiet baseline keep their look.
-        (AppTheme.entries-redesigned.toSet()).forEach {assertEquals(it.name,DesignLanguage.MATERIAL,it.language)}
+        // Build 110: the catalogue collections build the app in their own language (one per collection);
+        // operating systems and the quiet baseline keep Material.
+        val collections=mapOf("COSMOS_" to DesignLanguage.GLASS,"MINERAL_" to DesignLanguage.CHROME,"TEXTILE_" to DesignLanguage.STITCH,
+            "ARCH_" to DesignLanguage.SWISS,"CAFE_" to DesignLanguage.SOFT,"PRINT_" to DesignLanguage.EDITORIAL,"GAME_" to DesignLanguage.PIXEL,
+            "PET_" to DesignLanguage.CLAY)
+        (AppTheme.entries-redesigned.toSet()).forEach {t->
+            val own=collections.entries.firstOrNull {t.name.startsWith(it.key)}?.value ?: DesignLanguage.MATERIAL
+            assertEquals(t.name,own,t.language)
+        }
     }
 
     @Test fun theRedesignedGroupsAreVariedAndEveryLanguageIsUsed() {
@@ -41,7 +48,9 @@ class Build81DesignTest {
             assertTrue("${g.name} mixes languages",themes.map {it.language}.distinct().size>=2)
             assertTrue("${g.name} light and dark",themes.any {it.dark} && themes.any {!it.dark} || g in setOf(AppThemeGroup.BOLD,AppThemeGroup.SOFT))
         }
-        assertEquals(DesignLanguage.entries.toSet()-DesignLanguage.MATERIAL,redesigned.map {it.language}.toSet())
+        // Every language is spoken; "Naht & Stoff" (build 110) by the textile collection.
+        assertEquals(DesignLanguage.entries.toSet()-DesignLanguage.MATERIAL,
+            (redesigned+AppTheme.entries.filter {it.name.startsWith("TEXTILE_")}).map {it.language}.toSet())
         // Every theme is listed exactly once.
         val listed=groupedAppThemes().flatMap {it.second}
         val kept=AppTheme.entries.filterNot {it.retired}

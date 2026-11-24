@@ -1891,6 +1891,7 @@ internal val englishStrings: Map<String, String> = buildMap {
     put("Nachtstück in Weinrot mit stillen Goldlinien", "Nocturne in wine red with quiet gold rules")
     put("Nachtterminal", "Night Terminal")
     put("Nachtzug", "Night Train")
+    put("Naht & Stoff", "Seam & cloth")
     put("Name", "Name")
     put("Name des Favoriten", "Name of the favourite")
     put("Name des Favoriten oder Ziels", "Favourite or destination name")

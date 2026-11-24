@@ -42,6 +42,8 @@ enum class DesignLanguage(val titleKey:String) {
     CHROME("Chrom"),
     /** Layered paper: stacked cut-paper shadows. */
     PAPER("Papierschichten"),
+    /** Build 110 · cloth: woven surfaces, a stitched seam just inside every edge, soft fabric shadow. */
+    STITCH("Naht & Stoff"),
 }
 
 enum class LanguageShadow { NONE, SOFT, NEUMORPHIC, CLAY, HARD, STEPPED, GLOW, LAYERED }
@@ -86,6 +88,7 @@ val DesignLanguage.spec:LanguageSpec get()=when(this) {
     DesignLanguage.PIXEL->LanguageSpec(LanguageShadow.STEPPED,2f,true,LanguageFill.TINTED,LanguageBackdrop.PLAIN,LanguageHeader.RULE,500,0f,.02f)
     DesignLanguage.CHROME->LanguageSpec(LanguageShadow.SOFT,1f,false,LanguageFill.CONTAINER,LanguageBackdrop.TINT,LanguageHeader.GLASS,700,0f,.02f)
     DesignLanguage.PAPER->LanguageSpec(LanguageShadow.LAYERED,0f,false,LanguageFill.CONTAINER,LanguageBackdrop.PLAIN,LanguageHeader.HAIRLINE,650,-.005f,.03f)
+    DesignLanguage.STITCH->LanguageSpec(LanguageShadow.SOFT,0f,false,LanguageFill.TINTED,LanguageBackdrop.PLAIN,LanguageHeader.DASHED,650,0f,.03f,dashed=true)
 }
 
 /** Languages whose ride bars and time chips carry a solid ink contour (build 74 "graphic" borders). */
@@ -110,4 +113,5 @@ fun DesignLanguage.defaultDisplay(dark:Boolean):BoardDisplayTechnology?=when(thi
     DesignLanguage.PIXEL->if(dark)BoardDisplayTechnology.LED_MATRIX else BoardDisplayTechnology.REFLECTIVE_LCD
     DesignLanguage.CHROME->BoardDisplayTechnology.TFT_LCD
     DesignLanguage.PAPER->BoardDisplayTechnology.SEGMENT_LED
+    DesignLanguage.STITCH->if(dark)BoardDisplayTechnology.E_INK else BoardDisplayTechnology.VFD
 }

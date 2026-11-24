@@ -124,7 +124,11 @@ fun appTypography(visuals: AppVisuals): Typography {
         if(theme?.isOperatingSystem==true){drawSystemWallpaper(theme,bg,primary,secondary);return@onDrawBehind}
         // Design languages get one quiet backdrop at most – never a wallpaper pattern.
         if(theme!=null && theme.language!=DesignLanguage.MATERIAL) {
-            if(!quiet && !highContrast) drawLanguageBackdrop(theme,bg,primary,secondary)
+            if(!quiet && !highContrast) {
+                // Build 110: the collections keep their motif under the language's light (stars behind glass, plaid under seams).
+                if(theme.texture.name.startsWith("CATALOG_")) drawDecorativeThemeTexture(theme.texture,textureInk,backdrop,bg)
+                drawLanguageBackdrop(theme,bg,primary,secondary)
+            }
             return@onDrawBehind
         }
         // With "Hoher Textkontrast" no motif or texture runs behind text.

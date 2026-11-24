@@ -57,7 +57,7 @@ fun LanguageInk.fill(base:Color):Color=when(spec.fill) {
 /** Outline of a card-like surface, or null where the language draws none (or draws it itself). */
 fun LanguageInk.border():BorderStroke?=when(language) {
     DesignLanguage.MATERIAL,DesignLanguage.FLAT,DesignLanguage.SOFT,DesignLanguage.CLAY,DesignLanguage.SWISS,
-    DesignLanguage.PAPER,DesignLanguage.EDITORIAL,DesignLanguage.TERMINAL->null
+    DesignLanguage.PAPER,DesignLanguage.EDITORIAL,DesignLanguage.TERMINAL,DesignLanguage.STITCH->null
     DesignLanguage.GLASS->BorderStroke(1.dp,Brush.linearGradient(listOf(Color.White.copy(alpha=if(dark).30f else .9f),
         Color.White.copy(alpha=if(dark).06f else .25f),onSurface.copy(alpha=.10f))))
     DesignLanguage.AURORA->BorderStroke(spec.border.dp,Brush.linearGradient(listOf(primary,secondary,tertiary)))
@@ -136,6 +136,11 @@ fun Modifier.languageInnerMaterial(shape:Shape,ink:LanguageInk):Modifier {
                 }
                 DesignLanguage.TERMINAL->drawOutline(outline,ink.primary.copy(alpha=.7f),style=Stroke(1.dp.toPx(),
                     pathEffect=PathEffect.dashPathEffect(floatArrayOf(5.dp.toPx(),3.dp.toPx()))))
+                // Cloth: a fine weave under a running stitch just inside the edge, in the thread colour.
+                DesignLanguage.STITCH->{
+                    if(!ink.quiet) clipPath(path) {drawWeave(ink.onSurface.copy(alpha=if(ink.dark).05f else .045f),4.dp.toPx())}
+                    drawSeam(outline,lerp(ink.secondary,ink.onSurface,.15f).copy(alpha=.75f),5.dp.toPx(),1.2.dp.toPx())
+                }
                 else->Unit
             }
         }
@@ -233,3 +238,21 @@ internal fun DrawScope.drawLanguageHeader(theme:AppTheme,ink:LanguageInk,top:Flo
 
 /** Ink of header text and icons: on the coloured block of Swiss designs it follows the block. */
 fun LanguageInk.headerContent(default:Color):Color=if(active && spec.header==LanguageHeader.BLOCK) contrastContentColor(primary) else default
+
+/** A woven ground: fine warp and weft threads every [step]. */
+internal fun DrawScope.drawWeave(thread:Color,step:Float) {
+    val w=size.width;val h=size.height;var x=0f;var n=0
+    while(x<w && n<400){drawLine(thread,Offset(x,0f),Offset(x,h),step*.35f);x+=step;n++}
+    var y=0f;n=0
+    while(y<h && n<400){drawLine(thread.copy(alpha=thread.alpha*.7f),Offset(0f,y),Offset(w,y),step*.35f);y+=step;n++}
+}
+
+/** A running stitch [inset] inside [outline]: the same shape, scaled about its centre, dashed. */
+internal fun DrawScope.drawSeam(outline:Outline,thread:Color,inset:Float,width:Float) {
+    val w=size.width;val h=size.height
+    if(w<=inset*3 || h<=inset*3) return
+    withTransform({scale((w-2*inset)/w,(h-2*inset)/h,center)}) {
+        drawOutline(outline,thread,style=Stroke(width,cap=StrokeCap.Round,
+            pathEffect=PathEffect.dashPathEffect(floatArrayOf(width*4.2f,width*3f))))
+    }
+}
