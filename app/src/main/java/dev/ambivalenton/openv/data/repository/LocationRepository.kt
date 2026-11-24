@@ -409,7 +409,14 @@ class LocationRepository(private val store: androidx.datastore.core.DataStore<St
         require(id.matches(Regex("[a-z0-9-]{1,80}")))
         old.copy(completedTutorials=old.completedTutorials+id)
     }
-    suspend fun resetTutorials() = updateData {it.copy(completedTutorials=emptySet())}
+    suspend fun resetTutorials() = updateData {it.copy(completedTutorials=emptySet(),gestureHints=GestureHintProgress())}
+    /** Build 115 · a gesture was used: its hint ends for good. */
+    suspend fun learnGestureHint(key:String) = updateData {old->
+        require(key.matches(Regex("[a-z0-9-]{1,40}")))
+        if(key in old.gestureHints.learned) old else old.copy(gestureHints=old.gestureHints.copy(learned=old.gestureHints.learned+key))
+    }
+    /** Build 115 · foreground time counts towards the first hours of hints. */
+    suspend fun addGestureHintUse(millis:Long,now:Long) = updateData {it.copy(gestureHints=it.gestureHints.used(millis,now))}
     suspend fun restartOnboarding() = updateData {it.copy(onboardingVersion=0,onboardingDraft=null)}
 
     suspend fun recordPresence(fix: DevicePresence) =

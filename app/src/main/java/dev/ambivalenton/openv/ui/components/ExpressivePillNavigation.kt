@@ -42,6 +42,8 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.inset
+import dev.ambivalenton.openv.ui.hints.gestureHint
 import androidx.compose.ui.graphics.StrokeJoin
 import dev.ambivalenton.openv.data.model.ThemeLanguage
 import dev.ambivalenton.openv.data.model.themeLanguageOrStandard
@@ -90,6 +92,10 @@ internal val PillNavigationTop=PillNavigationPadding+PillNavigationInset
 /** [target]: The page a tap is taking the pager to; the capsule heads there until the pager has arrived. */
 @Composable fun ExpressivePillNavigationTo(pager: PagerState,tabs: List<PillDestination>,selectedOverride: Int?,target: Int?,onSelect: (Int)->Unit) {
     if(tabs.isEmpty()) return
+    // Build 115: once the pages have changed, the swipe hint is no longer needed.
+    val hints=dev.ambivalenton.openv.ui.hints.LocalGestureHints.current
+    val firstPage=remember {pager.settledPage}
+    LaunchedEffect(pager.settledPage) {if(pager.settledPage!=firstPage) hints?.learn(dev.ambivalenton.openv.data.model.GestureHintKeys.PAGES)}
     val visuals=dev.ambivalenton.openv.ui.theme.LocalAppVisuals.current
     val roundness=if(visuals.theme?.shapeStyle in setOf(dev.ambivalenton.openv.data.model.ThemeShape.CUT,dev.ambivalenton.openv.data.model.ThemeShape.BEVEL)) .15f else visuals.radiusScale.coerceIn(0f,1f)
     val shellShape=dev.ambivalenton.openv.ui.theme.appCorner(42.dp)
@@ -203,7 +209,9 @@ internal val PillNavigationTop=PillNavigationPadding+PillNavigationInset
                 val inset=PillNavigationInset.value*density.density;val p=c.positionInRoot()
                 stage.pill=Rect(p.x+inset,p.y+inset,p.x+c.size.width-inset,p.y+c.size.height-inset)
             } else Modifier)
-            .testTag("expressive-pill-navigation").selectableGroup()) {
+            .testTag("expressive-pill-navigation").selectableGroup()
+            // Build 115: the pages can be swiped – a dot glides across the pill in the first hours of use.
+            .gestureHint(dev.ambivalenton.openv.data.model.GestureHintKeys.PAGES,dev.ambivalenton.openv.ui.hints.HintKind.SWIPE,5200L)) {
             Canvas(Modifier.fillMaxSize()) {
                 val inset=7.dp.toPx();val slot=(size.width-2*inset)/tabs.size
                 val geometry=pillVisualGeometry(size.width,size.height,tabs.size,inset,
@@ -237,16 +245,20 @@ internal val PillNavigationTop=PillNavigationPadding+PillNavigationInset
                 }
                 drawPath(outline,bg)
                 clipPath(outline) {
-                    if(os!=null)drawIntoCanvas{drawSystemHeader(it.nativeCanvas,os,size.width,size.height,surfacePalette,density.density)}
+                    // The shell swells beyond its box while it springs: the bar's fill reaches past it, its rules stay out.
+                    if(os!=null)drawIntoCanvas{drawSystemHeader(it.nativeCanvas,os,size.width,size.height,surfacePalette,density.density,
+                        bleed=16.dp.toPx(),edges=false)}
+                    // Panel light follows the swelling too (at rest the outline stays inside the box: unchanged).
+                    val swell=outline.getBounds().let {maxOf(0f,-it.top,it.bottom-size.height)}
                     if(languageTheme!=null && language!=ThemeLanguage.STANDARD && !quiet && !highContrast)
-                        drawLanguagePanel(languageTheme,accent,secondaryInk)
+                        inset(0f,-swell,0f,-swell) {drawLanguagePanel(languageTheme,accent,secondaryInk)}
                     if(flashTab>=0 && flash.value>0) drawRoundRect(touch.copy(alpha=touch.alpha*flash.value),
                         Offset(inset+slot*flashTab,inset),Size(slot,size.height-2*inset),CornerRadius((size.height-2*inset)/2))
-                    if(lang.active && !lang.quiet) when(lang.language) {
+                    if(lang.active && !lang.quiet) inset(0f,-swell,0f,-swell) {when(lang.language) {
                         DesignLanguage.GLASS->drawRect(Brush.verticalGradient(listOf(Color.White.copy(alpha=if(lang.dark).10f else .40f),Color.Transparent)))
                         DesignLanguage.CHROME->drawRect(Brush.verticalGradient(0f to Color.White.copy(alpha=.6f),.5f to Color.White.copy(alpha=.08f),.51f to Color.Transparent,1f to Color.Black.copy(alpha=.05f)))
                         else->Unit
-                    }
+                    }}
                     val drop=themedPillPath(selectionShape,geometry.capsule,density,direction,strain=if(reduced||quiet)0f else head-tail,roundness=roundness)
                     drawPath(drop,tones?.at(if(reduced||quiet) destination else (head+tail)/2)?.fill ?: capsule)
                     when {

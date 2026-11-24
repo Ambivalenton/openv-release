@@ -1,0 +1,2 @@
+• Bedienhinweise ohne Text in den ersten Stunden: pulsierende Symbole, Halte-Ringe, Gesten-Filme in der Netzplan-Leiste und Pfeile im Netzplan; abschaltbar.
+• Behoben: helle Linie in der Navigationsleiste bei System-Designs; die Reisekarte rechts rutscht beim Aufklappen nicht mehr.

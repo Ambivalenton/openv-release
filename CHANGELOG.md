@@ -4,6 +4,15 @@ Alle nennenswerten Änderungen an Öpen-V. Versionen folgen [Semantic Versioning
 
 ## [Unveröffentlicht]
 
+## [1.1.5] (115) · 2026-11-24
+
+- Bedienhinweise ohne Text: In den ersten Stunden der Nutzung zeigen kleine Animationen, was sich antippen, halten oder wischen lässt – das Zahnrad nickt, der Stift über dem Netzplan pulsiert, die Datums- und Zeitwahl und „Design“ unter der Anzeigetafel pulsieren leise, im Balkendiagramm füllt sich ein Halte-Ring auf der ersten Verbindung, über die Navigationsleiste gleitet ein Punkt (Seiten wischen). Jeder Hinweis endet für immer, sobald die Geste einmal genutzt wurde; nach etwa drei Stunden Nutzung (höchstens zwei Wochen) enden alle. Hinweise spielen kurz und ruhen dann einige Sekunden, ohne in der Pause zu zeichnen. Abschaltbar unter Modi & Verhalten („Bedienhinweise“); „Bedienhinweise erneut zeigen“ unter Info & Hilfe startet sie neu. Im Ruhe- und Stromsparmodus und neben einer Text-Anleitung erscheinen sie nicht.
+- Netzplan-Leiste: Die Felder „Halten und schieben“, „Ziehen“ und „Tippen“ zeigen nacheinander je einen kurzen Film ihrer Geste – ein Favorit wird gehalten und in ein freies Feld getragen, eine Linie zum Nachbarn gezogen, ein Tipp öffnet eine kleine Einstellungskarte –, dann federt der Text zurück.
+- Netzplan in den ersten Stunden: Im Bearbeitungsmodus zeigt ein Finger an einem echten Favoriten, wie er sich verschieben, verbinden und einstellen lässt (gestrichelter Pfeil ins freie Feld, wachsende Linie, aufspringende Karte); außerhalb zeigt ein Halte-Ring auf freier Fläche, dass Gedrückthalten die Namen zeigt.
+- Behoben: Bei System-Designs wie „2001 · Hügelblau“ erschien unten in der federnden Navigationsleiste eine helle Linie, wo sich die Leiste wölbt.
+- Behoben: Die schwebende Reisekarte am rechten Bildschirmrand rutschte beim Auf- und Zuklappen leicht zur Seite; sie bleibt jetzt stehen wie am linken Rand.
+- Die Wegkarte am Umstieg verzichtet auf den Erklärsatz über dem Kartenausschnitt.
+
 ## [1.1.4] (114) · 2026-11-24
 
 - Balkendiagramm, Gesamtdauer: Die Minuten-Abzeichen über den Verbindungen richten sich nach den Verbindungen im Blick. Kürzere werden leicht größer (Schrift und Fläche), längere leicht kleiner; kürzere neigen sich etwas zur Akzentfarbe, längere zu einem ruhigen Grau. Wenige Minuten Unterschied bleiben dezent, doppelt so lange Fahrten sieht man deutlich. Die kürzeste Verbindung im Blick steht in der Akzentfarbe, die längste ist klar ausgegraut – ohne zusätzliche Größe. Beim Wischen wechselt alles mit einer weichen Feder; TalkBack nennt „kürzeste im Blick“ und „längste im Blick“.

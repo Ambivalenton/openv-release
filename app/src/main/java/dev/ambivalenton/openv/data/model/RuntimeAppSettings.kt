@@ -49,6 +49,8 @@ data class AppSettings(
     val timelineLabelControl: Float = 1f,
     /** Build 114 · the bar chart's now line: shown or not, clock, stroke, weight, colour. */
     val nowLine: NowLinePreferences = NowLinePreferences(),
+    /** Build 115 · small animated hints during the first hours of use (pulses, hold rings, gestures). */
+    val gestureHintsEnabled: Boolean = true,
     val timelineSeed: Long? = null,
     val timelinePalettes:Map<TimelineTheme,TimelinePaletteOverride> = emptyMap(),
     val timelineLineColors: Map<LineType, Long> = emptyMap(),

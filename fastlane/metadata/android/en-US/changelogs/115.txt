@@ -1,0 +1,2 @@
+• Wordless hints in the first hours: pulsing icons, hold rings, gesture films in the plan's edit bar and arrows on the plan; can be switched off.
+• Fixed: a light line in the navigation bar of system designs; the floating card on the right no longer shifts when opening.

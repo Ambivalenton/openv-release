@@ -274,6 +274,8 @@ fun NetworkPlan(
     val dim by animateFloatAsState(if (labelsHeld && !editing) 1f else 0f, if (quiet) snap() else tween(if (labelsHeld) 140 else 220),
         label = "network-label-dim")
 
+    // Build 115: wordless hints in the first hours of use; each ends the first time its gesture is used.
+    val hintState = dev.ambivalenton.openv.ui.hints.LocalGestureHints.current
     BoxWithConstraints(modifier.fillMaxWidth().testTag("network-plan"), contentAlignment = Alignment.TopCenter) {
         val side = minOf(maxWidth, 420.dp)
         val sidePx = with(density) { side.toPx() }
@@ -486,7 +488,7 @@ fun NetworkPlan(
                                     overZone -> { haptics.performHapticFeedback(HapticFeedbackType.Confirm); latestActions.onDelete(node) }
                                     outside -> latestActions.onToTray(node)
                                     // Back on its own field (a hold without moving): nothing to store.
-                                    target != null && target != placed[node] -> latestActions.onMove(node, target)
+                                    target != null && target != placed[node] -> { hintState?.learn(GestureHintKeys.PLAN_MOVE); latestActions.onMove(node, target) }
                                 }
                             } finally { holdToEdit = false; moving = null; moveTarget = null; latestZone?.let { it.moving = null; it.over = false } }
                         }
@@ -506,7 +508,7 @@ fun NetworkPlan(
                         !editing && node == null && press == null -> {
                             // Hold on a free spot (or a line): the names appear and go again on release.
                             haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            labelsHeld = true
+                            labelsHeld = true; hintState?.learn(GestureHintKeys.PLAN_HOLD)
                             try {
                                 do { val event = awaitPointerEvent(); event.changes.forEach { it.consume() } } while (event.changes.any { it.pressed })
                             } finally { labelsHeld = false }
@@ -520,7 +522,7 @@ fun NetworkPlan(
                             }
                             scope.launch { if (!quiet) delay(220); latestActions.onEdgeTap(edge) }
                         }
-                        editing && node != null && press == Press.TAP -> latestActions.onNodeTap(node)
+                        editing && node != null && press == Press.TAP -> { hintState?.learn(GestureHintKeys.PLAN_TAP); latestActions.onNodeTap(node) }
                         editing && edge != null && press == Press.TAP -> latestActions.onEdgeMenu(edge)
                         editing && free != null && press == Press.TAP -> {
                             if (trayPick != null) latestActions.onMove(trayPick, free) else latestActions.onFreePoint(free)
@@ -548,6 +550,7 @@ fun NetworkPlan(
                             ropeFrom = null; ropeSnap = null
                             if (cancelled) Unit
                             else if (target != null) {
+                                hintState?.learn(GestureHintKeys.PLAN_CONNECT)
                                 val id = latestActions.onConnect(node, target)
                                 if (id != null) {
                                     haptics.performHapticFeedback(HapticFeedbackType.Confirm)
@@ -878,6 +881,37 @@ fun NetworkPlan(
                         .testTag("network-label-$id").clearAndSetSemantics {},
                         style = style, textAlign = TextAlign.Center, color = ink)
                 }
+            }
+            // Build 115: hints on the plan in the first hours of use, one gesture at a time on a real favourite.
+            if (hintState != null && moving == null && !labelsHeld && settlingRun == null &&
+                dev.ambivalenton.openv.ui.tutorial.LocalTutorialState.current?.session == null) {
+                val anchor = order.firstOrNull()?.let { id -> placed[id]?.let { id to it } }
+                fun nearestFree(p: GridPoint): GridPoint? {
+                    for (d in 1..3) for (dy in -d..d) for (dx in -d..d) {
+                        if (maxOf(kotlin.math.abs(dx), kotlin.math.abs(dy)) != d) continue
+                        val q = GridPoint(p.x + dx, p.y + dy)
+                        if (q.free(placed.values, columns, rows)) return q
+                    }
+                    return null
+                }
+                val steps = buildList {
+                    val r = nodePx / 2f
+                    if (editing && anchor != null) {
+                        val (id, p) = anchor; val c = geometry.center(p)
+                        if (hintState.shows(GestureHintKeys.PLAN_MOVE)) nearestFree(p)?.let {
+                            add(dev.ambivalenton.openv.ui.hints.PlanHintStep(dev.ambivalenton.openv.ui.hints.PlanHintKind.MOVE, c, geometry.center(it), r)) }
+                        if (hintState.shows(GestureHintKeys.PLAN_CONNECT)) placed.filterKeys { it != id }.minByOrNull { (_, q) ->
+                                kotlin.math.abs(q.x - p.x) + kotlin.math.abs(q.y - p.y) }?.let {
+                            add(dev.ambivalenton.openv.ui.hints.PlanHintStep(dev.ambivalenton.openv.ui.hints.PlanHintKind.CONNECT, c, geometry.center(it.value), r)) }
+                        if (hintState.shows(GestureHintKeys.PLAN_TAP))
+                            add(dev.ambivalenton.openv.ui.hints.PlanHintStep(dev.ambivalenton.openv.ui.hints.PlanHintKind.TAP, c, null, r))
+                    } else if (!editing && hintState.shows(GestureHintKeys.PLAN_HOLD)) {
+                        val middle = GridPoint(columns / 2, rows / 2)
+                        (if (middle.free(placed.values, columns, rows)) middle else nearestFree(middle))?.let {
+                            add(dev.ambivalenton.openv.ui.hints.PlanHintStep(dev.ambivalenton.openv.ui.hints.PlanHintKind.NAMES, geometry.center(it), null, r)) }
+                    }
+                }
+                key(editing) { dev.ambivalenton.openv.ui.hints.PlanGestureHints(steps, Modifier.matchParentSize()) }
             }
         }
     }

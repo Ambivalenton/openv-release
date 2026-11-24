@@ -157,7 +157,6 @@ const val WALKING_MAP_CONTOUR_PX=5f
                     FittedText(title,Modifier.weight(1f),style=MaterialTheme.typography.titleLarge)
                     IconButton(onDismiss) {AppIcon(R.drawable.ic_close,tr("Karte schließen"))}
                 }
-                Text(tr("Hervorgehoben ist der zugehörige Wegabschnitt. Bei einer Abzweigung siehst du beide Straßen."),style=MaterialTheme.typography.bodyMedium)
                 WalkingRouteMap(parts,Modifier.weight(1f).fillMaxWidth(),interactive=true,tag="walking-map-expanded")
             }
         }

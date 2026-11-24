@@ -4,6 +4,8 @@
 
 package dev.ambivalenton.openv.ui.components
 
+import dev.ambivalenton.openv.ui.hints.gestureHint
+
 import dev.ambivalenton.openv.ui.components.AppDatePickerDialog as DatePickerDialog
 
 import dev.ambivalenton.openv.localization.tr
@@ -54,7 +56,8 @@ fun SplitDateTimePicker(
     val zone = ZoneId.systemDefault()
     val shown = Instant.ofEpochMilli(timeMillis ?: System.currentTimeMillis()).atZone(zone)
     Surface(
-        modifier.fillMaxWidth(),
+        // Build 115: the date and time can be changed – a quiet pulse in the first hours of use.
+        modifier.fillMaxWidth().gestureHint(dev.ambivalenton.openv.data.model.GestureHintKeys.SEARCH_TIME, dev.ambivalenton.openv.ui.hints.HintKind.PULSE, 3400L),
         shape = dev.ambivalenton.openv.ui.theme.appCorner(24.dp),
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {

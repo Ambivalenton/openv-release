@@ -4,6 +4,8 @@
 
 package dev.ambivalenton.openv.ui.components
 
+import dev.ambivalenton.openv.ui.hints.gestureHint
+
 import androidx.compose.animation.core.VisibilityThreshold
 
 import dev.ambivalenton.openv.localization.tr
@@ -337,6 +339,9 @@ private fun OeffiTimelineGraphBody(
                                     fadeOutSpec = if (quietMode) null else androidx.compose.animation.core.tween(180))
                                 .requiredWidth(columnWidth)
                                 .fillMaxHeight().cachedJourneyTint(trip.id in staleTripIds)
+                                // Build 115: on the first column in view, a hold ring shows what a long press does.
+                                .then(if (onTripLongPress != null && index == scrollState.firstVisibleItemIndex)
+                                    Modifier.gestureHint(dev.ambivalenton.openv.data.model.GestureHintKeys.CHART_HOLD, dev.ambivalenton.openv.ui.hints.HintKind.HOLD, 2400L) else Modifier)
                                 .clip(RoundedCornerShape(16.dp))
                                 .combinedClickable(
                                     role = Role.Button,

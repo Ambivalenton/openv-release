@@ -194,8 +194,27 @@ internal class PinnedBubbleOverlay(context:Context,private val attached:MutableS
         return BubbleArea(0,status,size.x,size.y-nav)
     }
 
-    /** Visible position → window position: the window starts one shadow inset earlier. */
-    private fun place(x:Int,y:Int) {visibleX=x;visibleY=y;params.x=x-inset;params.y=y-inset}
+    /** Width of the display the overlay is laid out in (its right edge anchors a bubble docked right). */
+    @Suppress("DEPRECATION")
+    private fun displayWidth():Int = if(Build.VERSION.SDK_INT>=30) windows.currentWindowMetrics.bounds.width()
+        else android.graphics.Point().also {windows.defaultDisplay.getRealSize(it)}.x
+
+    /**
+     * Visible position → window position: the window starts one shadow inset earlier. Build 115: docked
+     * right (and not dragged), the window is anchored at its right edge, so the card grows to the left
+     * out of a bubble that stays exactly where it is – as on the left edge. Before, the window itself
+     * moved left and back, and the bubble visibly shifted while the card opened and closed.
+     */
+    private fun place(x:Int,y:Int) {
+        visibleX=x;visibleY=y;params.y=y-inset
+        if(dockedRight && !gesture.dragging) {
+            params.gravity=Gravity.TOP or Gravity.END
+            params.x=displayWidth()-(x+if(windowOpen) cardWidth else bubbleSize)-inset
+        } else {
+            params.gravity=Gravity.TOP or Gravity.START
+            params.x=x-inset
+        }
+    }
 
     private fun move(x:Int,y:Int) {
         val view=bubble ?: return

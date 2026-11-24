@@ -4,6 +4,8 @@
 
 package dev.ambivalenton.openv
 
+import dev.ambivalenton.openv.ui.hints.gestureHint
+
 import kotlinx.coroutines.flow.distinctUntilChanged
 
 import kotlinx.coroutines.flow.drop
@@ -201,6 +203,10 @@ class MainActivity : ComponentActivity() {
                     LocalWalkingNavigationMode provides ui.store.settings.walkingNavigation,
                     LocalWalkingDirectionsSource provides remember(app) {app.koin.get<dev.ambivalenton.openv.data.repository.WalkingDirectionsSource>()},
                     LocalTutorialState provides rememberTutorialState(ui.store.completedTutorials,ui.ready && ui.storageError==null && ui.store.onboardingVersion>=1,vm::completeTutorial),
+                    // Build 115: wordless hints in the first hours of use (not with reduced motion).
+                    dev.ambivalenton.openv.ui.hints.LocalGestureHints provides dev.ambivalenton.openv.ui.hints.rememberGestureHints(ui.store.gestureHints,
+                        ui.ready && ui.storageError==null && ui.store.onboardingVersion>=1 && ui.store.settings.gestureHintsEnabled &&
+                            !ui.store.settings.reduceMotion,vm::learnGestureHint,vm::addGestureHintUse),
                     LocalPlaceSearchGateway provides remember(vm) {PlaceSearchGateway(vm::localLocationMatches,vm::locationSuggestions,startsImmediately=true)},
                     LocalFavoritePlaces provides ui.store.favorites,
                     LocalWaypointRoutingGateway provides remember(vm) {WaypointRoutingGateway(vm::routeWaypoints)},
@@ -977,7 +983,9 @@ private fun OpenVNavigation(
                         }, R.drawable.ic_refresh, tr("Aktuelle Daten laden"), dev.ambivalenton.openv.ui.components.IconTapMotion.SPIN)
                     if (route != "settings")
                         dev.ambivalenton.openv.ui.components.AnimatedIconButton({ nav.navigate("settings") { launchSingleTop = true } },
-                            R.drawable.ic_settings, tr("Einstellungen öffnen"), dev.ambivalenton.openv.ui.components.IconTapMotion.NUDGE)
+                            R.drawable.ic_settings, tr("Einstellungen öffnen"), dev.ambivalenton.openv.ui.components.IconTapMotion.NUDGE,
+                            // Build 115: the gear nods now and then during the first hours of use.
+                            Modifier.gestureHint(dev.ambivalenton.openv.data.model.GestureHintKeys.SETTINGS, dev.ambivalenton.openv.ui.hints.HintKind.PULSE, 2600L))
                 },
             )
         },

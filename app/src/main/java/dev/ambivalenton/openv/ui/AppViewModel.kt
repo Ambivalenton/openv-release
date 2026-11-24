@@ -1273,6 +1273,10 @@ class AppViewModel(
         locations.resetTutorials();messages.send(tr("Die Hinweise erscheinen bei der nächsten Nutzung erneut."))
     }
     fun restartOnboarding()=mutate(refreshWidgets=false) {locations.restartOnboarding()}
+    /** Build 115 · a hinted gesture was used; saved quietly (a failed write only shows the hint again). */
+    fun learnGestureHint(key:String) {viewModelScope.launch {runCatching {locations.learnGestureHint(key)}}}
+    /** Build 115 · foreground time of one visit, counted towards the first hours of hints. */
+    fun addGestureHintUse(millis:Long) {if(millis>0) viewModelScope.launch {runCatching {locations.addGestureHintUse(millis,System.currentTimeMillis())}}}
 
     suspend fun updateOnboarding(change: (OnboardingDraft) -> OnboardingDraft): Boolean = try {
         locations.updateOnboarding(change)

@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package dev.ambivalenton.openv.ui.network
 
+import dev.ambivalenton.openv.ui.hints.gestureHint
+
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.background
@@ -14,6 +16,8 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxHeight
+import dev.ambivalenton.openv.ui.hints.drawGestureDemo
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -154,6 +158,8 @@ fun NetworkEditBar(
                 val placeable = measurable.measure(constraints.copy(minHeight = 0, maxHeight = androidx.compose.ui.unit.Constraints.Infinity))
                 layout(placeable.width, geometry.OPEN_HEIGHT.roundToPx()) { placeable.place(0, top.roundToPx()) }
             }.width(width).height(height).then(if (editing) Modifier.testTag("network-edit-bar") else Modifier)
+                // Build 115: the closed pencil pulses during the first hours of use until it has been opened once.
+                .then(if (!editing) Modifier.gestureHint(dev.ambivalenton.openv.data.model.GestureHintKeys.PLAN_EDIT, dev.ambivalenton.openv.ui.hints.HintKind.PULSE, 1800L) else Modifier)
                 .shapeShadow(barShape, (1.5f * progress.coerceIn(0f, 1f)).dp)
                 .clip(barShape)
                 .background(container)
@@ -371,6 +377,27 @@ private fun BoxScope.GestureBand(open: Boolean, full: Dp, ink: Color) {
             }
         }
     }
+    // Build 115: one cell after another, the words give way to a tiny film of the gesture they name,
+    // then spring back. Only while the bar is open; never with reduced motion; resting phases draw no frames.
+    val stage = remember { List(cells.size) { androidx.compose.animation.core.Animatable(0f) } }
+    val film = remember { List(cells.size) { androidx.compose.animation.core.Animatable(0f) } }
+    androidx.compose.runtime.LaunchedEffect(open, quiet) {
+        stage.forEach { it.snapTo(0f) }; film.forEach { it.snapTo(0f) }
+        if (!open || quiet) return@LaunchedEffect
+        kotlinx.coroutines.delay(GESTURE_FILM_FIRST_MS)
+        while (true) {
+            for (i in cells.indices) {
+                film[i].snapTo(0f)
+                stage[i].animateTo(1f, androidx.compose.animation.core.spring(dampingRatio = .78f, stiffness = 420f))
+                film[i].animateTo(1f, androidx.compose.animation.core.tween(GESTURE_FILM_MS, easing = androidx.compose.animation.core.LinearEasing))
+                kotlinx.coroutines.delay(220L)
+                stage[i].animateTo(0f, androidx.compose.animation.core.spring(dampingRatio = .62f, stiffness = 320f))
+                kotlinx.coroutines.delay(900L)
+            }
+            kotlinx.coroutines.delay(GESTURE_FILM_PAUSE_MS)
+        }
+    }
+    val accent = MaterialTheme.colorScheme.primary
     androidx.compose.foundation.layout.Row(
         Modifier.layout { measurable, constraints ->
                 val width = (full - geometry.INSET * 2).roundToPx().coerceAtLeast(0)
@@ -387,13 +414,24 @@ private fun BoxScope.GestureBand(open: Boolean, full: Dp, ink: Color) {
             val arrival = arrivals[index]
             if (index > 0) Box(Modifier.width(1.dp).height(26.dp).graphicsLayer { alpha = arrival.value.coerceIn(0f, 1f) }
                 .background(ink.copy(alpha = .18f)))
-            androidx.compose.foundation.layout.Column(Modifier.weight(1f).padding(horizontal = 4.dp)
+            Box(Modifier.weight(1f).fillMaxHeight()) {
+            val shown = stage[index]
+            if (shown.value > .01f) androidx.compose.foundation.Canvas(Modifier.matchParentSize().padding(horizontal = 6.dp, vertical = 4.dp)
+                .graphicsLayer {
+                    alpha = shown.value.coerceIn(0f, 1f)
+                    val s = .86f + .14f * shown.value
+                    scaleX = s; scaleY = s
+                }.testTag("network-gesture-film-$index")) {
+                drawGestureDemo(dev.ambivalenton.openv.ui.hints.GestureDemo.entries[index], film[index].value, accent, ink)
+            }
+            androidx.compose.foundation.layout.Column(Modifier.align(Alignment.Center).fillMaxWidth().padding(horizontal = 4.dp)
                 .graphicsLayer {
                     val a = arrival.value
-                    alpha = a.coerceIn(0f, 1f)
-                    val s = .82f + .18f * a
+                    val away = shown.value
+                    alpha = (a * (1f - away)).coerceIn(0f, 1f)
+                    val s = .82f + .18f * a - .1f * away
                     scaleX = s; scaleY = s
-                    translationY = (1f - a) * 12.dp.toPx()
+                    translationY = (1f - a) * 12.dp.toPx() - away * 8.dp.toPx()
                 },
                 horizontalAlignment = Alignment.CenterHorizontally) {
                 androidx.compose.material3.Text(gesture, color = ink, maxLines = 1, softWrap = false,
@@ -405,9 +443,15 @@ private fun BoxScope.GestureBand(open: Boolean, full: Dp, ink: Color) {
                     autoSize = androidx.compose.foundation.text.TextAutoSize.StepBased(minFontSize = 7.sp,
                         maxFontSize = MaterialTheme.typography.labelSmall.fontSize, stepSize = .5.sp))
             }
+            }
         }
     }
 }
+
+/** Build 115 · timing of the gesture films: first one after the bar settled, each film, the rest after a round. */
+internal const val GESTURE_FILM_FIRST_MS = 1800L
+internal const val GESTURE_FILM_MS = 2200
+internal const val GESTURE_FILM_PAUSE_MS = 7000L
 
 /**
  * The zone that deletes a moved favourite: red, or another signal colour where the theme itself is red.

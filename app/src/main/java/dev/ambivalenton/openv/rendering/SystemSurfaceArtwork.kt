@@ -30,10 +30,16 @@ fun systemHeaderForeground(t:AppTheme,p:SystemSurfacePalette):Int {
         ColorUtils.calculateContrast(Color.BLACK,background or Color.BLACK))Color.WHITE else Color.BLACK
 }
 
-fun drawSystemHeader(c:Canvas,t:AppTheme,w:Float,h:Float,p:SystemSurfacePalette,density:Float=1f){
+/**
+ * [bleed] extends the fill beyond the top and bottom (the gradient keeps its place, its end colours
+ * continue); [edges] = false leaves out the light and dark rules at the top and bottom. Build 115: the
+ * navigation pill uses both – its shell swells past its box while it springs, and the rules then showed
+ * as a light line inside the swelling.
+ */
+fun drawSystemHeader(c:Canvas,t:AppTheme,w:Float,h:Float,p:SystemSurfacePalette,density:Float=1f,bleed:Float=0f,edges:Boolean=true){
     val paint=Paint(Paint.ANTI_ALIAS_FLAG);val base=systemHeaderColor(t,p);val u=density
-    fun fill(a:Int,b:Int=a,mid:Int?=null){paint.shader=LinearGradient(0f,0f,0f,h,if(mid==null)intArrayOf(a,b)else intArrayOf(a,mid,b),null,Shader.TileMode.CLAMP);c.drawRect(0f,0f,w,h,paint);paint.shader=null}
-    fun edge(color:Int,y:Float){paint.color=color;paint.strokeWidth=u;c.drawLine(0f,y,w,y,paint)}
+    fun fill(a:Int,b:Int=a,mid:Int?=null){paint.shader=LinearGradient(0f,0f,0f,h,if(mid==null)intArrayOf(a,b)else intArrayOf(a,mid,b),null,Shader.TileMode.CLAMP);c.drawRect(0f,-bleed,w,h+bleed,paint);paint.shader=null}
+    fun edge(color:Int,y:Float){if(!edges)return;paint.color=color;paint.strokeWidth=u;c.drawLine(0f,y,w,y,paint)}
     when(t){
         AppTheme.OS_WIN_XP->{fill(ColorUtils.blendARGB(base,Color.WHITE,.07f),ColorUtils.blendARGB(base,Color.BLACK,.18f),base);edge(0xff9ec6ff.toInt(),u);edge(0xff16439b.toInt(),h-u)}
         AppTheme.OS_WIN_7->{fill(0xffe0eef8.toInt(),0xffa6c9df.toInt(),0xffc1dceb.toInt());paint.color=0x24ffffff;c.drawPath(Path().apply{moveTo(w*.06f,0f);lineTo(w*.28f,0f);lineTo(w*.48f,h);lineTo(w*.26f,h);close()},paint);edge(0xfff0faff.toInt(),u);edge(0xff7e9caf.toInt(),h-u)}

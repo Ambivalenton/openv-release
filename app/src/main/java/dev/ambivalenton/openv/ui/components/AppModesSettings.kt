@@ -50,6 +50,9 @@ import kotlin.math.*
         val dayNightFrame=remember {androidx.compose.foundation.relocation.BringIntoViewRequester()}
         LaunchedEffect(dayNightAnchor) {if(dayNightAnchor=="day-night") {kotlinx.coroutines.delay(260);runCatching {dayNightFrame.bringIntoView()};onAnchorShown()}}
         Box(Modifier.bringIntoViewRequester(dayNightFrame)) {DayNightFrame(settings,update,place)}
+        // Build 115: wordless hints in the first hours of use (pulses, hold rings, small gesture films).
+        ModeSwitchCard(tr("Bedienhinweise"),tr("In den ersten Stunden zeigen kleine Animationen, was sich antippen, halten oder wischen lässt. Jeder Hinweis endet, sobald du die Geste einmal genutzt hast."),
+            settings.gestureHintsEnabled,{v->update {it.copy(gestureHintsEnabled=v)}},"mode-hints") {on,m->HintPicture(on,m)}
         ModeFrame("mode-bubble",{m->BubblePicture(settings.pinnedBubble,m)}) {PinnedBubbleSetting(settings,update)}
         ModeFrame("mode-long-press",{m->LongPressPicture(m)}) {
             ChartLongPressSetting(settings.chartLongPress) {action->update {it.copy(chartLongPress=action)}}
@@ -135,6 +138,24 @@ private fun Modifier.greyscale():Modifier=drawWithContent {
 }
 
 /** Three dots hop while the app is lively; in quiet mode they lie still in a row under a moon. */
+/** A finger rests on a dot while a ring fills around it; off, the dot alone. */
+@Composable private fun HintPicture(on:Boolean,modifier:Modifier) {
+    val colors=MaterialTheme.colorScheme
+    val still=!on||LocalAppSettings.current.reduceMotion
+    val t=if(still) .7f else rememberInfiniteTransition(label="hint-picture").animateFloat(0f,1f,
+        infiniteRepeatable(tween(2200,easing=LinearEasing)),label="hint-phase").value
+    Canvas(modifier) {
+        val c=Offset(size.width/2,size.height/2);val r=size.minDimension*.16f
+        drawCircle(colors.primary,r,c)
+        if(on) {
+            val fill=(t/.7f).coerceIn(0f,1f);val pop=((t-.7f)/.3f).coerceIn(0f,1f)
+            drawArc(colors.primary.copy(alpha=1f-pop),-90f,360f*fill,false,Offset(c.x-r*1.9f,c.y-r*1.9f),
+                androidx.compose.ui.geometry.Size(r*3.8f,r*3.8f),style=Stroke(2.5.dp.toPx(),cap=StrokeCap.Round))
+            if(pop>0f) drawCircle(colors.primary.copy(alpha=.5f*(1f-pop)),r*(1.9f+pop),c,style=Stroke(2.dp.toPx()))
+        }
+    }
+}
+
 @Composable private fun QuietPicture(on:Boolean,modifier:Modifier) {
     val colors=MaterialTheme.colorScheme
     val calm=on||LocalAppSettings.current.reduceMotion

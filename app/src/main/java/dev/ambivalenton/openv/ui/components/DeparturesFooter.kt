@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package dev.ambivalenton.openv.ui.components
 
+import dev.ambivalenton.openv.ui.hints.gestureHint
+
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.rememberTextMeasurer
@@ -30,6 +32,7 @@ import dev.ambivalenton.openv.localization.tr
             }
         }
         TextButton(onDesign,Modifier.weight(1f).heightIn(min=48.dp).testTag("footer-design")
+            .gestureHint(dev.ambivalenton.openv.data.model.GestureHintKeys.BOARD_DESIGN,dev.ambivalenton.openv.ui.hints.HintKind.PULSE,2200L)
             .semantics { contentDescription=tr("Design") },contentPadding=PaddingValues(horizontal=4.dp)) {
             Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.End,verticalAlignment=Alignment.CenterVertically) {
                 AppIcon(R.drawable.ic_palette,null,Modifier.size(18.dp))

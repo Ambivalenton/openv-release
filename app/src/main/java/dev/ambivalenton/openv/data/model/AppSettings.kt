@@ -302,6 +302,8 @@ data class StoredState(
     val launchFeedback: LaunchFeedback? = null,
     val savedJourneys:List<SavedJourney> = emptyList(),
     val usageTips:UsageTipProgress=UsageTipProgress(),
+    /** Build 115 · progress of the wordless first-use hints. */
+    val gestureHints:GestureHintProgress=GestureHintProgress(),
     val personalThemes:List<PersonalTheme> = emptyList(),
     val personalThemesIntroduced:Boolean=false,
     val launcherLogo:AppLogo?=null,
