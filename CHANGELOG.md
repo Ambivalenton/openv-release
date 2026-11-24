@@ -4,6 +4,11 @@ Alle nennenswerten Änderungen an Öpen-V. Versionen folgen [Semantic Versioning
 
 ## [Unveröffentlicht]
 
+## [1.1.1] (111) · 2026-11-24
+
+- Glas-Designs schweben über farbigem Licht: Hinter den Scheiben liegen vier große, weiche Lichter in den Farbtönen des Designs (Akzent, Zweitfarbe und ihre Mischungen), sodass Karten, Leiste und Netzplan wirklich wie Glas wirken. Die Lichter bleiben nahe an der Helligkeit des Grundes; Texte darauf bleiben in jedem Glas-Design lesbar (geprüft für alle).
+- Anzeigetafel mit Segmentziffern: Bei einer Verspätung stehen die Ziffern jetzt bündig mit den übrigen Zeilen und in gleicher Größe; die Verspätung folgt dahinter.
+
 ## [1.1.0] (110) · 2026-11-24
 
 - Design-Sammlungen bauen die App jetzt grundlegend verschieden auf, nicht nur in anderen Farben. Acht Sammlungen, die bisher nur Farbe und Muster wechselten, haben eine eigene Bauweise: Kosmos aus Glas über den Sternkarten, Minerale aus poliertem Chrom mit facettierten Ecken, Textil mit gesteppten Nähten (neue Bauweise „Naht & Stoff“), Architektur im Swiss-Raster mit farbigem Kopfband und kantigen Flächen, Café als Keramik-Relief, Druck als Editorial mit feinen Regeln, Gaming in 8-Bit mit Pixelecken und Stufenschatten, Haustiere aus weicher Knete. Karten, Felder, Knöpfe, Navigationsleiste, Balkendiagramm und Anzeigetafel folgen der Bauweise; die Motive der Sammlungen bleiben darunter sichtbar.
@@ -88,7 +93,8 @@ Erste Version.
 - Fahrplandaten von VRR OpenService, Haltestellenverzeichnis für Deutschland offline mitgeliefert.
 - Test-App „Öpen-V · Vorschau“ (`dev.ambivalenton.openv.next`), die sich neben der Store-App installiert.
 
-[Unveröffentlicht]: https://github.com/Ambivalenton/openv-release/compare/v1.1.0...HEAD
+[Unveröffentlicht]: https://github.com/Ambivalenton/openv-release/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/Ambivalenton/openv-release/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/Ambivalenton/openv-release/compare/v1.0.9...v1.1.0
 [1.0.9]: https://github.com/Ambivalenton/openv-release/compare/v1.0.8...v1.0.9
 [1.0.8]: https://github.com/Ambivalenton/openv-release/compare/v1.0.7...v1.0.8

@@ -57,6 +57,7 @@ internal fun drawThemeDisplay(c: Canvas, m: BoardPresentation, w: Float, h: Floa
         val clock = if (cancelled) tr("Fällt aus") else clockTime(row.time)
         val late = row.delay.minutes?.takeIf { it > 0 && !cancelled }?.let { "+$it" }.orEmpty()
         // Build 109: a delay widens the time column; the destination gives way, the time never does.
+        val baseClock = min(if (l.singleLine) 64 * scale else 74 * scale, cw * .38f)
         val clockWidth = min((if (l.singleLine) 64 * scale else 74 * scale) + if (late.isEmpty()) 0f else 16 * scale, cw * .38f)
         val detail = row.platform?.let { platformName(it, row.lineType) } ?: row.lineType.label
         fun time(x: Float, cy: Float, width: Float, height: Float) {
@@ -64,9 +65,11 @@ internal fun drawThemeDisplay(c: Canvas, m: BoardPresentation, w: Float, h: Floa
             val segments = d.material == DisplayMaterial.VFD || d.material == DisplayMaterial.REFLECTIVE_LCD ||
                 d.motif == DisplayMotif.HANDHELD
             if (segments && !cancelled) {
-                val digitHeight = min(16 * scale, min(height * .8f, (width - if (late.isEmpty()) 0f else 18 * scale) / 2.85f))
-                drawDisplayDigits(c, clock, x, cy - digitHeight / 2, digitHeight, timeInk, d.light)
-                if (late.isNotEmpty()) pen.text(late, x + digitHeight * 2.9f, cy, width - digitHeight * 2.9f, 9.5f * scale, height, delayInk, bold = true, fit = true)
+                // Build 111: segment digits share one size and one left edge in every row; a delay sits after them.
+                val shift = (width - baseClock).coerceAtLeast(0f)
+                val digitHeight = min(16 * scale, min(height * .8f, (baseClock - 18 * scale) / 2.85f))
+                drawDisplayDigits(c, clock, x + shift, cy - digitHeight / 2, digitHeight, timeInk, d.light)
+                if (late.isNotEmpty()) pen.text(late, x + shift + digitHeight * 2.9f, cy, width - shift - digitHeight * 2.9f, 9.5f * scale, height, delayInk, bold = true, fit = true)
             } else if (late.isNotEmpty()) {
                 val lateWidth = min(width * .36f, 26 * scale)
                 pen.text(clock, x, cy, width - lateWidth, 12.5f * scale, height, timeInk, bold = true, alignEnd = true, fit = true)

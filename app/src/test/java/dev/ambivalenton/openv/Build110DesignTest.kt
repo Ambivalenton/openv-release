@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package dev.ambivalenton.openv
 
+import androidx.compose.ui.graphics.toArgb
 import androidx.core.graphics.ColorUtils
 import dev.ambivalenton.openv.data.model.*
 import dev.ambivalenton.openv.rendering.DisplayMaterial
@@ -51,6 +52,28 @@ class Build110DesignTest {
             val d = displayProfile(t)
             assertTrue("${t.name} ink", ColorUtils.calculateContrast(d.ink, d.background or android.graphics.Color.BLACK) >= 4.5)
             assertTrue("${t.name} accent", ColorUtils.calculateContrast(d.accent, d.background or android.graphics.Color.BLACK) >= 4.5)
+        }
+    }
+}
+
+/** Build 111 · the coloured light behind glass keeps every text on the ground readable. */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [35])
+class Build111GlassTest {
+    @Test fun glassLightKeepsTextReadable() {
+        val glass = groupedAppThemes().flatMap { it.second }.filter { it.language == DesignLanguage.GLASS }
+        assertTrue(glass.size >= 10)
+        glass.forEach { t ->
+            val s = dev.ambivalenton.openv.ui.theme.appThemeScheme(t)
+            val lights = dev.ambivalenton.openv.ui.theme.glassFieldColors(s.background, s.primary, s.secondary, t.dark)
+            val strength = dev.ambivalenton.openv.ui.theme.glassFieldStrength(t.dark)
+            lights.forEach { light ->
+                val ground = androidx.compose.ui.graphics.lerp(s.background, light, strength)
+                fun ratio(a: androidx.compose.ui.graphics.Color) = ColorUtils.calculateContrast(a.toArgb() or android.graphics.Color.BLACK,
+                    ground.toArgb() or android.graphics.Color.BLACK)
+                assertTrue("${t.name} text ${ratio(s.onBackground)}", ratio(s.onBackground) >= 4.5)
+                assertTrue("${t.name} accent ${ratio(s.primary)}", ratio(s.primary) >= 3.0)
+            }
         }
     }
 }

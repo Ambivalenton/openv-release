@@ -153,7 +153,9 @@ internal fun DrawScope.drawLanguageBackdrop(theme:AppTheme,bg:Color,primary:Colo
     when(theme.backdrop ?: theme.language.spec.backdrop) {
         LanguageBackdrop.PLAIN->Unit
         LanguageBackdrop.TINT->drawRect(Brush.verticalGradient(listOf(bg,lerp(bg,secondary,if(dark).06f else .05f))))
-        LanguageBackdrop.GLOW->{
+        // Build 111: glass designs float over a field of coloured light – four large soft lights in the
+        // design's own hues, kept near the ground's brightness so every text on it stays readable.
+        LanguageBackdrop.GLOW->if(theme.language==DesignLanguage.GLASS) drawGlassField(bg,primary,secondary,dark) else {
             val r1=maxOf(w,h)*.62f;val c1=Offset(w*.08f,h*.12f)
             drawCircle(Brush.radialGradient(listOf(primary.copy(alpha=if(dark).20f else .16f),Color.Transparent),c1,r1),r1,c1)
             val r2=maxOf(w,h)*.7f;val c2=Offset(w*.98f,h*.78f)
@@ -254,5 +256,30 @@ internal fun DrawScope.drawSeam(outline:Outline,thread:Color,inset:Float,width:F
     withTransform({scale((w-2*inset)/w,(h-2*inset)/h,center)}) {
         drawOutline(outline,thread,style=Stroke(width,cap=StrokeCap.Round,
             pathEffect=PathEffect.dashPathEffect(floatArrayOf(width*4.2f,width*3f))))
+    }
+}
+
+/** Colours of the four lights behind glass (HCT tone near the ground's own, so text stays readable). */
+internal fun glassFieldColors(bg:Color,primary:Color,secondary:Color,dark:Boolean):List<Color> {
+    val ground=dev.ambivalenton.openv.color.utilities.Hct.fromInt(bg.toArgb())
+    val a=dev.ambivalenton.openv.color.utilities.Hct.fromInt(primary.toArgb())
+    val b=dev.ambivalenton.openv.color.utilities.Hct.fromInt(secondary.toArgb())
+    // Lights a little brighter than a dark ground or a little deeper than a light one: colour, not contrast.
+    val tone=if(dark) (ground.tone+14).coerceIn(18.0,34.0) else (ground.tone-9).coerceIn(78.0,90.0)
+    fun light(hue:Double,chroma:Double)=Color(dev.ambivalenton.openv.color.utilities.Hct.from(hue,chroma.coerceIn(28.0,56.0),tone).toInt())
+    val mid=((a.hue+b.hue)/2+if(kotlin.math.abs(a.hue-b.hue)>180) 180 else 0)%360
+    return listOf(light(a.hue,a.chroma),light(b.hue,b.chroma),light(mid,(a.chroma+b.chroma)/2),light((a.hue+150)%360,a.chroma*.8))
+}
+internal fun glassFieldStrength(dark:Boolean)=if(dark) .85f else .75f
+
+/** Light behind glass: four soft lights in the design's hues at the ground's own brightness (HCT tone). */
+internal fun DrawScope.drawGlassField(bg:Color,primary:Color,secondary:Color,dark:Boolean) {
+    val w=size.width;val h=size.height;val m=maxOf(w,h)
+    val colors=glassFieldColors(bg,primary,secondary,dark)
+    val places=listOf(Offset(w*.05f,h*.1f) to m*.72f,Offset(w*1.02f,h*.42f) to m*.66f,Offset(w*.18f,h*.86f) to m*.7f,Offset(w*.88f,h*1.04f) to m*.5f)
+    val strength=glassFieldStrength(dark)
+    colors.zip(places).forEach {(color,place)->
+        val (c,r)=place
+        drawCircle(Brush.radialGradient(listOf(color.copy(alpha=strength),color.copy(alpha=strength*.45f),Color.Transparent),c,r),r,c)
     }
 }
