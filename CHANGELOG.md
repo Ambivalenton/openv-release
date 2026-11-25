@@ -4,6 +4,13 @@ Alle nennenswerten Änderungen an Öpen-V. Versionen folgen [Semantic Versioning
 
 ## [Unveröffentlicht]
 
+## [1.2.0.3] (123) · 2026-11-26
+
+- Neu: Rotationsrollen für Datum und Uhrzeit unter „Suchen“. Eine Rolle für den Tag (Wochentag und Datum auf dem Ziffernblatt, nach oben gedreht kommen die nächsten Tage), je eine für Stunde und Minute. Sie drehen wie Walzen, rasten mit spürbarem Ticken und einer Feder ein, nehmen beim Loslassen etwas Schwung mit und tragen über wie ein Kilometerzähler (nach :59 dreht die Stunde weiter, nach 23 Uhr der Tag). Ein Tipp auf die Tagesrolle drückt sie wie einen Knopf hinein und öffnet den Kalender, ein Tipp auf die Uhrzeit die Eingabe per Tastatur. Solange „jetzt“ gilt, laufen die Rollen mit der Uhr und der Doppelpunkt blinkt.
+- Die Rollen tragen das Design: moderne Walzen mit Linse in Material-Designs, cremefarbene Zählwerkrollen mit Riffelung und Messingfenster in den Retro-Designs, leuchtende Ziffern mit Rasterlinien in Neon-, Terminal- und 8-Bit-Designs (auch Synthwave).
+- „Jetzt abfahren“ springt wie bisher aus dem Rahmen, trägt die Optik der Rollen und ein Rückspul-Symbol; ein Tipp lässt alle Rollen sichtbar auf die aktuelle Zeit zurückspulen.
+- Angepinnte Fahrt: Der Wellen-Fortschritt ist zurück und lebt mit der Situation – ruhig atmend vor dem Einstieg, dick, rot und pochend beim Einsteigen, dünn, grün und langsam bei pünktlicher Fahrt, orange und unruhiger bei Verspätung, in Schritten beim Gehen, orange-rot bei knappem Umstieg, gezackt und flackernd bei einer Störung, gestrichelt in der Pause; zum Ziel hin wird er ruhig. Jeder Wechsel federt, der Punkt an der Spitze landet mit einem kleinen Hüpfer. Bisher war die Welle vor der Abfahrt flach.
+
 ## [1.2.0.2] (122) · 2026-11-26
 
 - Behoben: „Suchen“ reagierte ab und zu nicht. Ursache: Seit die Kapsel der Navigationsleiste gezogen werden kann, zählte ein Tipp, bei dem der Finger nur ein paar Pixel zur Seite rutschte, als Ziehen – die Kapsel federte zurück, der Tab wechselte nicht. Ein solcher Tipp öffnet jetzt den Tab, auf dem er begann.

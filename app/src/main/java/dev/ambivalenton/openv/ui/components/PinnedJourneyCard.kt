@@ -94,8 +94,9 @@ import dev.ambivalenton.openv.localization.tr
                     if(correction.offerAlighted)TextButton({onCorrectAlighting(true)}) {Text(tr("Ich bin ausgestiegen"))}
                 }
             Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
-                JourneyWiggleProgress(focus.progress,assistantWaveActive(session,now,state.status),
-                    session.id,Modifier.weight(1f).semantics{contentDescription=tr("Reisefortschritt")},urgent=journeyHasDelay(session)||session.missedBoarding!=null,imminent=imminent)
+                // Build 123: the wave in the mood of the moment (boarding, riding on time or late, walking, tight change …).
+                JourneyWave(focus.progress,pinnedWaveMood(session,focus,brief,state.status,imminent,now),
+                    Modifier.weight(1f).semantics{contentDescription=tr("Reisefortschritt")})
                 if(!imminent){Spacer(Modifier.width(8.dp));AppIcon(R.drawable.ic_place,null,Modifier.size(18.dp))}
             }
         }

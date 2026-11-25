@@ -366,8 +366,17 @@ private const val SWAY_INERTIA = .13f
     val scheme = MaterialTheme.colorScheme
     val frame = scheme.surfaceContainerHigh
     // Slightly set apart from the frame: the same surface pulled towards the accent.
-    val fill = lerp(frame.compositeOver(scheme.background), scheme.primary, .16f).copy(alpha = frame.alpha.coerceAtLeast(.92f))
-    val ink = scheme.primary
+    // Build 123: the area wears the rollers' look – a brass-trimmed roller in the retro designs, a lit panel
+    // in the neon and terminal ones, the accent tint otherwise.
+    val look = wheelLook(visuals.theme)
+    val fill = when (look) {
+        WheelLook.MECHANICAL -> Color(0xFFE9DDC4)
+        WheelLook.DIGITAL -> Color(0xFF07090B)
+        WheelLook.MODERN -> lerp(frame.compositeOver(scheme.background), scheme.primary, .16f).copy(alpha = frame.alpha.coerceAtLeast(.92f))
+    }
+    val ink = if (look == WheelLook.MECHANICAL) Color(0xFF2A2219) else scheme.primary
+    val rewind = remember { Animatable(0f) }
+    val tapScope = rememberCoroutineScope()
     val style = visuals.theme?.shapeStyle ?: ThemeShape.ROUNDED
     val radius = 20.dp * visuals.radiusScale
     val shown = open || body.value > .002f
@@ -436,11 +445,15 @@ private const val SWAY_INERTIA = .13f
                     alpha = (t * 1.6f).coerceIn(0f, 1f)
                     transformOrigin = TransformOrigin(.5f, 0f)
                 }
-                .clickable(enabled = open, role = Role.Button, onClickLabel = tr("Jetzt abfahren"), onClick = onNow)
+                .clickable(enabled = open, role = Role.Button, onClickLabel = tr("Jetzt abfahren")) {
+                    // The arrow turns back once while the rollers spool back to the current time.
+                    if (!quiet) tapScope.launch { rewind.animateTo(rewind.value - 360f, spring(dampingRatio = .62f, stiffness = 170f)) }
+                    onNow()
+                }
                 .semantics(mergeDescendants = true) { contentDescription = tr("Jetzt abfahren") }
                 .testTag("search-now"),
                 horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-                AnalogClockIcon(null, Modifier.size(18.dp), tint = ink)
+                RewindGlyph(ink, Modifier.size(18.dp).graphicsLayer { rotationZ = rewind.value })
                 Spacer(Modifier.width(4.dp))
                 // M05: the reset says what it does: departure from now (also from an arrival search).
                 FittedText(tr("Jetzt abfahren"), Modifier.weight(1f, fill = false),
@@ -449,4 +462,20 @@ private const val SWAY_INERTIA = .13f
             }
         }
     }
+}
+
+
+/** Build 123 · a circular arrow turning back: "to the current time" (the rollers spool back). */
+@Composable private fun RewindGlyph(ink: Color, modifier: Modifier) = androidx.compose.foundation.Canvas(modifier) {
+    val stroke = 2.dp.toPx(); val r = size.minDimension / 2f - stroke
+    val c = Offset(size.width / 2f, size.height / 2f)
+    drawArc(ink, -60f, -270f, false, c - Offset(r, r), Size(r * 2, r * 2), style = Stroke(stroke, cap = StrokeCap.Round))
+    // The head at the arc's start, pointing back (counter-clockwise).
+    val a = Math.toRadians(-60.0); val tip = c + Offset((r * kotlin.math.cos(a)).toFloat(), (r * kotlin.math.sin(a)).toFloat())
+    val h = r * .62f
+    drawLine(ink, tip, tip + Offset(-h * .15f, -h), stroke, StrokeCap.Round)
+    drawLine(ink, tip, tip + Offset(-h, -h * .05f), stroke, StrokeCap.Round)
+    // The hand: back at twelve.
+    drawLine(ink, c, c + Offset(0f, -r * .55f), stroke * .9f, StrokeCap.Round)
+    drawCircle(ink, stroke * .7f, c)
 }

@@ -35,9 +35,10 @@ import dev.ambivalenton.openv.ui.theme.appCorner
                 Column(Modifier.weight(1f)) {
                     PinnedTextSlot(focus.heading(), t.titleSmall.copy(fontWeight = FontWeight.SemiBold), tag = "hover-action", grow = true)
                     PinnedTextSlot(nextPlace, t.bodyMedium, tag = "hover-next-place", grow = !railName, fitRail = railName)
-                    JourneyWiggleProgress(focus.progress, assistantWaveActive(session, now, state.status), session.id,
-                        Modifier.fillMaxWidth().padding(top = 4.dp).semantics { contentDescription = tr("Reisefortschritt") },
-                        urgent = journeyHasDelay(session) || session.missedBoarding != null)
+                    val alert = state.alert?.takeIf { state.status != PinnedTrackingStatus.PAUSED }
+                    val brief = remember(session, focus, now / 10_000, alert) { pinnedJourneyBrief(session, focus, now, alert) }
+                    JourneyWave(focus.progress, pinnedWaveMood(session, focus, brief, state.status, alert != null, now),
+                        Modifier.fillMaxWidth().padding(top = 4.dp).semantics { contentDescription = tr("Reisefortschritt") })
                 }
                 Column(Modifier.width(76.dp).padding(start = 8.dp), horizontalAlignment = Alignment.End) {
                     PinnedTextSlot(clockTime(focus.nextTime), t.titleLarge.copy(fontWeight = FontWeight.Bold), color = scheme.primary, tag = "hover-time")

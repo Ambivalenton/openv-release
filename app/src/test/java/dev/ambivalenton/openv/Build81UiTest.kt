@@ -52,8 +52,11 @@ class Build81UiTest {
         compose.onNodeWithTag("time-mode-DEPARTURE").assertIsNotSelected()
         compose.runOnIdle { time = 1_800_000_000_000L }
         compose.onNodeWithTag("search-now").assertIsDisplayed()
-        val chosen = java.time.Instant.ofEpochMilli(1_800_000_000_000L).atZone(java.time.ZoneId.systemDefault())
-        compose.onNodeWithTag("analog-clock-${chosen.hour}-${chosen.minute}", useUnmergedTree = true).assertExists()
+        // Build 123: the rollers show the chosen time (the stops' local time).
+        val chosen = java.time.Instant.ofEpochMilli(1_800_000_000_000L).atZone(dev.ambivalenton.openv.data.model.transitZone)
+        compose.waitForIdle()
+        assertEquals("%02d".format(chosen.hour), compose.onNodeWithTag("roller-hour").fetchSemanticsNode()
+            .config[androidx.compose.ui.semantics.SemanticsProperties.StateDescription])
         capture("schedule-open")
         compose.onNodeWithTag("search-now").performClick()
         compose.runOnIdle { assertNull(time); assertEquals(TimeMode.DEPARTURE, mode) }

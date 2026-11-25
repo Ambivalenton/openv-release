@@ -62,37 +62,19 @@ fun SplitDateTimePicker(
         shape = dev.ambivalenton.openv.ui.theme.appCorner(24.dp),
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
-        Row(Modifier.heightIn(min = 64.dp), verticalAlignment = Alignment.CenterVertically) {
-            PickerHalf(
-                tr("Datum wählen"),
-                if (shown.toLocalDate() == LocalDate.now(zone)) tr("Heute")
-                else shown.format(DateTimeFormatter.ofPattern(tr("dd. MMM"))),
-                R.drawable.ic_calendar,
-                Modifier.weight(1f),
-            ) {
-                dialog = "date"
-            }
-            VerticalDivider(
-                Modifier.height(28.dp),
-                color = MaterialTheme.colorScheme.outlineVariant,
-            )
-            PickerHalf(
-                tr("Uhrzeit wählen"),
-                if (timeMillis == null) tr("Jetzt")
-                else shown.format(DateTimeFormatter.ofPattern("HH:mm")),
-                R.drawable.ic_clock,
-                Modifier.weight(1f),
-                // The clock face shows the chosen time, or the current one for "Jetzt".
-                leading = { AnalogClockIcon(timeMillis, Modifier.size(20.dp)) },
-            ) {
-                dialog = "time"
-            }
-        }
+        // Build 123: rotating rollers for the day, the hour and the minute; a tap opens the calendar or the typed time.
+        TimeRollers(timeMillis, { onChange(it) }, onPickDate = { dialog = "date" }, onPickTime = { dialog = "time" },
+            Modifier.padding(horizontal = 12.dp, vertical = 4.dp))
     }
     if (dialog == "date") {
         val previous = timeMillis ?: System.currentTimeMillis()
         val state =
-            rememberDatePickerState(initialSelectedDateMillis = pickerDateMillis(previous, zone))
+            rememberDatePickerState(initialSelectedDateMillis = pickerDateMillis(previous, zone),
+                // Build 123: the days the rollers can show – from today on, for a year.
+                selectableDates = remember(zone) { object : SelectableDates {
+                    val first = pickerDateMillis(System.currentTimeMillis(), zone)
+                    override fun isSelectableDate(utcTimeMillis: Long) = utcTimeMillis >= first && utcTimeMillis < first + (WHEEL_DAYS - 1) * 86_400_000L
+                } })
         DatePickerDialog(
             onDismissRequest = { dialog = null },
             confirmButton = {
