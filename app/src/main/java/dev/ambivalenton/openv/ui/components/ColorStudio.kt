@@ -264,8 +264,7 @@ internal fun ColorStudioDialog(
         ReleaseDialogWindowOnDispose()
         Surface(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 20.dp).widthIn(max = 520.dp).testTag("advanced-color-dialog"),
             shape = RoundedCornerShape(30.dp), color = MaterialTheme.colorScheme.surfaceContainerLow, tonalElevation = 2.dp) {
-            BoxWithConstraints {
-                val room = maxHeight
+            Box {
                 Column(Modifier.imePadding().padding(top = 14.dp, bottom = 14.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                         FittedText(tr("Eigene Farbe"), Modifier.weight(1f).semantics { heading() }, style = MaterialTheme.typography.headlineSmall)

@@ -103,7 +103,7 @@ fun ColorPickerSheet(
         shape = MaterialTheme.shapes.extraLarge,
     ) {
         ReleaseDialogWindowOnDispose()
-        BoxWithConstraints(Modifier.fillMaxWidth()) {
+        Box(Modifier.fillMaxWidth()) {
             val room = LocalConfiguration.current.screenHeightDp.dp * .88f
             Column(Modifier.imePadding().fillMaxWidth().heightIn(max = room).testTag("color-picker-content"),
                 verticalArrangement = Arrangement.spacedBy(12.dp)) {
