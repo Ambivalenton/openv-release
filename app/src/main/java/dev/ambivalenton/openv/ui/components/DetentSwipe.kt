@@ -55,6 +55,8 @@ internal class DetentDrag(private val count: Int, start: Int) {
         const val LEAN_REACH = .26f
         /** Slots per second that count as a deliberate flick. */
         const val FLING = 3.2f
+        /** Up to this far (in slots) a sliding finger still counts as a tap. */
+        const val TAP_SLIP = .3f
     }
 }
 
@@ -63,6 +65,8 @@ internal class DetentDrag(private val count: Int, start: Int) {
  * fires at every detent the capsule clicks into. Taps keep working: the drag only starts past the touch
  * slop and then takes the gesture (the press of a tapped slot is cancelled).
  */
+internal const val TAP_SLIP = DetentDrag.TAP_SLIP
+
 internal fun Modifier.detentSwipe(enabled: Boolean, count: Int, current: () -> Int, slotPx: () -> Float, rtl: Boolean,
     onLean: (Float) -> Unit, onCommit: (Int) -> Unit): Modifier =
     if (!enabled || count < 2) this else composed {
@@ -73,28 +77,42 @@ internal fun Modifier.detentSwipe(enabled: Boolean, count: Int, current: () -> I
         val commit by rememberUpdatedState(onCommit)
         pointerInput(count, rtl) {
             var drag: DetentDrag? = null
+            var downSlot = -1
+            var clicked = false
             val velocity = androidx.compose.ui.input.pointer.util.VelocityTracker()
-            fun end(fling: Float) {
+            fun end(fling: Float, released: Boolean) {
                 val d = drag ?: return
                 drag = null
-                d.release(fling)?.let(commit)
+                val travel = kotlin.math.abs(d.raw - d.committed)
+                val flung = d.release(fling)
+                when {
+                    flung != null -> commit(flung)
+                    // Build 122: a tap whose finger slid a little (past the touch slop, far below half a
+                    // slot) is still a tap on the slot it went down on. Before, it ended as a tiny drag of
+                    // the capsule and the tapped tab ("Suchen") did not answer.
+                    released && !clicked && travel < TAP_SLIP && downSlot in 0 until count && downSlot != position() -> commit(downSlot)
+                }
                 lean(0f)
             }
             detectHorizontalDragGestures(
-                onDragStart = { drag = DetentDrag(count, position()); velocity.resetTracking() },
+                onDragStart = { at ->
+                    drag = DetentDrag(count, position()); velocity.resetTracking(); clicked = false
+                    val w = size.width.toFloat()
+                    downSlot = if (w > 0f) ((if (rtl) w - at.x else at.x) / (w / count)).toInt().coerceIn(0, count - 1) else -1
+                },
                 onDragEnd = {
                     val width = slot()
                     val v = if (width > 0f) velocity.calculateVelocity().x / width else 0f
-                    end(if (rtl) -v else v)
+                    end(if (rtl) -v else v, released = true)
                 },
-                onDragCancel = { end(0f) },
+                onDragCancel = { end(0f, released = false) },
             ) { change, dx ->
                 val d = drag ?: return@detectHorizontalDragGestures
                 val width = slot()
                 if (width <= 0f) return@detectHorizontalDragGestures
                 change.consume()
                 velocity.addPosition(change.uptimeMillis, change.position)
-                d.drag((if (rtl) -dx else dx) / width)?.let(commit)
+                d.drag((if (rtl) -dx else dx) / width)?.let { clicked = true; commit(it) }
                 // In slots of the row's own order (start → end), like the committed position.
                 lean(d.lean)
             }

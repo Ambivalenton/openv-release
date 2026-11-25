@@ -31,6 +31,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.zIndex
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -227,8 +229,13 @@ fun SearchScreen(
     // the overview's own anchor is refreshed only while the overview tab is open and went stale here.
     // Judged at the real time of this recomposition (a new fix or the minute tick causes it): the
     // minute clock lags behind a fix that arrives mid-minute, and such a fix counted as not fresh.
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val gpsOn = settings.originMode == OriginMode.AUTOMATIC && locationPermissionGranted(context)
     val anchorNodeId = exactTick.let {
-        ui.store.currentAnchor(maxOf(now.toInstant().toEpochMilli(), System.currentTimeMillis()))?.nodeId
+        val clock = maxOf(now.toInstant().toEpochMilli(), System.currentTimeMillis())
+        // Build 121: with the location in use only a real fix snaps to a favourite (not its time window).
+        val position = if (gpsOn) ui.store.presence?.takeIf { it.isFresh(clock) }?.location else ui.store.routingPosition(clock)
+        ui.store.currentAnchor(clock, position)?.nodeId
             ?.takeIf { it != ProximityMemory.suppressedNodeId }
     }
     val snapped = anchorNodeId?.takeIf { ui.store.originSource() == OriginSource.DEVICE }
@@ -237,25 +244,30 @@ fun SearchScreen(
         ?.let { o -> ui.store.favorites.firstOrNull { it.id == o.nodeId } }
     // Time-dependent location: a favourite's time window supplies the start (fallback behind GPS).
     val scheduledNode = ui.store.scheduledStart(now.toInstant().toEpochMilli())
+    // Build 121: with the location in use, the search measures the position itself (AppViewModel.origin); a
+    // favourite's time window only stands in when the location is off. Before, a time window took over while
+    // the last fix was a few minutes old – swapping then made that favourite the destination, and choosing
+    // "my location" afterwards ended in "Start und Ziel sind gleich" although the person was elsewhere.
+    val windowStart = scheduledNode?.takeIf { !gpsOn }
     val start =
         if (overrideNode != null) tr("Standort: %1\$s", overrideNode.label)
-        else if (scheduledNode != null) tr("%1\$s (Zeitfenster)", scheduledNode.label)
+        else if (windowStart != null) tr("%1\$s (Zeitfenster)", windowStart.label)
         else if (settings.originMode == OriginMode.MANUAL) settings.manualOrigin?.name ?: tr("Start wählen")
         else if (snapped != null) tr("%1\$s (in der Nähe)", snapped.label)
         else tr("Dein Standort")
-    val context = androidx.compose.ui.platform.LocalContext.current
     val navigation = dev.ambivalenton.openv.ui.components.LocalNavigationClearance.current
-    val gpsOn = settings.originMode == OriginMode.AUTOMATIC && locationPermissionGranted(context)
     val nowMillis = now.toInstant().toEpochMilli()
     // 2.3/N01/H02: the start in effect for the next search (a GPS start as the device position).
     val effectiveStart: Location? = when {
         overrideNode != null -> overrideNode.location
-        scheduledNode != null -> scheduledNode.location
+        windowStart != null -> windowStart.location
         settings.originMode == OriginMode.MANUAL -> settings.manualOrigin?.takeIf { it.routable && !it.isDevicePosition }
         snapped != null -> snapped.location
-        else -> (ui.store.presence?.takeIf { it.isFresh(nowMillis) }?.location ?: ui.position.value)
+        // The device's own fix only (the view model's position may be a favourite standing in for it).
+        else -> ui.store.presence?.takeIf { it.isFresh(nowMillis) }?.location
             ?.takeIf { it.hasCoordinates }?.copy(isDevicePosition = true)
     }
+    val latestPresence by rememberUpdatedState(ui.store.presence)
     val startMissing = effectiveStart == null && (settings.originMode == OriginMode.MANUAL || !locationPermissionGranted(context))
     // Build 118: each request is carried out once. The page is rebuilt whenever the pager returns to it;
     // a request repeated then took the focus again and could pull the pages along.
@@ -287,8 +299,8 @@ fun SearchScreen(
     fun focusDestinationField() { swapScope.launch { kotlinx.coroutines.delay(60); runCatching { destinationFocus.requestFocus() } } }
     fun askStart(text: String) { originOpen = true; startHint = text; startFocus++ }
     /** 2.3: both changes at once; the next search uses them, "Verbindung suchen" starts it. */
-    fun performSwap(target: Location) {
-        when (val plan = swapPlan(target, effectiveStart, System.currentTimeMillis())) {
+    fun performSwap(target: Location, from: Location? = effectiveStart) {
+        when (val plan = swapPlan(target, from, System.currentTimeMillis())) {
             SwapPlan.NeedsStart -> askStart(tr("Wähle zuerst einen Startort."))
             SwapPlan.NeedsDestination -> { destinationHint = tr("Wähle zuerst einen Ort aus den Vorschlägen."); focusDestinationField() }
             is SwapPlan.Swap -> {
@@ -314,6 +326,22 @@ fun SearchScreen(
         // Quick repeated taps: one swap at a time, each on the state the previous one left.
         if (swapPendingStart != null || swapGhosts != null || swapResolving) return
         val chosen = destination?.takeIf { it.routable }
+        // Build 121: the location is in use but no fresh fix is there yet: measure it first, then swap.
+        if (chosen != null && gpsOn && effectiveStart == null && overrideNode == null) {
+            swapResolving = true
+            vm.acquirePosition()
+            swapScope.launch {
+                try {
+                    val fix = kotlinx.coroutines.withTimeoutOrNull(10_000) {
+                        snapshotFlow { latestPresence?.takeIf { it.isFresh(System.currentTimeMillis()) && it.location.hasCoordinates } }
+                            .filterNotNull().first()
+                    }
+                    if (fix != null) performSwap(chosen, fix.location.copy(isDevicePosition = true))
+                    else askStart(tr("Dein Standort ist gerade nicht verfügbar. Wähle einen Start."))
+                } finally { swapResolving = false }
+            }
+            return
+        }
         if (chosen != null) { performSwap(chosen); return }
         val typed = destinationText.trim()
         if (typed.isEmpty()) return
