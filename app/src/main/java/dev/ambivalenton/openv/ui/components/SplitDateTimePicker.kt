@@ -53,7 +53,8 @@ fun SplitDateTimePicker(
     modifier: Modifier = Modifier,
 ) {
     var dialog by rememberSaveable { mutableStateOf<String?>(null) }
-    val zone = ZoneId.systemDefault()
+    // Build 122: chosen in the stops' local time, like every time the search shows.
+    val zone = dev.ambivalenton.openv.data.model.transitZone
     val shown = Instant.ofEpochMilli(timeMillis ?: System.currentTimeMillis()).atZone(zone)
     Surface(
         // Build 115: the date and time can be changed – a quiet pulse in the first hours of use.

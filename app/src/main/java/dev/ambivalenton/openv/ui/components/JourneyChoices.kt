@@ -100,10 +100,41 @@ fun choicePoint(brief: PinnedJourneyBrief): Boolean = when (brief.kind) {
     BriefStepKind.ARRIVE -> false
 }
 
+/** Build 122 · the line of a journey's first ride as people say it ("Bus 310", "RE1", "Tram 107"). */
+fun firstLineLabel(trip: Trip): String {
+    val ride = trip.segments.firstOrNull { !it.isWalk } ?: return ""
+    val name = ride.lineName.trim()
+    val numeric = name.firstOrNull()?.isDigit() == true
+    return when {
+        numeric && ride.lineType == LineType.BUS -> tr("Bus %1\$s", name)
+        numeric && (ride.lineType == LineType.TRAM || ride.lineType == LineType.SUBWAY) -> tr("Bahn %1\$s", name)
+        else -> name
+    }
+}
+
 /**
- * Build 117 · up to three other connections at a station: each button names the new arrival, the
- * changes and the estimated reliability; tapping asks once (compact summary) before the running
- * journey is replaced.
+ * Build 122 · the tightest change of [trip] in minutes (next departure − arrival − walking in between), or null
+ * without a change. Shown concretely ("Nur 2 Min. zum Umsteigen") where it decides how safe a journey is.
+ */
+fun tightestTransferMinutes(trip: Trip): Int? {
+    val rides = trip.segments.withIndex().filter { !it.value.isWalk }
+    if (rides.size < 2) return null
+    return rides.zipWithNext { (i, a), (j, b) ->
+        val walk = trip.segments.subList(i + 1, j).sumOf { (it.plannedEndTime - it.plannedStartTime).coerceAtLeast(0) }
+        ((b.effectiveDeparture() - a.effectiveArrival() - walk) / 60_000L).toInt()
+    }.minOrNull()
+}
+
+/** Build 122 · "Nur 2 Min. zum Umsteigen" for a tight change (≤ 4 min), else null. */
+fun tightTransferText(trip: Trip): String? = tightestTransferMinutes(trip)?.takeIf { it <= 4 }?.let {
+    if (it <= 0) tr("Kaum Zeit zum Umsteigen") else tr("Nur %1\$s Min. zum Umsteigen", it)
+}
+
+/**
+ * Build 117 · up to three other connections at a station. Build 122 (test report): every card first names its
+ * line and departure, then the arrival, the changes (the tightest one concretely) and the reliability in words –
+ * three buses arriving at the same time no longer look alike, also for TalkBack. The cards share the width they
+ * have; with large type or little room they stand one below the other.
  */
 @Composable fun JourneyChoicesRow(state: PinnedJourneyState, choices: List<Trip>, expanded: Boolean) {
     val actions = LocalJourneyChoiceActions.current ?: return
@@ -116,35 +147,62 @@ fun choicePoint(brief: PinnedJourneyBrief): Boolean = when (brief.kind) {
     AnimatedVisibility(choices.isNotEmpty(),
         enter = if (quiet) fadeIn(spring(stiffness = 10_000f)) else fadeIn(spring(stiffness = 300f)) + expandVertically(spring(dampingRatio = .82f, stiffness = 320f), expandFrom = Alignment.Top),
         exit = if (quiet) fadeOut(spring(stiffness = 10_000f)) else fadeOut(spring(stiffness = 500f)) + shrinkVertically(spring(stiffness = 420f), shrinkTowards = Alignment.Top)) {
-        Column(Modifier.fillMaxWidth().testTag("journey-choices"), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(tr("Andere Verbindungen"), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                shown.forEach { trip ->
-                    val level = remember(trip, actions.memory) { rateTrip(trip, actions.memory).level }
-                    val arrival = clockTime(trip.effectiveArrival())
-                    val changes = if (trip.transfers == 0) tr("Ohne Umstieg") else transferCount(trip.transfers)
-                    val spoken = tr("Ankunft %1\$s, %2\$s, Verlässlichkeit geschätzt: %3\$s", arrival, changes, level.title())
-                    Surface(onClick = { asked = trip }, modifier = Modifier.weight(1f).fillMaxHeight().testTag("journey-choice")
-                        .semantics(mergeDescendants = true) {}.clearAndSetSemantics { contentDescription = spoken },
-                        shape = appCorner(16.dp), color = MaterialTheme.colorScheme.surfaceContainerHighest) {
-                        Column(Modifier.padding(horizontal = 10.dp, vertical = if (expanded) 10.dp else 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            FittedText(arrival, style = (if (expanded) MaterialTheme.typography.titleLarge else MaterialTheme.typography.titleMedium)
-                                .copy(fontWeight = FontWeight.Bold), maxLines = 1)
-                            FittedText(changes, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
-                            ReliabilityMeter(level, label = false)
-                            // The level's name on its own line, shrinking rather than cut ("Sehr unsicher").
-                            if (expanded) FittedText(level.title(), style = MaterialTheme.typography.labelMedium, color = level.color(), maxLines = 1)
-                        }
-                    }
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val fontScale = LocalDensity.current.fontScale
+            // Each card needs about 132 dp for its line, departure and arrival; otherwise they stand in a column.
+            val stacked = fontScale >= 1.3f || maxWidth / shown.size.coerceAtLeast(1) < 132.dp
+            Column(Modifier.fillMaxWidth().testTag("journey-choices"), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(tr("Andere Verbindungen"), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                val card: @Composable (Trip, Modifier) -> Unit = { trip, m -> JourneyChoiceCard(trip, actions.memory, expanded, stacked, m) { asked = trip } }
+                if (stacked) shown.forEach { trip -> card(trip, Modifier.fillMaxWidth()) }
+                else Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    shown.forEach { trip -> card(trip, Modifier.weight(1f).fillMaxHeight()) }
                 }
-                // Fewer than three: the free places stay empty, so the buttons keep their width.
-                repeat(3 - shown.size) { Spacer(Modifier.weight(1f)) }
             }
         }
     }
     asked?.let { trip ->
         JourneyChoiceDialog(session, trip, state.choices?.query, actions.memory,
             onAccept = { asked = null; actions.onChoose(session.id, alternativeJourneyKey(trip)) }, onDismiss = { asked = null })
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable private fun JourneyChoiceCard(trip: Trip, memory: ReliabilityMemory, expanded: Boolean, wide: Boolean, modifier: Modifier, onClick: () -> Unit) {
+    val level = remember(trip, memory) { rateTrip(trip, memory).level }
+    val line = remember(trip) { firstLineLabel(trip) }
+    val departure = clockTime(trip.firstBoardingTime())
+    val arrival = clockTime(trip.effectiveArrival())
+    val tight = remember(trip) { tightTransferText(trip) }
+    val changes = if (trip.transfers == 0) tr("Ohne Umstieg") else transferCount(trip.transfers)
+    val spoken = listOfNotNull(line.takeIf { it.isNotBlank() }, tr("ab %1\$s", departure), tr("Ankunft %1\$s", arrival), changes, tight,
+        tr("Verlässlichkeit geschätzt: %1\$s", level.title())).joinToString(", ")
+    Surface(onClick = onClick, modifier = modifier.testTag("journey-choice").clearAndSetSemantics { contentDescription = spoken },
+        shape = appCorner(16.dp), color = MaterialTheme.colorScheme.surfaceContainerHighest) {
+        val pad = Modifier.padding(horizontal = 12.dp, vertical = if (expanded) 10.dp else 8.dp)
+        val head = @Composable {
+            // The departure moves to the next line rather than shrinking (large type).
+            FlowRow(verticalArrangement = Arrangement.Center, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                if (line.isNotBlank()) Text(line, Modifier.align(Alignment.CenterVertically).background(MaterialTheme.colorScheme.secondaryContainer, appCorner(6.dp))
+                    .padding(horizontal = 6.dp, vertical = 1.dp), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer, maxLines = 1)
+                Text(tr("ab %1\$s", departure), Modifier.align(Alignment.CenterVertically), style = MaterialTheme.typography.labelLarge, maxLines = 1)
+            }
+        }
+        val arrivalText = @Composable {
+            FittedText(tr("an %1\$s", arrival), style = (if (expanded) MaterialTheme.typography.titleLarge else MaterialTheme.typography.titleMedium)
+                .copy(fontWeight = FontWeight.Bold), maxLines = 1)
+        }
+        val details = @Composable {
+            FittedText(changes, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+            tight?.let { FittedText(it, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.error, maxLines = 2) }
+            // The level in words as well (not only colour and bars).
+            ReliabilityMeter(level, label = true)
+        }
+        if (wide) Row(pad.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) { head(); arrivalText() }
+            Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(2.dp)) { details() }
+        } else Column(pad, verticalArrangement = Arrangement.spacedBy(4.dp)) { head(); arrivalText(); details() }
     }
 }
 
@@ -226,8 +284,17 @@ fun choicePoint(brief: PinnedJourneyBrief): Boolean = when (brief.kind) {
     val rating = remember(session.trip, session.completedRideKeys, actions.memory) {
         rateTrip(session.trip, actions.memory) { stationRideKey(it) in session.completedRideKeys }
     }
-    Row(Modifier.fillMaxWidth().testTag("journey-reliability"), verticalAlignment = Alignment.CenterVertically) {
-        Text(tr("Verlässlichkeit"), Modifier.weight(1f), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        ReliabilityMeter(rating.level)
+    // Build 122: where a change decides it, said concretely ("Nur 2 Min. zum Umsteigen").
+    val remaining = remember(session.trip, session.completedRideKeys) {
+        session.trip.copy(segments = session.trip.segments.filterNot { !it.isWalk && stationRideKey(it) in session.completedRideKeys })
+    }
+    val tight = remember(remaining) { tightTransferText(remaining) }
+    Column(Modifier.fillMaxWidth().testTag("journey-reliability"), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text(tr("Verlässlichkeit"), Modifier.weight(1f), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            ReliabilityMeter(rating.level)
+        }
+        if (tight != null && rating.level.ordinal >= ReliabilityLevel.SAFE.ordinal)
+            Text(tight, Modifier.testTag("journey-tight-transfer"), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
     }
 }

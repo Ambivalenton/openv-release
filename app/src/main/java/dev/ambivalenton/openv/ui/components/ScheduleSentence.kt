@@ -16,7 +16,7 @@ import java.util.Locale
  * its weekday, anything else by its date. Days are judged in [zone]; in the repeated hour of a clock
  * change the zone name tells the two times apart.
  */
-fun searchButtonLabel(time: Long?, mode: TimeMode, now: Long, zone: ZoneId = ZoneId.systemDefault(),
+fun searchButtonLabel(time: Long?, mode: TimeMode, now: Long, zone: ZoneId = dev.ambivalenton.openv.data.model.transitZone,
     locale: Locale = Locale.getDefault()): String {
     if (time == null) return if (mode == TimeMode.DEPARTURE) tr("Nächste Verbindung suchen") else tr("Verbindung suchen")
     val at = Instant.ofEpochMilli(time).atZone(zone)

@@ -42,7 +42,7 @@ internal fun clockHandAngles(minutes: Float): Pair<Float, Float> = (minutes * .5
  */
 @Composable fun AnalogClockIcon(timeMillis: Long?, modifier: Modifier = Modifier, tint: Color = LocalContentColor.current) {
     val wall = rememberWallClock()
-    val shown = if (timeMillis == null) wall else Instant.ofEpochMilli(timeMillis).atZone(ZoneId.systemDefault())
+    val shown = if (timeMillis == null) wall else Instant.ofEpochMilli(timeMillis).atZone(dev.ambivalenton.openv.data.model.transitZone)
     val minutes = shown.hour * 60 + shown.minute
     val last = remember { floatArrayOf(minutes.toFloat()) }
     val target = remember(minutes) { nearestClockMinutes(last[0], minutes).also { last[0] = it } }

@@ -503,7 +503,7 @@ internal const val CHART_TOP_GAP_DP = 6f
 internal data class ChartAxisMark(val time: Long, val minuteOfDay: Int)
 
 /** Quarter-hour marks around the whole chart; the projection decides which ones show. */
-internal fun chartAxisMarks(window: TimelineWindow, zone: ZoneId = ZoneId.systemDefault()): List<ChartAxisMark> {
+internal fun chartAxisMarks(window: TimelineWindow, zone: ZoneId = dev.ambivalenton.openv.data.model.transitZone): List<ChartAxisMark> {
     var mark = Instant.ofEpochMilli(window.start - 3 * 3_600_000L).atZone(zone).withSecond(0).withNano(0)
     mark = mark.withMinute(mark.minute / 15 * 15)
     val end = window.end + 3 * 3_600_000L

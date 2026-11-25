@@ -237,9 +237,28 @@ enum class WaypointOrder { OPTIMIZED, MANUAL }
 val selectableProducts = LineType.entries.filter { it != LineType.WALK }.toSet()
 val localProducts = selectableProducts - LineType.ICE
 
+/**
+ * Build 122 · the time zone of the timetable: departures and arrivals are shown, chosen and rated in the local
+ * time of the stops (Germany), whatever zone the phone is set to – a departure at 00:43 never turns into
+ * 23:43 of the day before on a phone set to London. Device matters (day/night, a favourite's time windows,
+ * backups) keep the phone's zone.
+ */
+val transitZone: ZoneId = ZoneId.of("Europe/Berlin")
+
 fun clockTime(time: Long): String =
     Instant.ofEpochMilli(time)
-        .atZone(ZoneId.systemDefault())
+        .atZone(transitZone)
         .format(DateTimeFormatter.ofPattern("HH:mm"))
+
+/**
+ * Build 122 · null while the phone shows the stops' time anyway; otherwise a short note naming the stops' local
+ * time and day at [at] ("Ortszeit · Mi., 25.11."), so a time near midnight is never read for the wrong day.
+ */
+fun transitZoneNote(at: Long, device: ZoneId = ZoneId.systemDefault()): String? {
+    val instant = Instant.ofEpochMilli(at)
+    if (device.rules.getOffset(instant) == transitZone.rules.getOffset(instant)) return null
+    val day = instant.atZone(transitZone).format(DateTimeFormatter.ofPattern("EEE, dd.MM.", java.util.Locale.GERMAN))
+    return dev.ambivalenton.openv.localization.tr("Ortszeit Deutschland · %1\$s", day)
+}
 
 fun newId(): String = UUID.randomUUID().toString()

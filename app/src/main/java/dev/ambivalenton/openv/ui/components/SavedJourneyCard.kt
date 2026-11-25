@@ -24,7 +24,7 @@ import java.time.format.FormatStyle
 
 @Composable fun SavedJourneyCard(saved:SavedJourney,onOpen:()->Unit,onRemove:()->Unit,onPin:()->Unit={}) {
     val haptic=LocalHapticFeedback.current
-    val date=DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).format(Instant.ofEpochMilli(saved.trip.firstBoardingTime()).atZone(ZoneId.systemDefault()))
+    val date=DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).format(Instant.ofEpochMilli(saved.trip.firstBoardingTime()).atZone(dev.ambivalenton.openv.data.model.transitZone))
     AppCard(shape=appCorner(24.dp),modifier=Modifier.fillMaxWidth().testTag("saved-journey-${saved.id}")
         .combinedClickable(onClick=onOpen,onLongClickLabel=tr("Verbindung anpinnen"),onLongClick={haptic.performHapticFeedback(HapticFeedbackType.LongPress);onPin()}),
         colors=CardDefaults.cardColors(containerColor=MaterialTheme.colorScheme.surfaceContainerLow)) {

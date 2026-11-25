@@ -40,7 +40,7 @@ data class JourneyShareData(
                 legs,
                 (trip.totalDuration + 59_999) / 60_000,
                 Instant.ofEpochMilli(trip.startTime)
-                    .atZone(ZoneId.systemDefault())
+                    .atZone(dev.ambivalenton.openv.data.model.transitZone)
                     .format(DateTimeFormatter.ofPattern("dd.MM.yyyy")),
             )
         }

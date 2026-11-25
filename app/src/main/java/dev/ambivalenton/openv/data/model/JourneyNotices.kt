@@ -192,7 +192,7 @@ private fun triggers(text: String, sentence: IntRange, terms: List<String>): Lis
  * via [dismissed] (keys of [noticeDismissKey]). Identical texts are merged; a changed text or another
  * stop is judged again. Pure and deterministic.
  */
-fun scanJourneyNotices(trip: Trip, dismissed: Set<String> = emptySet(), zone: ZoneId = ZoneId.systemDefault()): List<NoticeHit> {
+fun scanJourneyNotices(trip: Trip, dismissed: Set<String> = emptySet(), zone: ZoneId = transitZone): List<NoticeHit> {
     data class Source(val text: String, val leg: Int?)
     val sources = trip.segments.flatMapIndexed { index, leg -> if (leg.isWalk) emptyList() else leg.notices.map { Source(it, index) } } +
         trip.notices.map { Source(it, null) }

@@ -21,7 +21,9 @@ fun pinnedHeaderPresentation(state: PinnedJourneyState,focus: JourneyFocus,disru
     val (nextPlace,rail)=pinnedStopLabel(focus,state.session?.trip)
     return PinnedHeaderPresentation(tr("Reisebegleiter"),
         assistantStepDetail(focus),focus.heading(),nextPlace,clockTime(focus.nextTime),focus.timeLabel,state.session?.let {nextBoardingInstruction(it,focus)}.orEmpty(),
-        focus.delay.orEmpty(),(state.session?.let {approximateMarker(projectSessionTimes(it,now).finalArrival)}.orEmpty())+clockTime(focus.arrival),warning,quality,false,paused,
+        focus.delay.orEmpty(),(state.session?.let {approximateMarker(projectSessionTimes(it,now).finalArrival)}.orEmpty())+clockTime(focus.arrival),
+        // Build 122: on a phone set to another zone the card names the stops' local time.
+        listOfNotNull(warning.takeIf {it.isNotBlank()},transitZoneNote(focus.arrival)).joinToString(" · "),quality,false,paused,
         state.session?.let {availablePinnedAlternative(it,now,state.presence)}!=null,rail,false,
         state.session?.let {assistantTravelSummary(it,now,focus).change}.orEmpty(),state.session?.let {assistantTravelSummary(it,now,focus).notice}.orEmpty(),
         state.session?.let {nextBoardingPlatformChanged(it,focus)}==true)

@@ -228,7 +228,7 @@ class EfaTransitRepository(
         throw TransitException(tr("Verbindung über die Suche aktualisieren."))
 }
 
-internal val efaZone: ZoneId = ZoneId.of("Europe/Berlin")
+internal val efaZone: ZoneId = dev.ambivalenton.openv.data.model.transitZone
 
 internal fun coordinate(lat: Double, lon: Double): String =
     String.format(Locale.ROOT, "%.7f:%.7f:WGS84[dd.ddddd]", lon, lat)

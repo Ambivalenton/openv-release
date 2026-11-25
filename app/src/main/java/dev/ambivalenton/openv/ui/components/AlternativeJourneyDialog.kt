@@ -59,7 +59,7 @@ import java.time.format.DateTimeFormatter
         dismissButton={TextButton(onKeep,Modifier.testTag("keep-current-journey")){Text(tr("Bisherige behalten"))}})
 }
 private fun comparisonTimes(current:Long,offered:Long):Pair<String,String> {
-    val zone=ZoneId.systemDefault()
+    val zone=dev.ambivalenton.openv.data.model.transitZone
     val a=Instant.ofEpochMilli(current).atZone(zone);val b=Instant.ofEpochMilli(offered).atZone(zone)
     val format=DateTimeFormatter.ofPattern(if(a.toLocalDate()==b.toLocalDate())"HH:mm" else "dd.MM. HH:mm")
     return format.format(a) to format.format(b)
@@ -79,7 +79,7 @@ private fun comparisonTimes(current:Long,offered:Long):Pair<String,String> {
         Column(Modifier.fillMaxWidth().padding(12.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
             Text(title,style=MaterialTheme.typography.titleSmall)
             Text(DateTimeFormatter.ofLocalizedDate(java.time.format.FormatStyle.MEDIUM)
-                .format(Instant.ofEpochMilli(trip.firstBoardingTime()).atZone(ZoneId.systemDefault())),style=MaterialTheme.typography.labelMedium)
+                .format(Instant.ofEpochMilli(trip.firstBoardingTime()).atZone(dev.ambivalenton.openv.data.model.transitZone)),style=MaterialTheme.typography.labelMedium)
             Text(tr("Abfahrt %1\$s · Ankunft %2\$s",clockTime(trip.firstBoardingTime()),clockTime(trip.effectiveArrival())),style=MaterialTheme.typography.bodyMedium)
             Text(transferCount(trip.transfers),style=MaterialTheme.typography.bodySmall)
             trip.segments.forEach {leg->

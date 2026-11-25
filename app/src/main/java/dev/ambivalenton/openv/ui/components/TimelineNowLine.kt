@@ -144,7 +144,7 @@ internal fun DrawScope.drawNowStroke(stroke:NowStroke,ink:Color,t:Float) {
 
 /** The clock at the end of the line: digits, a small dial or both, in the look of the line. */
 @Composable internal fun NowClock(style:NowClockStyle,now:Long,ink:Color,seconds:Boolean,stroke:NowStroke) {
-    val time=Instant.ofEpochMilli(now).atZone(ZoneId.systemDefault())
+    val time=Instant.ofEpochMilli(now).atZone(dev.ambivalenton.openv.data.model.transitZone)
     val text=String.format(java.util.Locale.ROOT,if(seconds)"%02d:%02d:%02d" else "%02d:%02d",time.hour,time.minute,time.second)
     val density=LocalDensity.current
     Row(Modifier.clearAndSetSemantics {contentDescription=tr("Jetzt %1\$s",clockTime(now))},

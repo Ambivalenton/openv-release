@@ -163,6 +163,8 @@ tasks.withType<Test>().configureEach {
         System.getProperty(key)?.let { systemProperty(key, it) }
     }
     systemProperty("http.nonProxyHosts", "localhost|127.*|[::1]")
+    // Build 122: the device zone of the tests is the timetable's (as on most phones); tests of other zones set it themselves.
+    systemProperty("user.timezone", "Europe/Berlin")
     dependsOn(syncRobolectricRuntime)
     inputs.files(syncRobolectricRuntime).withPropertyName("robolectricRuntime").withPathSensitivity(PathSensitivity.NAME_ONLY)
     systemProperty("robolectric.offline", "true")

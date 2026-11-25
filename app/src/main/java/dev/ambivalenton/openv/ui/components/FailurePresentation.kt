@@ -40,7 +40,8 @@ fun failureCopy(failure: TransitFailure, context: FailureContext, now: Long, pro
         FailureKind.RATE_LIMITED -> FailureCopy(tr("Der Fahrplandienst begrenzt gerade die Anfragen"),
             failure.waitSeconds(now)?.let { tr("Das ist vorübergehend. Bitte warte noch %1\$s Sekunden.", it) }
                 ?: tr("Das ist vorübergehend. Du kannst es jetzt erneut versuchen."), retry)
-        FailureKind.UNAVAILABLE -> FailureCopy(tr("Der Fahrplandienst antwortet gerade nicht"),
+        // Build 122: said plainly – the timetable is out of reach, not "no journey at this time".
+        FailureKind.UNAVAILABLE -> FailureCopy(tr("Fahrplan gerade nicht erreichbar"),
             tr("Das liegt nicht an deinem Gerät. Versuche es gleich noch einmal."), FailureStep.RELOAD)
         FailureKind.INVALID_RESPONSE -> FailureCopy(tr("Die Antwort des Fahrplandienstes war unvollständig"),
             tr("Versuche es gleich noch einmal."), FailureStep.RELOAD)
@@ -78,7 +79,9 @@ private fun waits(step: FailureStep) = step == FailureStep.RETRY || step == Fail
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun FailurePanel(failure: TransitFailure, context: FailureContext, onStep: (FailureStep) -> Unit, modifier: Modifier = Modifier,
-    provider: String? = null, alternative: String? = null) {
+    provider: String? = null, alternative: String? = null,
+    /** Build 122: the search that is kept for "Erneut suchen" (start → destination · time). */
+    kept: String? = null) {
     var now by remember(failure) { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(failure) {
         while (failure.waitSeconds(System.currentTimeMillis()) != null) { delay(1_000); now = System.currentTimeMillis() }
@@ -92,6 +95,8 @@ fun FailurePanel(failure: TransitFailure, context: FailureContext, onStep: (Fail
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(copy.title, style = MaterialTheme.typography.titleSmall)
             copy.body?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
+            kept?.let { Text(tr("Deine Suche bleibt erhalten: %1\$s", it), Modifier.testTag("failure-kept-query"),
+                style = MaterialTheme.typography.bodySmall) }
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOfNotNull(copy.primary, copy.secondary).forEach { step ->
                     TextButton({ onStep(step) }, Modifier.heightIn(min = 48.dp).testTag("failure-step-${step.name.lowercase()}"),

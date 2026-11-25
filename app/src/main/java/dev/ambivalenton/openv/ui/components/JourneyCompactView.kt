@@ -54,7 +54,7 @@ import kotlinx.coroutines.withContext
 }
 
 /** "Daten: … · Stand: …", with the provider's own real-time timestamp where it sent one. */
-fun journeyCompactSource(trip:Trip,zone:ZoneId=ZoneId.systemDefault()):String {
+fun journeyCompactSource(trip:Trip,zone:ZoneId=dev.ambivalenton.openv.data.model.transitZone):String {
     val fetched=Instant.ofEpochMilli(trip.fetchedAt).atZone(zone)
     val date=DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).format(fetched)
     val rides=trip.segments.filterNot {it.isWalk}

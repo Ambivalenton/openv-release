@@ -1277,7 +1277,7 @@ class AppViewModel(
     fun learnGestureHint(key:String) {viewModelScope.launch {runCatching {locations.learnGestureHint(key)}}}
     /** Build 117 · the person's report on a ride: kept on the device, only adjusts the reliability estimate. */
     fun reportPunctuality(segment:TripSegment,onTime:Boolean) = mutate(refreshWidgets=false) {
-        val time=java.time.Instant.ofEpochMilli(segment.plannedStartTime).atZone(java.time.ZoneId.systemDefault())
+        val time=java.time.Instant.ofEpochMilli(segment.plannedStartTime).atZone(dev.ambivalenton.openv.data.model.transitZone)
         locations.recordPunctuality(stationRideKey(segment),dev.ambivalenton.openv.data.reliability.reliabilityLineKey(segment),
             dev.ambivalenton.openv.data.reliability.reliabilityMode(segment),dev.ambivalenton.openv.data.reliability.timeWindow(time),onTime,System.currentTimeMillis())
     }

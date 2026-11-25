@@ -51,7 +51,7 @@ internal fun knownMinutes(seconds: Int?, source: TimeSource, predicted: Long, pl
  * rides ([skipRide]) no longer count, realtime forecasts replace the priors, [memory] adds the
  * person's own reports.
  */
-fun rateTrip(trip: Trip, memory: PersonalPunctuality? = null, zone: ZoneId = ZoneId.systemDefault(),
+fun rateTrip(trip: Trip, memory: PersonalPunctuality? = null, zone: ZoneId = dev.ambivalenton.openv.data.model.transitZone,
     skipRide: (TripSegment) -> Boolean = { false }): ReliabilityRating {
     val segments = trip.segments.filterNot(skipRide)
     if (segments.any { !it.isWalk && it.delay.cancelled }) return ReliabilityRating(emptyList(), 0.0, 0.0, 0, ReliabilityLevel.VERY_UNSAFE, true, false)

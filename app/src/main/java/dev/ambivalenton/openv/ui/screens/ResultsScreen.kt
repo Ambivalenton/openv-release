@@ -171,7 +171,9 @@ fun ResultsScreen(
                         // H05: cause and matching step; bars that are already shown stay above.
                         if (failure != null) FailurePanel(failure, FailureContext.RESULTS, onFailureStep,
                             provider = dev.ambivalenton.openv.data.model.TimetableProfile.shortName(ui.store.settings.engine),
-                            alternative = coverageAlternative(ui))
+                            alternative = coverageAlternative(ui),
+                            kept = ui.query?.takeIf { failure.kind != FailureKind.NO_CONNECTION && failure.kind != FailureKind.NO_COVERAGE }
+                                ?.let { q -> "${q.origin.name} → ${q.destination.name} · ${dev.ambivalenton.openv.data.model.clockTime(q.time)}" })
                         else ErrorPanel(error, onRetry)
                         // A missing GPS fix in automatic mode: check the permission or choose a start.
                         if (trips.isEmpty() && ui.store.settings.originMode == OriginMode.AUTOMATIC &&
@@ -392,7 +394,9 @@ private fun ConnectionPagingStatus(ui:AppUiState,onPast:()->Unit,onFuture:()->Un
     val small = MaterialTheme.typography.bodyMedium
     val range = MaterialTheme.typography.labelMedium
     val buttonHeight = with(LocalDensity.current) { (small.lineHeight.value + range.lineHeight.value).sp.toDp() }
-    val rangeText = window?.let { tr("%1\$s – %2\$s", clockTime(it.from), clockTime(it.until)) }
+    // Build 122: on a phone set to another zone the times say whose time they are, with the day.
+    val rangeText = window?.let { w -> tr("%1\$s – %2\$s", clockTime(w.from), clockTime(w.until)) +
+        (dev.ambivalenton.openv.data.model.transitZoneNote(w.from)?.let { " · $it" }.orEmpty()) }
     Row(Modifier.padding(horizontal = 20.dp).fillMaxWidth().calmContentSize(spring(dampingRatio = .8f, stiffness = 420f,
         visibilityThreshold = androidx.compose.ui.unit.IntSize.VisibilityThreshold)).testTag("chart-query-header"),
         verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
