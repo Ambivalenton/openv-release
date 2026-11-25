@@ -47,8 +47,6 @@ internal fun OverviewSentenceSettings(
 }
 
 @Composable internal fun OverviewSentenceFields(settings:OverviewSettings,onChange:((OverviewSettings)->OverviewSettings)->Unit){
-    Text(tr("Zeigt das Wetter am Ziel. Dafür erhält Open-Meteo den Zielort. Ohne Wetterdaten bleibt die Verbindung sichtbar."),
-        style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
     @Composable
     fun Field(
         label: String,
@@ -85,6 +83,13 @@ internal fun OverviewSentenceSettings(
     Field(tr("Liniennamen / Liniennummern"), settings.showLineNames) { s, v -> s.copy(showLineNames = v) }
     Field(tr("Gleis- / Bussteig-Angaben"), settings.showPlatforms) { s, v -> s.copy(showPlatforms = v) }
     Field(tr("Wetter bei der Ankunft"), settings.showWeather) { s, v -> s.copy(showWeather = v) }
+    // Build 122: the privacy note sits at the switch and appears the moment the weather is switched on.
+    dev.ambivalenton.openv.ui.components.CalmVisibility(settings.showWeather,
+        enter=androidx.compose.animation.fadeIn()+androidx.compose.animation.expandVertically(),
+        exit=androidx.compose.animation.fadeOut()+androidx.compose.animation.shrinkVertically()) {
+        Text(tr("Zeigt das Wetter am Ziel. Dafür erhält Open-Meteo den Zielort. Ohne Wetterdaten bleibt die Verbindung sichtbar."),
+            Modifier.padding(bottom=6.dp).testTag("weather-privacy-note"),style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+    }
 }
 
 @Composable

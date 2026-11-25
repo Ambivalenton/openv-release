@@ -11,7 +11,8 @@ import androidx.core.content.ContextCompat
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.basicMarquee
+import androidx.compose.animation.animateContentSize
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.*
@@ -79,31 +80,50 @@ fun hasWalkingLocationPermission(context: Context): Boolean =
     val line=if(lineHeight.isSp) lineHeight else (fontSize.value*1.35f).sp
     return with(density) {maxOf(line.toDp()*lines,measured.toDp())}+4.dp
 }
-@OptIn(ExperimentalFoundationApi::class)
+/**
+ * A text of the pinned view in its own slot. Build 122: no ticker any more. A text that does not fit one line
+ * takes a second one when [grow] (the slot then keeps two lines while it stays on screen, so a changing value
+ * never makes the card jump back); a slot that must stay one line high shrinks its type a little instead.
+ */
 @Composable internal fun PinnedTextSlot(value:String,style:TextStyle,lines:Int=1,color:Color=Color.Unspecified,
-    tag:String,modifier:Modifier=Modifier,marquee:Boolean=false,fitRail:Boolean=false,fallback:String?=null) {
-    val move=marquee&&!dev.ambivalenton.openv.ui.theme.LocalAppSettings.current.reduceMotion
-    val contentModifier=if(move)Modifier.basicMarquee(iterations=Int.MAX_VALUE,velocity=24.dp)else Modifier
+    tag:String,modifier:Modifier=Modifier,grow:Boolean=false,fitRail:Boolean=false,fallback:String?=null) {
     val measurer=rememberTextMeasurer();val density=LocalDensity.current
-    BoxWithConstraints(modifier.height(style.slotHeight(lines)).fillMaxWidth()) {
+    val held=remember {androidx.compose.runtime.mutableIntStateOf(lines)}
+    val quiet=dev.ambivalenton.openv.ui.theme.LocalAppSettings.current.reduceMotion
+    BoxWithConstraints(modifier.fillMaxWidth()) {
         val width=with(density){maxWidth.toPx()}
-        val fitted=remember(value,style,width,fitRail,density) {
-            val scale=if(fitRail)railStopNameScale(measurer.measure(value,style,softWrap=false,maxLines=1).size.width.toFloat(),width,true)else 1f
+        val fitted=remember(value,style,width,fitRail,grow,lines,density) {
+            val natural=measurer.measure(value,style,softWrap=false,maxLines=1).size.width.toFloat()
+            val scale=when {
+                fitRail->railStopNameScale(natural,width,true)
+                // One fixed line: a slightly smaller type instead of a cut word.
+                !grow && lines==1 && width>0f && natural>width->(width/natural).coerceIn(.72f,1f)
+                else->1f
+            }
             style.copy(fontSize=style.fontSize*scale,platformStyle=PlatformTextStyle(includeFontPadding=false))
         }
+        val needed=if(!grow || width<=0f || value.isEmpty()) lines else remember(value,fitted,width) {
+            measurer.measure(value,fitted,softWrap=true,maxLines=2,
+                constraints=androidx.compose.ui.unit.Constraints(maxWidth=width.toInt().coerceAtLeast(1))).lineCount.coerceIn(lines,2)
+        }
+        LaunchedEffect(needed) {if(needed>held.intValue) held.intValue=needed}
+        val shownLines=maxOf(lines,held.intValue,if(grow) 1 else lines)
         // The short form replaces a sentence that would be cut, so its key fact stays readable.
-        val shown=remember(value,fallback,fitted,width,lines) {
+        val shown=remember(value,fallback,fitted,width,shownLines) {
             if(fallback.isNullOrEmpty() || value.isEmpty() || width<=0f) value
-            else if(measurer.measure(value,fitted,overflow=TextOverflow.Ellipsis,softWrap=lines>1,maxLines=lines,
+            else if(measurer.measure(value,fitted,overflow=TextOverflow.Ellipsis,softWrap=shownLines>1,maxLines=shownLines,
                     constraints=androidx.compose.ui.unit.Constraints(maxWidth=width.toInt().coerceAtLeast(1))).hasVisualOverflow) fallback
             else value
         }
-        Text(shown.ifEmpty {" "},contentModifier.fillMaxWidth().testTag(tag),style=fitted,
-            maxLines=lines,minLines=lines,softWrap=lines>1,overflow=TextOverflow.Ellipsis,color=color)
+        Box(Modifier.fillMaxWidth().height(style.slotHeight(shownLines))
+            .animateContentSize(if(quiet) androidx.compose.animation.core.snap() else androidx.compose.animation.core.spring(dampingRatio=.82f,stiffness=380f))) {
+            Text(shown.ifEmpty {" "},Modifier.fillMaxWidth().testTag(tag),style=fitted,
+                maxLines=shownLines,minLines=shownLines,softWrap=shownLines>1,overflow=TextOverflow.Ellipsis,color=color)
+        }
     }
 }
 @Composable private fun FixedHeaderText(value:String,style:TextStyle,lines:Int=1,color:Color=Color.Unspecified,
-    tag:String,modifier:Modifier=Modifier,fitRail:Boolean=false)=PinnedTextSlot(value,style,lines,color,tag,modifier,marquee=lines==1,fitRail=fitRail)
+    tag:String,modifier:Modifier=Modifier,fitRail:Boolean=false,grow:Boolean=false)=PinnedTextSlot(value,style,lines,color,tag,modifier,grow=grow,fitRail=fitRail)
 
 /** Every volatile value owns a fixed, font-scaled slot. No size animation or conditional-height block. */
 @Composable fun StablePinnedJourneyHeader(model: PinnedHeaderPresentation,onLocationPermission: ()->Unit,
@@ -118,9 +138,9 @@ fun hasWalkingLocationPermission(context: Context): Boolean =
             Text(model.arrival,style=t.displaySmall,maxLines=1,color=arrivalColor,fontWeight=androidx.compose.ui.text.font.FontWeight.Bold,
                 modifier=Modifier.testTag("pin-arrival-time"))
         }
-        if(model.position.isNotBlank())FixedHeaderText(model.position,t.bodyMedium,1,tag="pin-position")
-        FixedHeaderText(model.action,t.labelLarge,color=s.primary,tag="pin-next-action")
-        FixedHeaderText(model.nextPlace,t.headlineSmall,1,color=nextColor,tag="pin-next-place",fitRail=model.nextPlaceIsRail)
+        if(model.position.isNotBlank())FixedHeaderText(model.position,t.bodyMedium,1,tag="pin-position",grow=true)
+        FixedHeaderText(model.action,t.labelLarge,color=s.primary,tag="pin-next-action",grow=true)
+        FixedHeaderText(model.nextPlace,t.headlineSmall,1,color=nextColor,tag="pin-next-place",fitRail=model.nextPlaceIsRail,grow=!model.nextPlaceIsRail)
         val timeHeight=maxOf(t.headlineLarge.slotHeight(),t.labelMedium.slotHeight()+t.titleMedium.slotHeight())
         Row(Modifier.fillMaxWidth().height(timeHeight),verticalAlignment=Alignment.Top) {
             FixedHeaderText(model.time,clockStyle,color=nextColor,tag="pin-next-time",modifier=Modifier.width(clockWidth))
@@ -130,9 +150,23 @@ fun hasWalkingLocationPermission(context: Context): Boolean =
             }
         }
         // Boarding information owns the whole width and may grow; a platform number is never ellipsised.
-        Text(model.platform.ifEmpty {" "},Modifier.fillMaxWidth().heightIn(min=t.titleSmall.slotHeight(2)).testTag("pin-platform"),
-            style=t.titleSmall,minLines=2,softWrap=true,
-            color=nextColor.takeUnless {it==Color.Unspecified}?:s.primary)
+        // Build 122: a changed platform stands out – in the error colour on a soft tint that breathes in once.
+        val changed=model.platformChanged
+        val glow=remember {androidx.compose.animation.core.Animatable(0f)}
+        val calm=dev.ambivalenton.openv.ui.theme.LocalAppSettings.current.reduceMotion
+        LaunchedEffect(changed,model.platform) {
+            if(!changed) glow.snapTo(0f)
+            else if(calm) glow.snapTo(1f)
+            else {glow.snapTo(0f);glow.animateTo(1.25f,androidx.compose.animation.core.spring(dampingRatio=.5f,stiffness=300f));glow.animateTo(1f,androidx.compose.animation.core.spring(dampingRatio=.7f,stiffness=200f))}
+        }
+        Text(model.platform.ifEmpty {" "},Modifier.fillMaxWidth().heightIn(min=t.titleSmall.slotHeight(2))
+            .then(if(changed) Modifier.drawBehind {
+                drawRoundRect(s.errorContainer.copy(alpha=(.75f*glow.value).coerceIn(0f,1f)),
+                    topLeft=androidx.compose.ui.geometry.Offset(-6.dp.toPx(),0f),size=androidx.compose.ui.geometry.Size(size.width+12.dp.toPx(),size.height),
+                    cornerRadius=androidx.compose.ui.geometry.CornerRadius(10.dp.toPx()))
+            } else Modifier).testTag("pin-platform"),
+            style=t.titleSmall,minLines=2,softWrap=true,fontWeight=if(changed) androidx.compose.ui.text.font.FontWeight.Bold else null,
+            color=if(changed) s.onErrorContainer else nextColor.takeUnless {it==Color.Unspecified}?:s.primary)
         if(model.nextChange.isNotBlank())Text(model.nextChange,Modifier.fillMaxWidth().testTag("pin-next-change"),style=t.bodyMedium)
         if(model.notice.isNotBlank())Text(model.notice,Modifier.fillMaxWidth().testTag("pin-connection-notice"),style=t.bodySmall,color=s.primary)
         if(model.warning.isNotBlank())Text(model.warning,Modifier.fillMaxWidth().testTag("pin-warning"),style=t.bodySmall,color=s.onSurfaceVariant)

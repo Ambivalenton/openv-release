@@ -137,6 +137,8 @@ data class TripSegment(
     val realtimeGeneratedAt:Long? = null,
     /** Receipt time of the response in which this leg's forecast values last changed. */
     val forecastChangedAt:Long? = null,
+    /** Build 122: the timetable's platform when the operator changed it (null: unchanged or unknown). */
+    val plannedDeparturePlatform: String? = null,
 ) {
     val isWalk: Boolean
         get() = lineType == LineType.WALK

@@ -82,7 +82,7 @@ import java.time.LocalDate
         text={Column(Modifier.verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(8.dp)){
             BackupImportSummary(preview,current=importer.current)
             TextButton({exportStatus=null;export.launch("OepenV_Sicherung_vorher_${LocalDate.now()}.json")},
-                Modifier.heightIn(min=48.dp).testTag("backup-export-before-import"),enabled=!busy){Text(tr("Vorherige Sicherung exportieren"))}
+                Modifier.heightIn(min=48.dp).testTag("backup-export-before-import"),enabled=!busy){Text(tr("Aktuelle Daten zuerst sichern"))}
             exportStatus?.let{(text,failure)->BackupMessage(text,failure)}
         }},
         confirmButton={TextButton({importer.confirm()},enabled=!busy,modifier=Modifier.testTag("backup-import-confirm")){Text(tr("Daten ersetzen"))}},

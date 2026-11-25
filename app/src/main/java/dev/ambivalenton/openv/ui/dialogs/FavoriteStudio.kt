@@ -365,7 +365,8 @@ private fun placeLine(place: Location): String = listOfNotNull(place.name.takeIf
                 if (quiet) snap() else spring(dampingRatio = .5f, stiffness = 520f), label = "color-dot-$index")
             Box(Modifier.size(44.dp).testTag("$tagPrefix-color-dot-$index")
                 .selectable(chosen, enabled = enabled, role = Role.RadioButton) { onColor(color) }
-                .semantics { contentDescription = tr("Farbe %1\$s", index + 1); stateDescription = if (chosen) tr("Ausgewählt") else "" },
+                // Build 122: TalkBack names the colour ("Dunkles Türkis") instead of "Farbe 1".
+                .semantics { contentDescription = dev.ambivalenton.openv.ui.components.colorName(color); stateDescription = if (chosen) tr("Ausgewählt") else "" },
                 contentAlignment = Alignment.Center) {
                 Box(Modifier.size(size).background(Color(color), CircleShape)
                     .then(if (chosen) Modifier.border(3.dp, MaterialTheme.colorScheme.onSurface, CircleShape)

@@ -101,8 +101,15 @@ fun assistantStepDetail(focus:JourneyFocus):String=remainingRideStops(focus).tak
 fun nextBoardingInstruction(session:PinnedJourneySession,focus:JourneyFocus):String {
     val (index,platform)=nextBoarding(session,focus)?:return ""
     val first=session.trip.segments.indexOfFirst {!it.isWalk}
-    return if(index==first)tr("Nächster Einstieg: %1\$s",platform)else tr("Nächster Umstieg: %1\$s",platform)
+    // Build 122: a platform changed by the operator is said as such ("jetzt Gleis 5 statt 3").
+    val ride=session.trip.segments[index]
+    val shown=ride.plannedDeparturePlatform?.let {planned->tr("jetzt %1\$s statt %2\$s",platform,planned.trim())} ?: platform
+    return if(index==first)tr("Nächster Einstieg: %1\$s",shown)else tr("Nächster Umstieg: %1\$s",shown)
 }
+
+/** Build 122: the next boarding's platform was changed by the operator. */
+fun nextBoardingPlatformChanged(session:PinnedJourneySession,focus:JourneyFocus):Boolean =
+    nextBoarding(session,focus)?.let {(index,_)->session.trip.segments[index].plannedDeparturePlatform!=null}==true
 
 /** The platform of [nextBoardingInstruction] alone ("Gleis 2"): the card falls back to it when the
  * whole instruction does not fit (very large text), so the platform itself never disappears. */

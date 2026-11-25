@@ -555,6 +555,10 @@ internal fun parseEfaTrip(raw: JsonElement, receivedAt: Long = System.currentTim
                 arrivalSource=when { endForecast != null -> TimeSource.PROGNOSIS; carried != null -> TimeSource.CARRIED; else -> TimeSource.PLANNED },
                 realtimeReceivedAt=receivedAt.takeIf { startForecast != null || endForecast != null },
                 forecastChangedAt=receivedAt.takeIf { startForecast != null || endForecast != null },
+                // Build 122: a changed platform is kept with the planned one, so the journey can say "now platform 5 (instead of 3)".
+                plannedDeparturePlatform=first.text("plannedPlatformName")?.trim()?.takeIf { planned ->
+                    val current = first.text("platformName")?.trim()
+                    planned.isNotBlank() && !current.isNullOrBlank() && !current.equals(planned, ignoreCase = true) },
             )
         }
     // The alighting stop is part of the offer: two results may share boarding stop, line and time

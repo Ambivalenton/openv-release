@@ -22,7 +22,9 @@ import dev.ambivalenton.openv.ui.components.FittedText
 /** Below the plan: edit hints, the tray and the undo of a removal. */
 @Composable
 fun NetworkPlanFooter(store: StoredState, editing: Boolean, trayPick: String?,
-                      onTrayPick: (String) -> Unit, onUndo: (() -> Unit)?) {
+                      onTrayPick: (String) -> Unit, onUndo: (() -> Unit)?,
+                      /** Build 122: what was removed, with both places ("Linie Zuhause – Arbeit entfernt"). */
+                      undoLabel: String? = null) {
     val scheme = MaterialTheme.colorScheme
     // No summary line ("Ab …: …") below the plan any more; the times sit on the lines.
     if (editing) {
@@ -45,10 +47,22 @@ fun NetworkPlanFooter(store: StoredState, editing: Boolean, trayPick: String?,
     }
     if (onUndo != null) Surface(Modifier.fillMaxWidth().testTag("network-undo"), shape = MaterialTheme.shapes.medium, color = scheme.inverseSurface) {
         Row(Modifier.padding(start = 16.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(tr("Verbindung entfernt"), Modifier.weight(1f), color = scheme.inverseOnSurface)
+            Text(undoLabel ?: tr("Verbindung entfernt"), Modifier.weight(1f).padding(vertical = 10.dp), color = scheme.inverseOnSurface)
             TextButton(onUndo) { Text(tr("Rückgängig"), color = scheme.inversePrimary) }
         }
     }
+}
+
+/**
+ * Build 122: how long an undo stays: Android's recommended time for a control with text (it grows with the
+ * accessibility setting "Zeit zum Reagieren"), at least [base] milliseconds.
+ */
+fun recommendedUndoMillis(context: android.content.Context, base: Long = 6_000L): Long {
+    if (android.os.Build.VERSION.SDK_INT < 29) return base
+    val manager = context.getSystemService(android.view.accessibility.AccessibilityManager::class.java) ?: return base
+    return manager.getRecommendedTimeoutMillis(base.toInt(),
+        android.view.accessibility.AccessibilityManager.FLAG_CONTENT_CONTROLS or android.view.accessibility.AccessibilityManager.FLAG_CONTENT_TEXT)
+        .toLong().coerceAtLeast(base)
 }
 
 /** Tap on a line in edit mode: both directions, one way each, or remove. */

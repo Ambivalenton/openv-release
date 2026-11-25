@@ -83,7 +83,9 @@ private val ArrowSpring = spring<Float>(dampingRatio = .52f, stiffness = 420f)
  * half a turn about its 45° axis (the diagonal through its bend), so the two heads trade places, with
  * a springy finish. The light stays where it is while the arrow turns (see [SpaceArrow]).
  */
-@Composable fun SwapPlacesArrow(visible: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+@Composable fun SwapPlacesArrow(visible: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier,
+    /** Build 122: always shown; without a destination it stays faint and [onClick] explains what is missing. */
+    ready: Boolean = true) {
     val quiet = LocalAppSettings.current.reduceMotion
     val presence = remember { Animatable(if (visible) 1f else 0f) }
     val bounce = remember { Animatable(1f) }
@@ -114,14 +116,23 @@ private val ArrowSpring = spring<Float>(dampingRatio = .52f, stiffness = 420f)
             translationX = (1f - p.coerceIn(0f, 1f)) * 14.dp.toPx()
         }
         .then(if (visible) Modifier.clickable(interactionSource = remember { MutableInteractionSource() }, indication = null,
-            role = Role.Button, onClickLabel = label) { taps++; onClick() }
+            role = Role.Button, onClickLabel = label) { if (ready) taps++; onClick() }
             .semantics { contentDescription = label } else Modifier.clearAndSetSemantics {})
         .testTag("swap-places")) {
         // The turn is computed as geometry (the outline projected in space), the light is
         // not: it keeps coming from the upper left, so shadow, sheen and edges never turn with it.
+        // Build 122: a round tonal button behind the arrow, so it reads as something to tap.
+        val ring by androidx.compose.animation.core.animateFloatAsState(if (ready) 1f else .45f,
+            if (quiet) androidx.compose.animation.core.snap() else spring(dampingRatio = .8f, stiffness = 380f), label = "swap-ready")
+        val container = scheme.secondaryContainer
         Spacer(Modifier.fillMaxSize().drawWithCache {
-            val arrow = SpaceArrow(size)
-            onDrawBehind { arrow.draw(this, flip.value, body, shadowInk, dark) }
+            val arrow = SpaceArrow(Size(size.width * .78f, size.height * .78f))
+            onDrawBehind {
+                drawCircle(container.copy(alpha = container.alpha * (.55f + .45f * ring)), size.minDimension / 2f)
+                translate(size.width * .11f, size.height * .11f) {
+                    arrow.draw(this, flip.value, body.copy(alpha = ring), shadowInk.copy(alpha = shadowInk.alpha * ring), dark)
+                }
+            }
         })
     }
 }

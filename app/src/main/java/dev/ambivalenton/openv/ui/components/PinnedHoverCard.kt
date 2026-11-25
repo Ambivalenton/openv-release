@@ -33,8 +33,8 @@ import dev.ambivalenton.openv.ui.theme.appCorner
             Row(Modifier.fillMaxWidth().heightIn(min = PillNavigationBox).padding(start = 22.dp, end = 6.dp, top = 8.dp, bottom = 8.dp),
                 verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    PinnedTextSlot(focus.heading(), t.titleSmall.copy(fontWeight = FontWeight.SemiBold), tag = "hover-action", marquee = true)
-                    PinnedTextSlot(nextPlace, t.bodyMedium, tag = "hover-next-place", marquee = true, fitRail = railName)
+                    PinnedTextSlot(focus.heading(), t.titleSmall.copy(fontWeight = FontWeight.SemiBold), tag = "hover-action", grow = true)
+                    PinnedTextSlot(nextPlace, t.bodyMedium, tag = "hover-next-place", grow = !railName, fitRail = railName)
                     JourneyWiggleProgress(focus.progress, assistantWaveActive(session, now, state.status), session.id,
                         Modifier.fillMaxWidth().padding(top = 4.dp).semantics { contentDescription = tr("Reisefortschritt") },
                         urgent = journeyHasDelay(session) || session.missedBoarding != null)

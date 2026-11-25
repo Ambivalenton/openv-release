@@ -10,6 +10,8 @@ data class PinnedHeaderPresentation(
     val warning: String,val quality: String,val permissionRequired: Boolean,val paused: Boolean,val alternative: Boolean,
     val nextPlaceIsRail:Boolean=false,val gpsConnected:Boolean=false,
     val nextChange:String="",val notice:String="",
+    /** Build 122: the platform of the next boarding changed – the line is highlighted. */
+    val platformChanged:Boolean=false,
 )
 fun pinnedHeaderPresentation(state: PinnedJourneyState,focus: JourneyFocus,disruption: String?,now: Long,
     locationPermissionGranted: Boolean): PinnedHeaderPresentation {
@@ -21,5 +23,6 @@ fun pinnedHeaderPresentation(state: PinnedJourneyState,focus: JourneyFocus,disru
         assistantStepDetail(focus),focus.heading(),nextPlace,clockTime(focus.nextTime),focus.timeLabel,state.session?.let {nextBoardingInstruction(it,focus)}.orEmpty(),
         focus.delay.orEmpty(),(state.session?.let {approximateMarker(projectSessionTimes(it,now).finalArrival)}.orEmpty())+clockTime(focus.arrival),warning,quality,false,paused,
         state.session?.let {availablePinnedAlternative(it,now,state.presence)}!=null,rail,false,
-        state.session?.let {assistantTravelSummary(it,now,focus).change}.orEmpty(),state.session?.let {assistantTravelSummary(it,now,focus).notice}.orEmpty())
+        state.session?.let {assistantTravelSummary(it,now,focus).change}.orEmpty(),state.session?.let {assistantTravelSummary(it,now,focus).notice}.orEmpty(),
+        state.session?.let {nextBoardingPlatformChanged(it,focus)}==true)
 }

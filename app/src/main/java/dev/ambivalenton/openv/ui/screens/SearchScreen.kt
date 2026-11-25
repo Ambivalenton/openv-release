@@ -167,7 +167,9 @@ fun SearchScreen(
     // M17: a tap between close targets on the plan asks which one is meant.
     var targetChoice by remember {mutableStateOf<Pair<List<String>,List<String>>?>(null)}
     androidx.activity.compose.BackHandler(editing) {editing=false;trayPick=null}
-    LaunchedEffect(removedEdge) {if(removedEdge!=null){kotlinx.coroutines.delay(6_000);removedEdge=null}}
+    // Build 122: as long as Android recommends for a control (accessibility "Zeit zum Reagieren"), at least 6 s.
+    val undoContext = androidx.compose.ui.platform.LocalContext.current
+    LaunchedEffect(removedEdge) {if(removedEdge!=null){kotlinx.coroutines.delay(dev.ambivalenton.openv.ui.network.recommendedUndoMillis(undoContext));removedEdge=null}}
     var add by rememberSaveable { mutableStateOf(false) }
     var addLocation by rememberSaveable(stateSaver=locationSaver) {mutableStateOf<Location?>(null)}
     LaunchedEffect(addFavorite) { if (addFavorite > 0) { addAt = null; edit = null; addLocation = null; add = true } }
@@ -488,10 +490,15 @@ fun SearchScreen(
                     // 2.3: the swap arrow takes the former filter button's place. It appears with a spring
                     // once the destination field holds text and pushes the start box to the left; without
                     // it the box may use the whole width (and stays as narrow as its text otherwise).
-                    val arrowShown = destinationText.isNotBlank() && !originOpen
+                    // Build 122: the swap button is always there (faint without a destination), so it is found.
+                    val arrowShown = !originOpen
+                    val swapReady = destinationText.isNotBlank()
                     val arrowRoom by androidx.compose.animation.core.animateDpAsState(if (arrowShown) 56.dp else 0.dp,
                         if (motionOff) androidx.compose.animation.core.snap() else spring(dampingRatio = .7f, stiffness = 380f), label = "swap-arrow-room")
-                    SwapPlacesArrow(arrowShown, ::swapPlaces, Modifier.align(Alignment.TopEnd).offset(y = (-4).dp))
+                    SwapPlacesArrow(arrowShown, {
+                        if (swapReady) swapPlaces()
+                        else { destinationHint = tr("Wähle zuerst ein Ziel – dann tauscht dieser Knopf Start und Ziel."); focusDestinationField() }
+                    }, Modifier.align(Alignment.TopEnd).offset(y = (-4).dp), ready = swapReady)
                     dev.ambivalenton.openv.ui.components.OriginMorphField(
                         label = start,
                         open = originOpen,
@@ -512,6 +519,7 @@ fun SearchScreen(
                         focusRequest = startFocus,
                         clearRequest = startClear,
                         favorites = ui.store.favorites,
+                        missing = startMissing,
                         modifier = Modifier.zIndex(1f).graphicsLayer { alpha = if (swapGhosts != null) 0f else 1f }
                             .onGloballyPositioned { originBounds = it.boundsInRoot().translate(-screenOrigin) },
                     )
@@ -649,7 +657,12 @@ fun SearchScreen(
                         onEdgeDelete = { id -> removedEdge = vm.removeEdge(id); edgeMenu = null },
                     ), pinnedState=pinnedState ?: activePin?.let {PinnedJourneyState(session=it)}, deleteZone = deleteZone)
                 NetworkPlanFooter(ui.store, editing, trayPick, { id -> trayPick = if (trayPick == id) null else id },
-                    removedEdge?.let { removed -> { vm.restoreEdge(removed.first, removed.second); removedEdge = null } })
+                    removedEdge?.let { removed -> { vm.restoreEdge(removed.first, removed.second); removedEdge = null } },
+                    removedEdge?.first?.let { edge ->
+                        val a = ui.store.favorites.firstOrNull { it.id == edge.aId }?.label
+                        val b = ui.store.favorites.firstOrNull { it.id == edge.bId }?.label
+                        if (a != null && b != null) tr("Linie %1\$s – %2\$s entfernt", a, b) else null
+                    })
             }
             }
         }

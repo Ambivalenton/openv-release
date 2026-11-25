@@ -19,8 +19,10 @@ class StaticStopCatalog internal constructor(private val databaseFile: suspend (
     constructor(context: Context) : this(CatalogAsset(context.applicationContext)::file)
 
     @Volatile private var knownCities:List<String>?=null
-    suspend fun search(query:String,bias:Location?=null):List<Location> = safely {db->
-        val input=searchText(query);val match=catalogMatch(query)?:return@safely emptyList()
+    suspend fun search(typed:String,bias:Location?=null):List<Location> = safely {db->
+        // Build 122: ranked by what was meant ("central station" → "hauptbahnhof"), so such hits are not dropped.
+        val query=stationWords(placeWords(typed)).joinToString(" ").ifBlank {typed}
+        val input=searchText(query);val match=catalogMatch(typed)?:return@safely emptyList()
         suspend fun lookup(expression:String,limit:Int=64,cityFocus:String=input):List<Location> {
             val args=mutableListOf(expression,"$cityFocus%",input,"$input%",input)
             val distance=if(bias?.hasCoordinates==true){args+=listOf(bias.latitude.toString(),bias.longitude.toString());", abs(s.lat-CAST(? AS REAL))+abs(s.lon-CAST(? AS REAL))*0.7"}else ""
@@ -104,9 +106,38 @@ class StaticStopCatalog internal constructor(private val databaseFile: suspend (
 
 internal fun catalogMatch(query: String): String? {
     if(query.trim().length !in 2..160) return null
-    val terms=placeWords(query)
+    val terms=stationWords(placeWords(query))
     if(terms.isEmpty() || terms.size>8) return null
-    return terms.joinToString(" ") {when(it){"hauptbahnhof"->"(hauptbahnhof* OR hbf* OR hauptbf*)";"bahnhof"->"(bahnhof* OR bf* OR bhf*)";else->"$it*"}}
+    return terms.joinToString(" ") {when(it){"hauptbahnhof"->"(hauptbahnhof* OR hbf* OR hauptbf*)";"bahnhof"->"(bahnhof* OR bf* OR bhf*)";
+        "flughafen"->"(flughafen* OR airport*)";else->umlautAlternatives(it)}}
+}
+
+/**
+ * Build 122 · how travellers write a station: "central station" and "main station" mean the main station,
+ * "station" a station, "airport" the airport; a typo in "Hauptbahnhof" ("Hauptbanhof", "Hauptbahnhf") or
+ * "Bahnhof" still counts. Only whole words are replaced; everything else stays as typed.
+ */
+internal fun stationWords(words:List<String>):List<String> {
+    val out=mutableListOf<String>();var i=0
+    while(i<words.size) {
+        val w=words[i];val next=words.getOrNull(i+1)
+        if((w=="central"||w=="main") && (next=="station"||next=="stn")) {out+="hauptbahnhof";i+=2;continue}
+        out+=when {
+            w=="station"||w=="stn"->"bahnhof"
+            w=="airport"->"flughafen"
+            w.length in 9..14 && w!="hauptbahnhof" && placeEditDistance(w,"hauptbahnhof",2)<=2->"hauptbahnhof"
+            w.length in 6..8 && w!="bahnhof" && placeEditDistance(w,"bahnhof",1)<=1->"bahnhof"
+            else->w
+        }
+        i++
+    }
+    return out
+}
+
+/** "ue", "oe" and "ae" written for an umlaut (Duesseldorf, Koeln): the folded spelling is searched as well. */
+internal fun umlautAlternatives(term:String):String {
+    val folded=umlautFolded(term)
+    return if(folded==term || folded.length<2) "$term*" else "($term* OR $folded*)"
 }
 
 /** Lazy, cancellable extraction on IO; verified by the generated manifest, then opened read-only. */

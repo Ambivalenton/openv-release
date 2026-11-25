@@ -97,11 +97,13 @@ private fun termScore(q:String,c:String):Int {
 }
 internal data class PlaceMatch(val exact:Boolean,val score:Int,val fuzzy:Boolean=false)
 internal fun placeMatch(query:String,place:Location,aliases:List<String> = emptyList()):PlaceMatch? {
-    val all=placeWords(query).distinct().take(12);val terms=all.filter {it !in searchFillers}.ifEmpty {all};if(terms.isEmpty())return null
+    // Build 122: "central station" means the main station, "Duesseldorf" Düsseldorf (see stationWords).
+    val all=stationWords(placeWords(query)).distinct().take(12);val terms=all.filter {it !in searchFillers}.ifEmpty {all};if(terms.isEmpty())return null
     return (listOf(place.name+" "+place.city.orEmpty())+listOfNotNull(place.searchTerms)+aliases).mapNotNull {value->
         val words=placeWords(value).distinct();val used=mutableSetOf<Int>();val scores=mutableListOf<Int>()
         for(term in terms.sortedByDescending {it.length}) {
-            val match=words.indices.filter {it !in used}.map {it to termScore(term,words[it])}.maxByOrNull {it.second}
+            val folded=umlautFolded(term)
+            val match=words.indices.filter {it !in used}.map {it to maxOf(termScore(term,words[it]),if(folded!=term) termScore(folded,words[it]) else 0)}.maxByOrNull {it.second}
             if(match==null||match.second==0)return@mapNotNull null
             used+=match.first;scores+=match.second
         }
@@ -110,6 +112,8 @@ internal fun placeMatch(query:String,place:Location,aliases:List<String> = empty
         PlaceMatch(exact,(if(joined==terms.joinToString(" "))4500 else if(exact)3500 else if(!fuzzy)2500 else 1300)+scores.sum()-(words.size-terms.size).coerceIn(0,30)*8,fuzzy)
     }.maxByOrNull {it.score}
 }
+/** "ue", "oe", "ae" written for an umlaut, folded like the stored names (Düsseldorf → dusseldorf). */
+internal fun umlautFolded(term:String):String = term.replace(Regex("(?<!q)ue"),"u").replace("oe","o").replace("ae","a")
 internal fun stationNameRank(name:String):Int {val w=placeWords(name).toSet();return when{"hauptbahnhof" in w->0;"bahnhof" in w||"stadtbahnhof" in w||"central" in w||"railway" in w->1;"zob" in w||"busbahnhof" in w->2;else->3}}
 internal fun isCityQuery(query:String,city:String?):Boolean {
     if(city.isNullOrBlank())return false;val q=searchText(query);val c=searchText(city)

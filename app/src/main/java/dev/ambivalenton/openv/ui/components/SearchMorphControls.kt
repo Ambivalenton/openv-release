@@ -108,6 +108,8 @@ internal fun <T> morphCloseSpring(visibility: T? = null) = spring(dampingRatio =
     clearRequest: Int = 0,
     /** H02: saved places stay directly selectable as start. */
     favorites: List<dev.ambivalenton.openv.data.model.Favorite> = emptyList(),
+    /** Build 122: no start yet – the chip is filled with the accent so it is found at once. */
+    missing: Boolean = false,
 ) {
     val quiet = LocalAppSettings.current.reduceMotion
     val manualFocus = remember { androidx.compose.ui.focus.FocusRequester() }
@@ -142,13 +144,17 @@ internal fun <T> morphCloseSpring(visibility: T? = null) = spring(dampingRatio =
     val panelComposed = open || p > .001f
     Layout(content = {
         // Collapsed: the familiar chip. It stays measured so the morph always starts from its true size.
+        // Build 122: "Ab" says what the chip is, the symbol how the start is found (GPS mark or a fixed place).
+        val chipInk = if (missing) scheme.onPrimaryContainer else scheme.onSurface
         Row(Modifier.layoutId("chip").height(MorphChipHeight).padding(horizontal = 12.dp)
             .graphicsLayer { alpha = (1f - progress.value * 2.6f).coerceIn(0f, 1f) },
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            AppIcon(R.drawable.ic_place, null, Modifier.size(18.dp), tint = scheme.primary)
-            Text(label, Modifier.weight(1f, fill = false), style = MaterialTheme.typography.labelLarge,
+            AppIcon(if (gpsOn) R.drawable.ic_gps else R.drawable.ic_place, null, Modifier.size(18.dp),
+                tint = if (missing) scheme.onPrimaryContainer else scheme.primary)
+            Text(tr("Ab"), style = MaterialTheme.typography.labelMedium, color = chipInk.copy(alpha = .72f), maxLines = 1)
+            Text(label, Modifier.weight(1f, fill = false), style = MaterialTheme.typography.labelLarge, color = chipInk,
                 fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            AppIcon(R.drawable.ic_expand, null, Modifier.size(16.dp))
+            AppIcon(R.drawable.ic_expand, null, Modifier.size(16.dp), tint = chipInk)
         }
         if (panelComposed) Column(Modifier.layoutId("panel").fillMaxWidth()
             .graphicsLayer { alpha = ((progress.value - .3f) / .45f).coerceIn(0f, 1f) }.testTag("origin-panel")) {
@@ -178,6 +184,7 @@ internal fun <T> morphCloseSpring(visibility: T? = null) = spring(dampingRatio =
         .drawWithContent {
             val o = shape.createOutline(size, layoutDirection, this)
             val reveal = progress.value.coerceIn(0f, 1f)
+            if (missing && reveal < 1f) drawOutline(o, scheme.primaryContainer.copy(alpha = 1f - reveal))
             drawOutline(o, fill.copy(alpha = fill.alpha * reveal))
             if (reveal < 1f) drawOutline(o, outline.copy(alpha = 1f - reveal), style = Stroke(1.dp.toPx()))
             val path = Path().apply { addOutline(o) }

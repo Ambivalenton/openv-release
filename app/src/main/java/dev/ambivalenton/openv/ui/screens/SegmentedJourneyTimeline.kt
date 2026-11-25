@@ -2,7 +2,6 @@
 package dev.ambivalenton.openv.ui.screens
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
@@ -92,9 +91,10 @@ import dev.ambivalenton.openv.ui.theme.timelineColorPalette
                 Modifier.width(railWidth).fillMaxHeight().testTag("focus-mode-${stop.key}"),fontPx,firstCentre+topInsetPx,
                 walking=stop.lineType==LineType.WALK)
             Column(Modifier.weight(1f).padding(top=topInset,end=10.dp,bottom=14.dp)) {
-                Text(name,Modifier.fillMaxWidth().testTag("focus-label-${stop.key}").semantics {contentDescription=stop.location.name}
-                    .then(if(dev.ambivalenton.openv.ui.theme.LocalAppSettings.current.reduceMotion)Modifier else Modifier.basicMarquee(iterations=Int.MAX_VALUE,velocity=24.dp)),style=fittedStyle,maxLines=1,softWrap=false)
-                Text(stop.line,Modifier.then(if(dev.ambivalenton.openv.ui.theme.LocalAppSettings.current.reduceMotion)Modifier else Modifier.basicMarquee(iterations=Int.MAX_VALUE,velocity=24.dp)),style=MaterialTheme.typography.labelSmall,color=color,maxLines=1,softWrap=false)
+                // Build 122: no ticker – long names and lines wrap onto a second line.
+                Text(name,Modifier.fillMaxWidth().testTag("focus-label-${stop.key}").semantics {contentDescription=stop.location.name},
+                    style=fittedStyle,maxLines=2,overflow=androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                Text(stop.line,style=MaterialTheme.typography.labelSmall,color=color,maxLines=2,overflow=androidx.compose.ui.text.style.TextOverflow.Ellipsis)
             }
             Text(clockTime(stop.time),Modifier.padding(top=topInset).width(with(density) {timeWidthPx.toDp()}),style=timeStyle,maxLines=1,
                 color=if(stop.cancelled) MaterialTheme.colorScheme.error else if(endpointColor!=androidx.compose.ui.graphics.Color.Unspecified)endpointColor else MaterialTheme.colorScheme.onSurfaceVariant)
