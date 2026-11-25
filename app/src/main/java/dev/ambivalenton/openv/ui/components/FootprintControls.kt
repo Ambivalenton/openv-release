@@ -48,7 +48,7 @@ import kotlinx.coroutines.launch
                 Text(tr("Kleinste"),style=MaterialTheme.typography.labelSmall)
                 Text(tr("Größte"),style=MaterialTheme.typography.labelSmall)
             }
-            Row(Modifier.selectableGroup(),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+            FlowRow(Modifier.selectableGroup(),horizontalArrangement=Arrangement.spacedBy(8.dp),verticalArrangement=Arrangement.spacedBy(4.dp)) {
                 FilterChip(p.path==FootprintPathMode.STRAIGHT,{update {it.copy(footprints=it.footprints.copy(path=FootprintPathMode.STRAIGHT))}},
                     label={Text(tr("Gerade"))},enabled=!settings.quietMode,modifier=Modifier.testTag("footprint-path-straight"))
                 FilterChip(p.path==FootprintPathMode.RANDOM,{update {it.copy(footprints=it.footprints.copy(path=FootprintPathMode.RANDOM))}},

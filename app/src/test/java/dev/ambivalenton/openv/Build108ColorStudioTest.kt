@@ -122,10 +122,10 @@ class Build108ColorStudioTest {
         studio(onConfirm = { confirmed = it })
         compose.onNodeWithText("Heller und dunkler").assertExists()
         compose.onNodeWithText("Passt dazu").assertExists()
-        compose.onNodeWithContentDescription("Akzent des App-Designs, ${colorName(0xFF6750A4L)}").performScrollTo().performClick()
+        compose.onNodeWithContentDescription("Akzent des App-Designs, ${colorName(0xFF6750A4L)}").performClick()
         compose.onNodeWithTag("advanced-color-apply").performClick()
         compose.runOnIdle { assertEquals(0xFF6750A4L, confirmed) }
-        compose.onNodeWithContentDescription(colorName(0xFFC2185BL)).performScrollTo().performClick()
+        compose.onNodeWithContentDescription(colorName(0xFFC2185BL)).performClick()
         compose.onNodeWithTag("advanced-color-apply").performClick()
         compose.runOnIdle { assertEquals(0xFFC2185BL, confirmed) }
     }
@@ -135,7 +135,7 @@ class Build108ColorStudioTest {
         var confirmed: Long? = null
         studio(alpha = true, onConfirm = { confirmed = it })
         compose.onNodeWithTag("alpha-strip").performTouchInput { down(Offset(1f, center.y)); moveTo(Offset(width * .5f, center.y)); up() }
-        compose.onNodeWithTag("color-hex").performScrollTo().performTextReplacement("00A86B")
+        compose.onNodeWithTag("color-hex").performTextReplacement("00A86B")
         compose.onNodeWithTag("advanced-color-apply").performClick()
         compose.runOnIdle {
             assertEquals("colour from the code", 0x00A86BL, confirmed!! and 0xFFFFFFL)

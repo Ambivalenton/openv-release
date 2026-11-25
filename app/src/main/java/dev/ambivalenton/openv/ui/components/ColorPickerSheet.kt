@@ -111,7 +111,8 @@ fun ColorPickerSheet(
                     FittedText(title, Modifier.weight(1f).semantics { heading() }, style = MaterialTheme.typography.headlineSmall)
                     IconButton(onDismiss, Modifier.testTag("color-picker-close")) { AppIcon(R.drawable.ic_close, tr("Farbauswahl schließen")) }
                 }
-                ColorHero(seed, chosen, allowAlpha, inheritLabel, { pick(seed) }, Modifier.padding(horizontal = 24.dp))
+                ColorHero(seed, chosen, allowAlpha, inheritLabel, { pick(seed) }, Modifier.padding(horizontal = 24.dp),
+                    onHex = { color, withAlpha -> draft.choose(color, withAlpha); chosen = draft.value })
                 ColorModeSwitch(mixing, { mix ->
                     mixing = mix
                     // Mixing starts from what is chosen; the design's own colour starts from its first suggestion.
@@ -125,18 +126,10 @@ fun ColorPickerSheet(
                             (slideOutHorizontally(spring(dampingRatio = .86f, stiffness = 420f)) { w -> if (targetState) -w / 5 else w / 5 } +
                                 fadeOut(spring(stiffness = 900f)))
                     }) { mix ->
-                        if (mix) BoxWithConstraints {
-                            val height = mixerFieldHeight(maxHeight, allowAlpha)
-                            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                                Box(Modifier.padding(horizontal = 24.dp)) { ColorMixer(draft, { chosen = draft.value }, height) }
-                                Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()).padding(horizontal = 24.dp)
-                                    .testTag("color-extras"), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                                    previewContent?.let { preview -> Box(Modifier.fillMaxWidth().testTag("color-role-preview")) { preview(chosen) } }
-                                    ColorMixerExtras(draft, history?.recent.orEmpty(), designColors?.swatches?.firstOrNull()?.color) { chosen = draft.value }
-                                    Spacer(Modifier.height(4.dp))
-                                }
-                            }
-                        } else Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 24.dp).testTag("color-choices"),
+                        // Build 120: one page each, no scrolling: the mixing field takes what is left; the choices shrink to fit.
+                        if (mix) ColorMixPage(draft, history?.recent.orEmpty(), designColors?.swatches?.firstOrNull()?.color, { chosen = draft.value },
+                            Modifier.padding(horizontal = 24.dp))
+                        else ShrinkToFit(Modifier.testTag("color-choices")) { Column(Modifier.padding(horizontal = 24.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             previewContent?.let { preview -> Box(Modifier.fillMaxWidth().testTag("color-role-preview")) { preview(chosen) } }
                             FilterChip(chosen == null, { pick(null) }, label = { Text(inheritLabel) })
@@ -165,7 +158,7 @@ fun ColorPickerSheet(
                             }
                             error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                             Spacer(Modifier.height(4.dp))
-                        }
+                        } }
                     }
                 }
                 ApplyColorButton(chosen, allowAlpha, { confirm(chosen) },

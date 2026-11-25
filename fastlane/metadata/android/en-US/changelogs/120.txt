@@ -1,0 +1,3 @@
+• Stops off the direct way work now (e.g. Düsseldorf on the way from Dortmund to Herne); a clearer dialog.
+• Colour choice on one page without scrolling: smaller field, suggestions, hex code in the preview, springy motion.
+• Chart display: buttons wrap, the navigation bar no longer covers anything.

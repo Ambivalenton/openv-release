@@ -26,10 +26,9 @@ class WaypointOrderOptimizer {
             val distance=dev.ambivalenton.openv.data.model.distanceMeters(origin,stop)!!/6_371_008.8
             return atan2(sin(distance)*cos(bearing(origin,stop)-direction),cos(distance))*6_371_008.8
         }
+        // Build 120: a stop behind the start or beyond the destination is a deliberate detour, not an error
+        // (Düsseldorf on the way from Dortmund to Herne). It is visited first or last; nothing is refused.
         val along=stops.map(::progress)
-        require(along.all {it>=-LOCAL_FORWARD_CELL_METERS && it<=length+LOCAL_FORWARD_CELL_METERS}) {
-            tr("Dieser Zwischenstopp liegt hinter dem Start oder Ziel und würde eine Rückfahrt erfordern.")
-        }
         val cells=along.map {floor(it.coerceIn(0.0,length)/LOCAL_FORWARD_CELL_METERS).toLong()}
         // Dense symmetric geographical cost matrix for small sets; on-demand edges for larger sets.
         val points=listOf(origin)+stops+destination
@@ -66,5 +65,26 @@ class WaypointOrderOptimizer {
             ordered+=local;before=local.last()
         }
         return ordered.map {stops[it-1]}
+    }
+}
+
+/**
+ * Build 120 · stops that lie clearly off the direct way (more than [slack] metres behind the start or
+ * beyond the destination along the line between them): the planner says so quietly, it never refuses.
+ */
+fun waypointDetours(origin:Location,destination:Location,stops:List<Location>,slack:Double=1_000.0):List<Location> {
+    if(!origin.hasCoordinates || !destination.hasCoordinates) return emptyList()
+    val length=dev.ambivalenton.openv.data.model.distanceMeters(origin,destination) ?: return emptyList()
+    if(length<=50.0) return emptyList()
+    fun bearing(a:Location,b:Location):Double {
+        val lat1=Math.toRadians(a.latitude!!);val lat2=Math.toRadians(b.latitude!!)
+        val lon=Math.toRadians(b.longitude!!-a.longitude!!)
+        return atan2(sin(lon)*cos(lat2),cos(lat1)*sin(lat2)-sin(lat1)*cos(lat2)*cos(lon))
+    }
+    val direction=bearing(origin,destination)
+    return stops.filter {it.hasCoordinates}.filter {stop->
+        val distance=dev.ambivalenton.openv.data.model.distanceMeters(origin,stop)!!/6_371_008.8
+        val along=atan2(sin(distance)*cos(bearing(origin,stop)-direction),cos(distance))*6_371_008.8
+        along< -slack || along>length+slack
     }
 }

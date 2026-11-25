@@ -26,6 +26,8 @@ import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.onFocusChanged
@@ -168,11 +170,15 @@ internal fun colorName(color: Long): String {
  * A tap on "Vorher" brings the old colour back. [after] null = the design's own colour.
  */
 @Composable internal fun ColorHero(before: Long?, after: Long?, allowAlpha: Boolean, autoLabel: String, onRevert: () -> Unit,
-    modifier: Modifier = Modifier) {
+    modifier: Modifier = Modifier, onHex: ((Long, Boolean) -> Unit)? = null) {
+    val quiet = LocalAppSettings.current.reduceMotion
+    // Build 120: the preview flows into the new colour instead of switching.
+    val shownColor by androidx.compose.animation.animateColorAsState(after?.let { Color(it) } ?: Color.Transparent,
+        if (quiet) snap() else spring(dampingRatio = .9f, stiffness = 320f), label = "hero-colour")
     Row(modifier.fillMaxWidth().testTag("color-hero"), verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp)) {
         Box(Modifier.size(64.dp).clip(RoundedCornerShape(20.dp)).border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(20.dp))
-            .then(if (after != null) Modifier.checkerboard().background(Color(after)) else Modifier.automaticSwatch())
+            .then(if (after != null) Modifier.checkerboard().background(shownColor) else Modifier.automaticSwatch())
             .semantics { contentDescription = after?.let { tr("Neu %1\$s", colorHex(it, allowAlpha)) } ?: autoLabel },
             contentAlignment = Alignment.Center) {
             after?.let { Text("Aa", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold,
@@ -181,7 +187,8 @@ internal fun colorName(color: Long): String {
         Column(Modifier.weight(1f)) {
             Text(after?.let { colorName(it) } ?: autoLabel, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold,
                 maxLines = 2, modifier = Modifier.testTag("color-name"))
-            Text(after?.let { colorHex(it, allowAlpha) } ?: tr("Farbe des Designs"), style = MaterialTheme.typography.bodySmall,
+            if (after != null && onHex != null) InlineHex(after, allowAlpha, onHex)
+            else Text(after?.let { colorHex(it, allowAlpha) } ?: tr("Farbe des Designs"), style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         if (before != after) Surface(onRevert, Modifier.heightIn(min = 48.dp).testTag("color-before"), shape = RoundedCornerShape(16.dp),
@@ -264,14 +271,11 @@ internal fun ColorStudioDialog(
                         FittedText(tr("Eigene Farbe"), Modifier.weight(1f).semantics { heading() }, style = MaterialTheme.typography.headlineSmall)
                         IconButton(onDismiss) { AppIcon(R.drawable.ic_close, tr("Farbauswahl schließen")) }
                     }
-                    ColorHero(start, working, allowAlpha, tr("Automatisch"), { draft.choose(start, true); sync() }, Modifier.padding(horizontal = 20.dp))
-                    Box(Modifier.padding(horizontal = 20.dp)) {
-                        ColorMixer(draft, sync, mixerFieldHeight(if (room == Dp.Infinity) room else room * .48f, allowAlpha))
-                    }
-                    Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp)
-                        .testTag("color-extras"), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        previewContent?.invoke(working)
-                        ColorMixerExtras(draft, recentColors, themeAccentColor, sync)
+                    ColorHero(start, working, allowAlpha, tr("Automatisch"), { draft.choose(start, true); sync() }, Modifier.padding(horizontal = 20.dp),
+                        onHex = { color, withAlpha -> draft.choose(color, withAlpha); sync() })
+                    // Build 120: everything on one page; the field takes what is left, nothing scrolls.
+                    Box(Modifier.weight(1f, fill = false)) {
+                        ColorMixPage(draft, recentColors, themeAccentColor, sync, Modifier.padding(horizontal = 20.dp))
                     }
                     Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.End),
                         verticalAlignment = Alignment.CenterVertically) {
@@ -325,6 +329,10 @@ internal fun ColorStudioDialog(
     val pure = Color.hsv(hue.coerceIn(0f, 359.99f), 1f, 1f)
     val current = Color.hsv(hue.coerceIn(0f, 359.99f), saturation, brightness)
     val shape = RoundedCornerShape(24.dp)
+    // Build 120: a picked suggestion or code makes the thumb spring to its place; under the finger it follows at once.
+    val follow = if (pressed || quiet) snap<Float>() else spring(dampingRatio = .62f, stiffness = 360f)
+    val shownS by animateFloatAsState(saturation, follow, label = "field-saturation")
+    val shownV by animateFloatAsState(brightness, follow, label = "field-brightness")
     // Touch lives on the unclipped frame: the rounded corners must not swallow a tap on pure white or black.
     Box(Modifier.fillMaxWidth().height(height).testTag("color-field")
             .semantics {
@@ -363,7 +371,7 @@ internal fun ColorStudioDialog(
             })
         // Thumb and loupe are drawn outside the clipped field: whole at the edges, and floating above the finger.
         Canvas(Modifier.matchParentSize()) {
-            val thumb = Offset(saturation * size.width, (1f - brightness) * size.height)
+            val thumb = Offset(shownS * size.width, (1f - shownV) * size.height)
             drawStudioThumb(thumb, current, 1f + .2f * lift)
             if (lift <= .01f) return@Canvas
             val r = 26.dp.toPx() * lift
@@ -398,6 +406,8 @@ internal fun ColorStudioDialog(
     val quiet = LocalAppSettings.current.reduceMotion
     var pressed by remember { mutableStateOf(false) }
     val thumb by animateFloatAsState(if (pressed) 1.25f else 1f, if (quiet) snap() else spring(dampingRatio = .5f, stiffness = 600f), label = "$tag-thumb")
+    // Build 120: the thumb springs to a picked colour; while dragged it follows the finger directly.
+    val shown by animateFloatAsState(position, if (pressed || quiet) snap() else spring(dampingRatio = .62f, stiffness = 360f), label = "$tag-position")
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(Modifier.fillMaxWidth()) {
             Text(label, Modifier.weight(1f), style = MaterialTheme.typography.labelLarge)
@@ -428,7 +438,7 @@ internal fun ColorStudioDialog(
                 if (checker) drawCheckers(Offset(0f, top), track, radius)
                 drawRoundRect(brush, Offset(0f, top), track, radius)
                 drawRoundRect(Color.Black.copy(alpha = .12f), Offset(0f, top), track, radius, style = Stroke(1.dp.toPx()))
-                drawStudioThumb(Offset(pad + position.coerceIn(0f, 1f) * (size.width - 2 * pad), size.height / 2), thumbColor, thumb)
+                drawStudioThumb(Offset(pad + shown.coerceIn(0f, 1f) * (size.width - 2 * pad), size.height / 2), thumbColor, thumb)
             })
     }
 }
@@ -546,6 +556,99 @@ internal fun dev.ambivalenton.openv.data.model.DesignSwatch.label(): String = if
                     }
                 }
             }
+        }
+    }
+}
+
+/**
+ * Build 120 · the hex code inside the hero, editable in place (it replaces the separate field, so the
+ * colour page needs no scrolling). A complete code takes over at once; a wrong one turns red.
+ */
+@Composable private fun InlineHex(color: Long, allowAlpha: Boolean, onPick: (Long, Boolean) -> Unit) {
+    var hex by remember { mutableStateOf(colorHex(color, allowAlpha).removePrefix("#")) }
+    var typing by remember { mutableStateOf(false) }
+    LaunchedEffect(color, typing) { if (!typing) hex = colorHex(color, allowAlpha).removePrefix("#") }
+    val valid = parseColorHex(hex, allowAlpha) != null
+    val ink = if (valid) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.error
+    val line = if (typing) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
+    androidx.compose.foundation.text.BasicTextField(hex, { text ->
+        val clean = text.uppercase().filter { it in "0123456789ABCDEF" }.take(if (allowAlpha) 8 else 6)
+        hex = clean
+        parseColorHex(clean, allowAlpha)?.let { onPick(it, clean.length == 8) }
+    }, Modifier.widthIn(min = 96.dp).onFocusChanged { typing = it.isFocused }.testTag("color-hex")
+        .semantics { contentDescription = tr("Hex-Code") }
+        .drawBehind { drawLine(line, Offset(0f, size.height), Offset(size.width, size.height), 1.dp.toPx(),
+            pathEffect = if (typing) null else androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(3.dp.toPx(), 3.dp.toPx()))) },
+        singleLine = true, textStyle = MaterialTheme.typography.bodyMedium.copy(color = ink),
+        cursorBrush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.primary),
+        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, autoCorrectEnabled = false, imeAction = ImeAction.Done),
+        keyboardActions = KeyboardActions(onDone = { typing = false }),
+        decorationBox = { inner -> Row { Text("#", style = MaterialTheme.typography.bodyMedium, color = ink); inner() } })
+}
+
+/**
+ * Build 120 · the whole mixing page on one screen, without scrolling: field, hue (and opacity), then
+ * one row of lighter and darker tones and one row of colours that go with it (and the recent ones).
+ * The field takes what is left, never more than 220 dp; everything else keeps its size.
+ */
+@Composable internal fun ColorMixPage(draft: ColorDraft, recent: List<Long>, accent: Long?, onChange: () -> Unit, modifier: Modifier = Modifier) {
+    val changed by rememberUpdatedState(onChange)
+    BoxWithConstraints(modifier.fillMaxWidth().testTag("color-mix-page")) {
+        val strips = if (draft.allowAlpha) 128.dp else 64.dp
+        val rows = (20.dp + MixSwatch) * 2
+        val field = if (maxHeight == Dp.Infinity) 180.dp else (maxHeight - strips - rows - 12.dp * 3 - 6.dp).coerceIn(96.dp, 220.dp)
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            ColorMixer(draft, changed, field)
+            val steps = remember(draft.value) { colorToneSteps(draft.value) }
+            val partners = remember(draft.value) { colorHarmonies(draft.value) }
+            CompactSwatchRow(tr("Heller und dunkler"), steps, draft.value, { draft.choose(it); changed() })
+            val more = partners + listOfNotNull(accent) + recent.distinct().filter { it !in partners && it != accent }.take(3)
+            CompactSwatchRow(tr("Passt dazu"), more, draft.value, { draft.choose(it); changed() },
+                labels = listOf(tr("Nachbar links"), tr("Nachbar rechts"), tr("Gegenfarbe"), tr("Dreiklang")) +
+                    listOfNotNull(accent?.let { tr("Akzent des App-Designs") }), tag = "color-harmonies")
+        }
+    }
+}
+
+private val MixSwatch = 34.dp
+
+/** One row of round swatches that always fits its width (they get smaller instead of wrapping); the chosen one springs larger. */
+@Composable private fun CompactSwatchRow(title: String, colors: List<Long>, current: Long, onChoose: (Long) -> Unit,
+    labels: List<String>? = null, tag: String? = null) {
+    val quiet = LocalAppSettings.current.reduceMotion
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(title, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        BoxWithConstraints(Modifier.fillMaxWidth().then(if (tag != null) Modifier.testTag(tag) else Modifier)) {
+            val gap = 8.dp
+            val size = if (colors.isEmpty()) MixSwatch else minOf(MixSwatch, (maxWidth - gap * (colors.size - 1)) / colors.size)
+            Row(horizontalArrangement = Arrangement.spacedBy(gap)) {
+                colors.forEachIndexed { i, c ->
+                    val on = (c or 0xff000000L) == (current or 0xff000000L)
+                    val grow by animateFloatAsState(if (on) 1.12f else 1f, if (quiet) snap() else spring(dampingRatio = .45f, stiffness = 520f), label = "swatch-$i")
+                    val name = labels?.getOrNull(i)?.let { "$it, ${colorName(c)}" } ?: colorName(c)
+                    Box(Modifier.size(size).graphicsLayer { scaleX = grow; scaleY = grow }.clip(CircleShape).checkerboard().background(Color(c))
+                        .border(if (on) 2.5.dp else 1.dp, if (on) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.outlineVariant, CircleShape)
+                        .pressScale(.88f).clickable(role = androidx.compose.ui.semantics.Role.Button, onClickLabel = tr("Farbe wählen")) { onChoose(c) }
+                        .semantics { contentDescription = name; selected = on })
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Build 120 · a page that never scrolls: when its content is taller than the room (very small screens,
+ * very large type), the whole page is drawn a little smaller instead of cutting anything off.
+ */
+@Composable internal fun ShrinkToFit(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    androidx.compose.ui.layout.Layout(content, modifier.clipToBounds()) { measurables, constraints ->
+        val placeables = measurables.map { it.measure(constraints.copy(minHeight = 0, maxHeight = androidx.compose.ui.unit.Constraints.Infinity)) }
+        val height = placeables.maxOfOrNull { it.height } ?: 0
+        val width = (placeables.maxOfOrNull { it.width } ?: 0).coerceIn(constraints.minWidth, constraints.maxWidth)
+        val scale = if (constraints.hasBoundedHeight && height > constraints.maxHeight && height > 0) constraints.maxHeight.toFloat() / height else 1f
+        layout(width, if (scale < 1f) constraints.maxHeight else height.coerceAtLeast(constraints.minHeight)) {
+            placeables.forEach { it.placeWithLayer(0, 0) { scaleX = scale; scaleY = scale
+                transformOrigin = androidx.compose.ui.graphics.TransformOrigin(.5f, 0f) } }
         }
     }
 }

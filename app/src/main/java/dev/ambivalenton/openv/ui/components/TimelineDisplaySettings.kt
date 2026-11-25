@@ -84,6 +84,8 @@ import kotlinx.coroutines.launch
     val scope=rememberCoroutineScope()
     val list=rememberLazyListState();val target=rememberJourneyScrollTarget(list)
     DirectModalSheet(onDismiss,target,"timeline-display-sheet") {motion,dismiss->
+        // Build 120: a page of its own with its own close button – the navigation pill steps aside, it covered the tiles.
+        RequestPillAside()
         Column(Modifier.fillMaxSize()) {
             DesignPickerHeader(tr("Darstellung im Diagramm"),dismiss)
             LazyColumn(state=list,userScrollEnabled=false,modifier=Modifier.weight(1f).testTag("timeline-display-list").semantics {
@@ -151,14 +153,15 @@ import kotlinx.coroutines.launch
                     NowStroke.entries.forEach {stroke->StrokeTile(stroke,p,settings) {set {it.copy(stroke=stroke)}}}
                 }
                 ChoiceCaption(tr("Stärke"))
-                Row(Modifier.selectableGroup(),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                // Build 120: chips wrap to the next line instead of being squeezed letter by letter.
+                FlowRow(Modifier.selectableGroup(),horizontalArrangement=Arrangement.spacedBy(8.dp),verticalArrangement=Arrangement.spacedBy(4.dp)) {
                     NowWeight.entries.forEach {weight->
                         FilterChip(p.weight==weight,{set {it.copy(weight=weight)}},label={Text(tr(weight.titleKey))},
                             modifier=Modifier.testTag("now-line-weight-${weight.name}"))
                     }
                 }
                 ChoiceCaption(tr("Farbe"))
-                Row(Modifier.selectableGroup(),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                FlowRow(Modifier.selectableGroup(),horizontalArrangement=Arrangement.spacedBy(8.dp),verticalArrangement=Arrangement.spacedBy(4.dp)) {
                     NowColor.entries.forEach {color->
                         val swatch=nowLineInk(NowLinePreferences(color=color))
                         FilterChip(p.color==color,{set {it.copy(color=color)}},label={Text(tr(color.titleKey))},

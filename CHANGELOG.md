@@ -4,6 +4,13 @@ Alle nennenswerten Änderungen an Öpen-V. Versionen folgen [Semantic Versioning
 
 ## [Unveröffentlicht]
 
+## [1.2.0] (120) · 2026-11-25
+
+- Zwischenstopps: Orte abseits des direkten Wegs funktionieren jetzt. Bisher wurde ein Zwischenstopp abgelehnt, sobald er hinter dem Start oder hinter dem Ziel lag („würde eine Rückfahrt erfordern“), etwa Düsseldorf auf dem Weg von Dortmund nach Herne – auch, wenn es nur ein einziger Stopp war. Ein solcher Umweg ist gewollt: Öpen-V plant ihn ein (in der optimierten Reihenfolge am Anfang bzw. am Ende) und sagt nur ruhig, dass der Ort nicht auf dem direkten Weg liegt.
+- Zwischenstopps, Dialog: Das Suchfeld ist in jedem Design sichtbar (feiner Rahmen, auch in dunklen und Monospace-Designs), seine Vorschläge liegen über den Knöpfen statt darunter, der Inhalt blendet unter dem Titel und über den Knöpfen weich aus, statt abgeschnitten zu wirken. Der Aufenthalt rastet in 5-Minuten-Schritten ein und zeigt ganze Minuten (keine „29,0 Min“ mehr, kein überlaufendes Feld).
+- Farbwahl auf einer Seite: Beim Mischen steht alles ohne Scrollen auf dem Bildschirm – ein kleineres Farbfeld, darunter Farbton, eine Reihe „Heller und dunkler“ und eine Reihe „Passt dazu“ (mit Akzent und zuletzt gewählten Farben). Der Hex-Code steht direkt in der Vorschau und lässt sich dort bearbeiten. Ein gewählter Vorschlag lässt die Markierungen im Feld und auf dem Regenbogen federnd an ihren Platz springen, die Vorschau gleitet in die neue Farbe, der gewählte Vorschlag wird mit einer Feder etwas größer. Auch die Auswahl-Seite scrollt nicht mehr; auf sehr kleinen Bildschirmen wird sie als Ganzes etwas verkleinert. Bisher war unter dem Farbton alles abgeschnitten und ließ sich nicht erreichen.
+- Darstellung im Diagramm: Die Farbknöpfe der Uhrzeitlinie („Akzent“, „Zweitfarbe“, „Textfarbe“) und die Wege der Fußabdrücke brechen in die nächste Zeile um, statt „Textfarbe“ Buchstabe für Buchstabe untereinander zu quetschen. Die Navigationsleiste tritt auf dieser Seite zur Seite und verdeckt keine Kacheln mehr.
+
 ## [1.1.9] (119) · 2026-11-24
 
 - Netzplan, Linien löschen: Im Bearbeitungsmodus lässt sich eine Verbindungslinie gedrückt halten. Sie zittert erst immer stärker und zerspringt dann wie Konfetti in ihrer Farbe; die Linie ist gelöscht. „Rückgängig“ unter dem Plan bringt sie zurück. Ein kurzer Tipp öffnet wie bisher das Linienmenü; mit „Bewegung reduzieren“ verschwindet die Linie ohne Konfetti.

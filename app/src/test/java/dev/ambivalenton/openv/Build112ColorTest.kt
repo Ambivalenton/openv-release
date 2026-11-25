@@ -67,22 +67,24 @@ class Build112ColorTest {
         compose.waitForIdle()
     }
 
-    /** The mixing tools never sit inside something that scrolls – the reason scrolling changed colours before. */
+    /** Build 120: nothing in the colour dialog scrolls – the tools stand still and everything is on one page. */
     @Test fun mixingToolsStandStill() {
         studio()
-        for (tag in listOf("color-field", "hue-strip", "alpha-strip"))
-            compose.onNodeWithTag(tag).assert(!hasAnyAncestor(hasScrollAction()))
-        compose.onNodeWithTag("color-hex").assert(hasAnyAncestor(hasScrollAction()))
+        for (tag in listOf("color-field", "hue-strip", "alpha-strip", "color-hex", "color-harmonies"))
+            compose.onNodeWithTag(tag).assert(!hasAnyAncestor(hasScrollAction())).assertIsDisplayed()
+        compose.onAllNodes(hasScrollAction()).assertCountEquals(0)
+        compose.onNodeWithTag("advanced-color-apply").assertIsDisplayed()
     }
 
-    /** A swipe over the suggestions scrolls them and leaves the colour exactly as it was. */
-    @Test fun scrollingNeverChangesTheColour() {
+    /** Build 120: a tapped suggestion is taken over at once (the thumbs spring there); "Übernehmen" returns it. */
+    @Test fun aTappedSuggestionIsTakenOver() {
         var confirmed: Long? = null
         studio(onConfirm = { confirmed = it })
-        compose.onNodeWithTag("color-extras").performTouchInput { swipeUp(startY = bottom - 4f, endY = top + 4f, durationMillis = 300) }
-        compose.onNodeWithTag("color-extras").performTouchInput { swipeDown(startY = top + 4f, endY = bottom - 4f, durationMillis = 300) }
+        val accent = 0xFF6750A4L
+        compose.onNodeWithContentDescription("Akzent des App-Designs, ${colorName(accent)}").performClick()
+        compose.onNodeWithTag("color-name").assertTextEquals(colorName(accent))
         compose.onNodeWithTag("advanced-color-apply").performClick()
-        compose.runOnIdle { assertEquals(blue, confirmed) }
+        compose.runOnIdle { assertEquals(accent, confirmed!! or 0xff000000L) }
     }
 
     /** As in the app: the sheet is hosted in the activity's own overlay, not in a window of its own. */
@@ -111,12 +113,16 @@ class Build112ColorTest {
         compose.onNodeWithTag("color-mode-choose").assertIsSelected()
         // A preset changes the hero at once.
         val preset = favoriteColorPresets[3]
-        compose.onNodeWithContentDescription(preset.name).performScrollTo().performClick()
+        compose.onNodeWithContentDescription(preset.name).performClick()
         compose.onNodeWithTag("color-name").assertTextEquals(colorName(preset.seed))
         // Mixing continues from the chosen colour; the field is not inside a scroll container.
         compose.onNodeWithTag("color-mode-mix").performClick()
         compose.waitForIdle()
         compose.onNodeWithTag("color-field").assert(!hasAnyAncestor(hasScrollAction()))
+        // Build 120: the whole mixing page is on screen, nothing scrolls.
+        compose.onAllNodes(hasScrollAction()).assertCountEquals(0)
+        compose.onNodeWithTag("color-harmonies").assertIsDisplayed()
+        compose.onNodeWithTag("color-picker-apply").assertIsDisplayed()
         compose.onNodeWithTag("color-field").performTouchInput { down(center); moveTo(topRight); up() }
         compose.onAllNodesWithTag("advanced-color-dialog").assertCountEquals(0)
         compose.onNodeWithTag("color-picker-apply").performClick()
@@ -138,7 +144,7 @@ class Build112ColorTest {
         compose.onNodeWithTag("color-before").performClick()
         compose.onNodeWithTag("color-name").assertTextEquals(colorName(blue))
         compose.onNodeWithTag("color-mode-choose").performClick()
-        compose.onNodeWithText("Designstandard").performScrollTo().performClick()
+        compose.onNodeWithText("Designstandard").performClick()
         compose.onNodeWithTag("color-picker-apply").performClick()
         compose.runOnIdle { assertNull(saved) }
     }

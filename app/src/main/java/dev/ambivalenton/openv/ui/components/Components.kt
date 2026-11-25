@@ -218,6 +218,8 @@ fun PlaceSearchField(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     expressive: Boolean = false,
+    /** Build 120: a fine outline also at rest, where the field would otherwise melt into its surface (dialogs). */
+    outlinedAtRest: Boolean = false,
     fastSearch: PlaceSearchGateway? = LocalPlaceSearchGateway.current,
     externalLabel: Boolean = false,
     onSuggestionLongClick: ((Location) -> Unit)? = null,
@@ -350,7 +352,8 @@ fun PlaceSearchField(
                         if (expressive) MaterialTheme.colorScheme.primary
                         else MaterialTheme.colorScheme.outline,
                     unfocusedBorderColor =
-                        if (expressive) androidx.compose.ui.graphics.Color.Transparent
+                        if (expressive && outlinedAtRest) MaterialTheme.colorScheme.outline.copy(alpha = .55f)
+                        else if (expressive) androidx.compose.ui.graphics.Color.Transparent
                         else MaterialTheme.colorScheme.outline,
                 ),
             textStyle =

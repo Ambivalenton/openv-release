@@ -13,6 +13,10 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.graphicsLayer
+import kotlin.math.roundToInt
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
@@ -62,13 +66,16 @@ import kotlinx.coroutines.flow.last
                     FittedText(tr("Zwischenstopps"),Modifier.weight(1f),style=MaterialTheme.typography.titleLarge)
                     IconButton({dismiss()}) {AppIcon(R.drawable.ic_close,tr("Zwischenstopps schließen"))}
                 }
-                Column(Modifier.weight(1f).padding(top=4.dp).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(10.dp)) {
+                val scroll=rememberScrollState()
+                // Build 120: the content fades out under the title and above the buttons instead of being cut off.
+                Column(Modifier.weight(1f).padding(top=4.dp).scrollFades(scroll).verticalScroll(scroll),verticalArrangement=Arrangement.spacedBy(10.dp)) {
                     Text(tr("%1\$s → %2\$s",query.origin.name,query.destination.name),Modifier.testTag("waypoint-route-context"),
                         style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
                     PlaceSearchField(tr("Adresse oder Haltestelle als Zwischenstopp"),selected,"waypoint-${query.origin.provider}",
                         search={text->search?.updates?.invoke(text)?.last() ?: emptyList()},
-                        onSelected={selected=it;problem=null},enabled=!loading,expressive=true,externalLabel=true,
-                        modifier=Modifier.testTag("waypoint-search"))
+                        onSelected={selected=it;problem=null},enabled=!loading,expressive=true,externalLabel=true,outlinedAtRest=true,
+                        // Its suggestions lie above the controls below it, not underneath them.
+                        modifier=Modifier.zIndex(1f).testTag("waypoint-search"))
                     WaypointOrderChoice(order,{order=it;problem=null},!loading)
                     if(selected!=null) WaypointStaySlider(selectedStay,{selectedStay=it},!loading,"waypoint-stay-new")
                     stops.forEachIndexed {index,place->
@@ -111,6 +118,13 @@ import kotlinx.coroutines.flow.last
                             ?: tr("Die Reihenfolge wird bei der Berechnung in Fahrtrichtung bestimmt."),
                             Modifier.testTag("waypoint-order-preview"),style=MaterialTheme.typography.bodyMedium,
                             color=MaterialTheme.colorScheme.onSurfaceVariant)
+                    // Build 120: a stop off the direct way is a detour the person chose – said quietly, never refused.
+                    val detours=remember(stops,selected,query.origin,query.destination) {
+                        dev.ambivalenton.openv.data.repository.waypointDetours(query.origin,query.destination,stops+listOfNotNull(selected))
+                    }
+                    if(detours.isNotEmpty()) Text(tr("%1\$s liegt nicht auf dem direkten Weg. Öpen-V plant den Umweg dorthin ein.",
+                        detours.joinToString(", ") {it.name}),Modifier.testTag("waypoint-detour"),
+                        style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
                     if(stops.isEmpty() && selected==null) Text(tr("Suche deinen ersten Zwischenstopp."),style=MaterialTheme.typography.bodyMedium)
                     if(loading) {
                         OverviewDottedDivider(isLoading=true)
@@ -195,17 +209,18 @@ fun waypointOrderPreview(origin:Location,destination:Location,stops:List<Locatio
         Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween,verticalAlignment=Alignment.CenterVertically) {
             FittedText(tr("Aufenthalt"),Modifier.weight(1f),style=MaterialTheme.typography.titleSmall)
             // M13: the stay can also be typed in minutes.
-            var typed by remember(normalized) {mutableStateOf(if(normalized%1f==0f) normalized.toInt().toString() else waypointMinutesLabel(normalized).filter {it.isDigit() || it==',' || it=='.'})}
+            var typed by remember(normalized) {mutableStateOf(normalized.roundToInt().toString())}
             OutlinedTextField(typed,{text->
                 typed=text.filter(Char::isDigit).take(3)
                 typed.toIntOrNull()?.let {onChange(normalizedWaypointStay(it.toFloat()))}
-            },Modifier.width(112.dp).testTag("$tag-minutes"),enabled=enabled,singleLine=true,
+            },Modifier.width(124.dp).testTag("$tag-minutes"),enabled=enabled,singleLine=true,
                 suffix={Text(tr("Min"))},
                 keyboardOptions=androidx.compose.foundation.text.KeyboardOptions(keyboardType=androidx.compose.ui.text.input.KeyboardType.Number,
                     imeAction=androidx.compose.ui.text.input.ImeAction.Done),
                 label=null,textStyle=MaterialTheme.typography.titleSmall)
         }
-        Slider(normalized,{onChange(normalizedWaypointStay(it))},valueRange=0f..120f,steps=0,
+        // Build 120: the stay snaps to five minutes (whole minutes can still be typed).
+        Slider(normalized,{onChange(normalizedWaypointStay((it/5f).roundToInt()*5f))},valueRange=0f..120f,steps=23,
             enabled=enabled,modifier=Modifier.testTag(tag).then(if(tag=="waypoint-stay-new") Modifier.tutorialTarget("waypoint-stay") else Modifier).semantics {
                 contentDescription=tr("Aufenthaltsdauer am Zwischenstopp")
                 stateDescription=waypointMinutesLabel(normalized)
@@ -216,3 +231,22 @@ fun waypointOrderPreview(origin:Location,destination:Location,stops:List<Locatio
         }
     }
 }
+
+/**
+ * Build 120 · a scrolling column fades out at an edge where more content waits beyond it (24 dp),
+ * instead of cutting text off under the title or above the buttons.
+ */
+internal fun Modifier.scrollFades(scroll:androidx.compose.foundation.ScrollState,edge:androidx.compose.ui.unit.Dp=24.dp):Modifier =
+    graphicsLayer {compositingStrategy=androidx.compose.ui.graphics.CompositingStrategy.Offscreen}.drawWithContent {
+        drawContent()
+        val fade=edge.toPx().coerceAtMost(size.height/3f)
+        val top=(scroll.value/fade).coerceIn(0f,1f)
+        val bottom=((scroll.maxValue-scroll.value)/fade).coerceIn(0f,1f)
+        if(top>0f) drawRect(androidx.compose.ui.graphics.Brush.verticalGradient(0f to androidx.compose.ui.graphics.Color.Black.copy(alpha=1f-top),
+            1f to androidx.compose.ui.graphics.Color.Black,startY=0f,endY=fade),blendMode=androidx.compose.ui.graphics.BlendMode.DstIn,
+            size=androidx.compose.ui.geometry.Size(size.width,fade))
+        if(bottom>0f) drawRect(androidx.compose.ui.graphics.Brush.verticalGradient(0f to androidx.compose.ui.graphics.Color.Black,
+            1f to androidx.compose.ui.graphics.Color.Black.copy(alpha=1f-bottom),startY=size.height-fade,endY=size.height),
+            topLeft=androidx.compose.ui.geometry.Offset(0f,size.height-fade),blendMode=androidx.compose.ui.graphics.BlendMode.DstIn,
+            size=androidx.compose.ui.geometry.Size(size.width,fade))
+    }

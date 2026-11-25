@@ -1,0 +1,3 @@
+• Zwischenstopps abseits des direkten Wegs funktionieren (z. B. Düsseldorf auf dem Weg Dortmund → Herne); klarerer Dialog.
+• Farbwahl auf einer Seite ohne Scrollen: kleineres Feld, Vorschläge, Hex-Code in der Vorschau, federnde Bewegungen.
+• Darstellung im Diagramm: Knöpfe brechen um, die Navigationsleiste verdeckt nichts mehr.
