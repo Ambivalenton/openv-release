@@ -20,8 +20,8 @@ android {
         applicationId = "dev.ambivalenton.openv"
         minSdk = 26
         targetSdk = 36
-        versionCode = 121
-        versionName = "1.2.0.1"
+        versionCode = 122
+        versionName = "1.2.0.2"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // Timetable service of this build: "vrr" (VRR OpenService, default) or "delfi" (DELFI-Navi).
         // openv.timetable.protocol names the interface of the granted access: "efa" (EFA JSON, the

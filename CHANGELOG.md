@@ -4,6 +4,20 @@ Alle nennenswerten Änderungen an Öpen-V. Versionen folgen [Semantic Versioning
 
 ## [Unveröffentlicht]
 
+## [1.2.0.2] (122) · 2026-11-26
+
+- Behoben: „Suchen“ reagierte ab und zu nicht. Ursache: Seit die Kapsel der Navigationsleiste gezogen werden kann, zählte ein Tipp, bei dem der Finger nur ein paar Pixel zur Seite rutschte, als Ziehen – die Kapsel federte zurück, der Tab wechselte nicht. Ein solcher Tipp öffnet jetzt den Tab, auf dem er begann.
+- Behoben: Nach „Tauschen“ und „Aktueller Standort“ hieß es oft „Start und Ziel sind gleich“. Ursache: Hatte ein Favorit ein Zeitfenster für „Standort nach Zeit“ (auch aus der früheren Funktion „Zeitlich ausblenden“), stand er als Start ein, sobald der letzte GPS-Standort ein paar Minuten alt war – beim Tauschen wurde er so zum Ziel. Mit eingeschaltetem Standort gilt jetzt immer der gemessene Standort; Tauschen misst ihn notfalls zuerst.
+- Angepinnte Ansicht: keine Laufschrift mehr. Lange Texte nehmen eine zweite Zeile, die Karte springt danach nicht zurück.
+- Suchen: Der Start heißt „Ab …“ mit GPS- oder Ortssymbol und ist farbig, solange er fehlt. Der Tauschen-Knopf ist immer sichtbar (rund hinterlegt); ohne Ziel erklärt er, was zu tun ist.
+- Alternativen unterwegs: Jede Karte nennt zuerst Linie und Abfahrt („Bus 310 ab 08:22“), dann Ankunft, den knappsten Umstieg („Nur 2 Min. zum Umsteigen“) und die Verlässlichkeit in Worten – auch für TalkBack. Bei großer Schrift steht eine Karte pro Zeile.
+- Uhrzeiten in Ortszeit: Abfahrten und Ankünfte erscheinen immer in deutscher Ortszeit; ist das Handy auf eine andere Zeitzone gestellt, steht „Ortszeit Deutschland · Mi., 25.11.“ dabei.
+- Offline-Suche: „Duesseldorf“, „Koeln“, Tippfehler wie „Hauptbanhof“ sowie „central station“, „main station“ und „airport“ werden verstanden.
+- Fehlermeldungen: „Fahrplan gerade nicht erreichbar“ ist klar von „keine Fahrt zu dieser Zeit“ getrennt; die Meldung sagt, dass deine Suche für „Erneut suchen“ erhalten bleibt.
+- Gleisänderung: Meldet der Fahrplandienst ein anderes Gleis, sagt die angepinnte Karte „jetzt Gleis 5 statt 3“ – fett, rot hinterlegt, mit kurzem Aufleuchten.
+- Netzplan: „Rückgängig“ nennt beide Orte der gelöschten Linie und bleibt so lange, wie Android es für Bedienhilfen empfiehlt (mindestens 6 Sekunden).
+- Barrierefreiheit und Datenschutz: TalkBack nennt die Favoritenfarben beim Namen; der Wetter-Hinweis (Open-Meteo erhält den Zielort) erscheint direkt beim Einschalten; vor dem Ersetzen einer Sicherung heißt der Knopf „Aktuelle Daten zuerst sichern“.
+
 ## [1.2.0.1] (121) · 2026-11-25
 
 - Ersteinrichtung neu: Der Startbildschirm stellt „App einrichten“ in den Mittelpunkt, darüber gleitet ein kleiner Zug von Halt zu Halt. „Direkt eine Verbindung suchen“ und „Sicherung importieren“ bleiben als kleine Auswege darunter; im Ablauf selbst gibt es keinen Import mehr. Jeder Schritt hat jetzt einen „Weiter“-Knopf, der auch bei großer Schrift nicht mehr aus der Zeile gedrängt wird; „Überspringen“ erscheint nur noch, wo „Weiter“ auf eine Auswahl wartet. Kein Wort bricht mehr mitten in zwei Zeilen (bisher „Verbindunge-n“, „Übersprin-gen“): Freigaben stehen als Karten mit eigenem Knopf darunter, Beschriftungen passen sich an. Der Fortschritt oben ist jetzt ein kleiner Zeitstrahl: Ein Zug aus dem Netzplan fährt federnd von Haltestelle zu Haltestelle, erreichte Haltestellen füllen sich, und seine Farbe gleitet fließend von der Farbe einer Haltestelle zur nächsten.

@@ -1,0 +1,5 @@
+• Behoben: „Suchen“ reagierte manchmal nicht; nach Tauschen kam fälschlich „Start und Ziel sind gleich“.
+• Angepinnte Ansicht ohne Laufschrift; Gleisänderungen hervorgehoben.
+• Alternativen nennen Linie, Abfahrt und knappe Umstiege.
+• Zeiten in deutscher Ortszeit, tolerantere Offline-Suche, klarere Fehler.
+• Start und Tauschen deutlicher.

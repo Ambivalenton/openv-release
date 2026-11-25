@@ -1,0 +1,5 @@
+• Fixed: "Search" sometimes did not respond; after a swap "start and destination are the same" appeared wrongly.
+• Pinned view without scrolling text; platform changes highlighted.
+• Alternatives name line, departure and tight changes.
+• Times in German local time, more tolerant offline search, clearer errors.
+• Start and swap easier to find.

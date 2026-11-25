@@ -19,7 +19,9 @@ class Build122ZoneTest {
         try {
             TimeZone.setDefault(TimeZone.getTimeZone("Europe/London"))
             assertEquals("00:43", clockTime(departure))
-            assertEquals("Ortszeit Deutschland · Mi., 25.11.", transitZoneNote(departure, ZoneId.of("Europe/London")))
+            // The words follow the app language; the day is the stops' day.
+            val note = transitZoneNote(departure, ZoneId.of("Europe/London"))!!
+            assertTrue(note, note.endsWith(" · Mi., 25.11."))
         } finally { TimeZone.setDefault(before) }
         assertNull("same zone: no note", transitZoneNote(departure, transitZone))
         // Summer: still the same offset in Berlin and Vienna – no note either.
