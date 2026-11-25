@@ -58,6 +58,7 @@ import dev.ambivalenton.openv.ui.theme.systemSurfacePalette
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.max
+import kotlin.math.roundToInt
 import kotlin.math.min
 
 /** Height of the "Abfahrt | Ankunft" pill: 4 dp around a capsule as tall as the former chips. */
@@ -103,6 +104,12 @@ private val ScheduleGap = 8.dp
             if (!rowX.isRunning && rowX.value == target && sway.physics.resting) { sway.reset(); break }
         }
     }
+    // Build 121: the room of the "Jetzt" area is only kept free while the area is out. Before, it was always
+    // reserved; at a large system font "Abfahrt | Ankunft" then sat exactly at the limit, and a one-pixel
+    // difference on landing a page let the capsule shrink in one jump. Now the pill keeps its natural size and
+    // only makes room – softly – when the area springs out.
+    val reserve by animateFloatAsState(if (timeMillis != null) 1f else 0f,
+        if (quiet) snap() else spring(dampingRatio = .86f, stiffness = 420f), label = "schedule-now-room")
     Column(modifier.fillMaxWidth()) {
         // The frame is drawn above the area that slides out from underneath it.
         Box(Modifier.zIndex(1f).onSizeChanged { frameHeight = it.height }) { SplitDateTimePicker(timeMillis, onTime) }
@@ -116,7 +123,8 @@ private val ScheduleGap = 8.dp
             val gap = ScheduleGap.roundToPx()
             val tabWidth = measurables[1].maxIntrinsicWidth(ModePillHeight.roundToPx()).plus(32.dp.roundToPx())
                 .coerceIn((width * .34f).toInt(), (width * .46f).toInt())
-            val pill = measurables[0].measure(Constraints(maxWidth = (width - tabWidth - 8.dp.roundToPx()).coerceAtLeast(0)))
+            val room = ((tabWidth + 8.dp.roundToPx()) * reserve).roundToInt()
+            val pill = measurables[0].measure(Constraints(maxWidth = (width - room).coerceAtLeast(0)))
             val height = gap + max(pill.height, ModePillHeight.roundToPx())
             val tab = measurables[1].measure(Constraints.fixed(tabWidth, height))
             tabLeft = width - tabWidth

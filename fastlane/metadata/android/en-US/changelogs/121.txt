@@ -1,0 +1,5 @@
+• New first-run setup: "Set up app" first, progress as a timeline with a train, a Next button on every step.
+• New: a start place without location access and a step for the main modes with animated pictures.
+• The colour choice no longer flickers; departure/arrival no longer shrinks.
+• Reliability: a connection missed by the forecast counts as very unsafe.
+• The settings search finds every word.

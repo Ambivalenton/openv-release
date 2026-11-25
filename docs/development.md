@@ -47,6 +47,7 @@ Einige Kotlin- und Textdateien werden aus gepflegten Quellen erzeugt und eingech
 | `content/journey_content.json` | `tools/generate_journey_content.py` | Texte der Übersicht |
 | `content/icon_context.json` | `tools/generate_icon_content.py` | Texte zu Favoritensymbolen |
 | `localization/fonts.json` | `tools/generate_fonts.py` | Schriftkatalog, [fonts.md](fonts.md) |
+| Texte der Einstellungsseiten (`tr("…")` in den Seiten-Composables) | `tools/generate_settings_search.py` | `ui/screens/SettingsSearchTexts.kt` (Volltext der Einstellungssuche) |
 | `content/dependency-licenses.json`, `content/licenses-*.md` | `tools/generate_notices.py` | Lizenzhinweise in der App, `THIRD_PARTY_NOTICES.md` |
 | `PRIVACY.md`, `PRIVACY_EN.md`, `docs/legal/publisher.*.md` | `tools/sync_publication.py` | Rechtstexte in der App, `docs/privacy/index.html` |
 

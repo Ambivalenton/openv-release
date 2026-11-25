@@ -29,7 +29,9 @@ import java.util.Locale
  * running edition does not have.
  */
 data class SettingsSearchEntry(val titleKey: String, val page: SettingsPage, val words: List<String>,
-    val anchor: String? = null, val available: Boolean = true, val noteKey: String? = null)
+    val anchor: String? = null, val available: Boolean = true, val noteKey: String? = null,
+    /** Build 121: for a hit in a page's own texts, the passage around the word (already translated). */
+    val excerpt: String? = null)
 
 /** M11: the index over the existing settings pages; synonyms instead of a second structure. */
 fun settingsSearchIndex(): List<SettingsSearchEntry> = listOf(
@@ -71,8 +73,15 @@ fun settingsSearchIndex(): List<SettingsSearchEntry> = listOf(
 internal fun searchKey(text: String): String = Normalizer.normalize(text.lowercase(Locale.ROOT).replace("ß", "ss"), Normalizer.Form.NFD)
     .replace(Regex("\\p{M}"), "").trim()
 
-/** M11: matches by name first, then by the start of a synonym, then anywhere in one. */
-fun searchSettings(query: String, index: List<SettingsSearchEntry> = settingsSearchIndex()): List<SettingsSearchEntry> {
+/**
+ * M11: matches by name first, then by the start of a synonym, then anywhere in one. Build 121: and in every
+ * text that is written on a settings page ([texts], generated from the pages themselves) – "Fuß" finds the
+ * footprints as well as the walking pace. A word counts at the start of the text, at the start of one of its
+ * words, and inside a compound ("abdruck" in "Fußabdrücke"). One hit per page from its texts; short texts
+ * (names of settings) become the hit's title, longer ones are shown as a passage under the page's name.
+ */
+fun searchSettings(query: String, index: List<SettingsSearchEntry> = settingsSearchIndex(),
+    texts: Map<SettingsPage, List<String>> = settingsPageTexts): List<SettingsSearchEntry> {
     val key = searchKey(query)
     if (key.length < 2) return emptyList()
     fun score(entry: SettingsSearchEntry): Int {
@@ -86,7 +95,55 @@ fun searchSettings(query: String, index: List<SettingsSearchEntry> = settingsSea
             else -> 0
         }
     }
-    return index.map { it to score(it) }.filter { it.second > 0 }.sortedByDescending { it.second }.map { it.first }.take(8)
+    val curated = index.map { it to score(it) }.filter { it.second > 0 }
+    val found = texts.mapNotNull { (page, list) ->
+        list.mapNotNull { german -> textHit(german, key)?.let { german to it } }
+            .maxWithOrNull(compareBy<Pair<String, Int>> { it.second }.thenBy { -it.first.length })
+            ?.let { (german, s) -> pageTextEntry(page, german, key) to s }
+    }.filter { (hit, _) -> curated.none { (c, _) -> c.page == hit.page && searchKey(tr(c.titleKey)) == searchKey(tr(hit.titleKey)) } }
+    // Names and synonyms first, then the pages' own texts.
+    return (curated.map { it.first to it.second + 4 } + found)
+        .sortedByDescending { it.second }.map { it.first }.distinctBy { it.page to (it.anchor ?: it.titleKey) }.take(10)
+}
+
+/** Placeholders ("%1\$s") are not words of a text. */
+private fun plainText(text: String) = text.replace(Regex("%\\d+\\\$[sdf]|%%"), " ").replace(Regex("\\s+"), " ").trim()
+
+/** How well [key] matches one text of a page (in the current language or in German), 0 = not at all. */
+private fun textHit(german: String, key: String): Int? {
+    fun of(text: String): Int {
+        val t = searchKey(plainText(text))
+        if (!t.contains(key)) return 0
+        val short = t.length <= 34 && !t.endsWith(".")
+        val base = when {
+            t.startsWith(key) -> 3
+            Regex("(^|[^\\p{L}\\p{N}])" + Regex.escape(key)).containsMatchIn(t) -> 2
+            else -> 1
+        }
+        return base + if (short) 1 else 0
+    }
+    return maxOf(of(tr(german)), of(german)).takeIf { it > 0 }
+}
+
+/** The hit for a text found on [page]: a short text names the setting itself, a long one is a passage. */
+private fun pageTextEntry(page: SettingsPage, german: String, key: String): SettingsSearchEntry {
+    val shown = plainText(tr(german))
+    // "Uhrzeitlinie · Text im Balken · Fußabdrücke": the part that holds the word.
+    val part = shown.split(" · ").firstOrNull { searchKey(it).contains(key) } ?: shown
+    val name = part.length <= 34 && !part.endsWith(".") && !german.contains('%')
+    return if (name) SettingsSearchEntry(if (part == shown) german else part, page, emptyList())
+    else SettingsSearchEntry(page.titleKey, page, emptyList(), excerpt = settingsExcerpt(shown, key))
+}
+
+/** About 70 characters of [text] around the first place of [key], cut at word boundaries. */
+internal fun settingsExcerpt(text: String, key: String): String {
+    if (text.length <= 72) return text
+    val at = searchKey(text).indexOf(key).coerceAtLeast(0)
+    var from = (at - 24).coerceAtLeast(0); var to = (from + 72).coerceAtMost(text.length)
+    if (to == text.length) from = (to - 72).coerceAtLeast(0)
+    if (from > 0) from = text.indexOf(' ', from).takeIf { it in 0 until at } ?.plus(1) ?: from
+    if (to < text.length) to = text.lastIndexOf(' ', to).takeIf { it > at } ?: to
+    return (if (from > 0) "…" else "") + text.substring(from, to).trim() + if (to < text.length) "…" else ""
 }
 
 /** M11: the visible path of a hit, e.g. "Einstellungen › Fahrt & Navigation › Fußwege & Navigation". */
@@ -138,6 +195,8 @@ fun settingsPath(page: SettingsPage): String = generateSequence(page) { it.paren
                         Text(tr(entry.titleKey), style = MaterialTheme.typography.titleSmall)
                         Text(settingsPath(entry.page), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         entry.noteKey?.let { Text(tr(it), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                        entry.excerpt?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) }
                     }
                     AppIcon(R.drawable.ic_chevron_right, null)
                 }

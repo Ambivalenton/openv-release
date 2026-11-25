@@ -222,7 +222,7 @@ class Build101FavoriteStudioTest {
         compose.onNodeWithTag("onboarding-next").performClick()
         compose.waitForIdle()
         compose.runOnIdle {
-            assertEquals(2, store.onboardingDraft!!.step)
+            assertEquals(OnboardingStage.MODES, store.onboardingDraft!!.stage)
             assertEquals(listOf("Zuhause", "Zoom Erlebniswelt"), store.onboardingDraft!!.favorites.map { it.label })
         }
     }

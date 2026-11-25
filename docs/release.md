@@ -8,7 +8,7 @@ Damit sich jede Vorschau als Update installiert, braucht das Repository das Secr
 
 ## Version veröffentlichen
 
-1. In `app/build.gradle.kts` `versionCode` erhöhen und `versionName` setzen (z. B. `1.0.1`).
+1. In `app/build.gradle.kts` `versionCode` erhöhen und `versionName` setzen. Kleine Folgeversionen zählen in der vierten Stelle (z. B. `1.2.0.1`, `1.2.0.2`), größere Schritte in den ersten drei.
 2. `CHANGELOG.md` ergänzen und die Store-Hinweise anlegen: `fastlane/metadata/android/de-DE/changelogs/<versionCode>.txt` und `en-US/…` (je höchstens 500 Zeichen).
 3. Auf `main` committen und pushen, grünen CI-Lauf abwarten.
 4. Tag setzen: `git tag v1.0.1 && git push origin v1.0.1` – oder am Handy: Releases → *Draft a new release* → neuen Tag `v1.0.1` auf `main` → *Publish*.

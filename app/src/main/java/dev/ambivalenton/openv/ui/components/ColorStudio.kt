@@ -52,6 +52,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import dev.ambivalenton.openv.R
 import dev.ambivalenton.openv.color.utilities.Hct
@@ -185,8 +186,13 @@ internal fun colorName(color: Long): String {
                 color = contrastContentColor(Color(it).copy(alpha = 1f))) }
         }
         Column(Modifier.weight(1f)) {
-            Text(after?.let { colorName(it) } ?: autoLabel, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold,
-                maxLines = 2, modifier = Modifier.testTag("color-name"))
+            // Build 121: one line, always. The name changes while a finger moves over the field ("Türkis",
+            // "Dunkles Türkis"); wrapping to a second line made the whole sheet jump up and down (flicker).
+            // A long name shrinks a little instead, so the hero keeps its height.
+            val nameStyle = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
+            androidx.compose.foundation.text.BasicText(after?.let { colorName(it) } ?: autoLabel, Modifier.fillMaxWidth().testTag("color-name"),
+                style = nameStyle, maxLines = 1, softWrap = false, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                autoSize = androidx.compose.foundation.text.TextAutoSize.StepBased(minFontSize = 11.sp, maxFontSize = nameStyle.fontSize, stepSize = .5.sp))
             if (after != null && onHex != null) InlineHex(after, allowAlpha, onHex)
             else Text(after?.let { colorHex(it, allowAlpha) } ?: tr("Farbe des Designs"), style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)

@@ -30,12 +30,21 @@ fun reliabilityMode(segment: TripSegment): ReliabilityMode {
 /** The line as the personal memory knows it: type and name, independent of the trip and the day. */
 fun reliabilityLineKey(segment: TripSegment) = "${segment.lineType.name}:${segment.lineName.trim().uppercase()}"
 
-/** A realtime minute value only where an operator forecast (or a carried or local estimate) exists; none means unknown, not on time. */
-private fun knownMinutes(seconds: Int?, source: TimeSource): Int? = when (source) {
-    TimeSource.PLANNED -> null
-    TimeSource.UNKNOWN -> seconds
-    else -> seconds ?: 0
-}?.let { Math.floorDiv(it + 30, 60) }
+/**
+ * A realtime minute value only where an operator forecast (or a carried or local estimate) exists; none
+ * means unknown, not on time. Build 121: the shown time counts as well. A departure delay carried forward
+ * to the arrival lives only in the shown arrival ([predicted] − [planned]) – before, the empty seconds field
+ * of such an arrival read as "0 minutes late", and a connection that leaves before the feeder arrives got
+ * the best rating.
+ */
+internal fun knownMinutes(seconds: Int?, source: TimeSource, predicted: Long, planned: Long): Int? {
+    val shown = ((predicted - planned) / 1000L).toInt().takeIf { predicted != planned }
+    return when (source) {
+        TimeSource.PLANNED -> null
+        TimeSource.UNKNOWN -> seconds ?: shown
+        else -> seconds ?: shown ?: 0
+    }?.let { Math.floorDiv(it + 30, 60) }
+}
 
 /**
  * Build 117 · the reliability of [trip] from now on: cancelled rides make it very unsafe, completed
@@ -54,7 +63,8 @@ fun rateTrip(trip: Trip, memory: PersonalPunctuality? = null, zone: ZoneId = Zon
         // The run before boarding is not in the response; minutesIntoRun stays unknown.
         rides += RideInput(reliabilityMode(s), reliabilityLineKey(s), s.plannedStartTime, s.plannedEndTime,
             RideContext(Instant.ofEpochMilli(s.plannedStartTime).atZone(zone)),
-            knownMinutes(s.delay.departureSeconds, s.departureSource), knownMinutes(s.delay.arrivalSeconds, s.arrivalSource))
+            knownMinutes(s.delay.departureSeconds, s.departureSource, s.startTime, s.plannedStartTime),
+            knownMinutes(s.delay.arrivalSeconds, s.arrivalSource, s.endTime, s.plannedEndTime))
     }
     return rateJourney(rides, walks, memory)
 }

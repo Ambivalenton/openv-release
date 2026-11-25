@@ -85,7 +85,7 @@ object StateSerializer : Serializer<StoredState> {
                             require(draft.favorites.size + state.favorites.size <= 80)
                             require(draft.favorites.all {it.hasValidRoutingOptions() && it.label.isNotBlank() && it.label.length <= 80 && it.location.routable})
                             require(draft.favorites.map {it.id}.distinct().size == draft.favorites.size)
-                            draft.copy(step=draft.step.coerceIn(0,ONBOARDING_STEPS-1),settings=normalizePreferences(draft.settings))
+                            draft.copy(step=draft.step.coerceIn(0,OnboardingStage.entries.size-1),settings=normalizePreferences(draft.settings))
                         },
                         history = mergeSearchHistory(state.history),
                     ).migrateToNetwork().migrateBoardStops().normalizedOverride().copy(schemaVersion = 10)
@@ -362,7 +362,7 @@ class LocationRepository(private val store: androidx.datastore.core.DataStore<St
     suspend fun updateOnboarding(change: (OnboardingDraft) -> OnboardingDraft) = updateData { old ->
         if (!needsFirstLaunchSetup(old)) old else {
             val next = change(old.onboardingDraft ?: OnboardingDraft(settings = old.settings))
-            require(next.step in 0 until ONBOARDING_STEPS)
+            require(next.step in 0 until OnboardingStage.entries.size)
             require(next.favorites.size + old.favorites.size <= 40) { tr("Maximal 40 Favoriten.") }
             require(next.favorites.all { it.hasValidRoutingOptions() && it.label.isNotBlank() && it.label.length <= 80 && it.location.routable })
             require((old.favorites+next.favorites).map {it.id}.distinct().size==old.favorites.size+next.favorites.size)

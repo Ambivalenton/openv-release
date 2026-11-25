@@ -1,8 +1,19 @@
 # Änderungen
 
-Alle nennenswerten Änderungen an Öpen-V. Versionen folgen [Semantic Versioning](https://semver.org/lang/de/); in Klammern steht der Android-`versionCode`.
+Alle nennenswerten Änderungen an Öpen-V. Versionen folgen [Semantic Versioning](https://semver.org/lang/de/); kleine Folgeversionen zählen seit 1.2.0.1 in einer vierten Stelle. In Klammern steht der Android-`versionCode`.
 
 ## [Unveröffentlicht]
+
+## [1.2.0.1] (121) · 2026-11-25
+
+- Ersteinrichtung neu: Der Startbildschirm stellt „App einrichten“ in den Mittelpunkt, darüber gleitet ein kleiner Zug von Halt zu Halt. „Direkt eine Verbindung suchen“ und „Sicherung importieren“ bleiben als kleine Auswege darunter; im Ablauf selbst gibt es keinen Import mehr. Jeder Schritt hat jetzt einen „Weiter“-Knopf, der auch bei großer Schrift nicht mehr aus der Zeile gedrängt wird; „Überspringen“ erscheint nur noch, wo „Weiter“ auf eine Auswahl wartet. Kein Wort bricht mehr mitten in zwei Zeilen (bisher „Verbindunge-n“, „Übersprin-gen“): Freigaben stehen als Karten mit eigenem Knopf darunter, Beschriftungen passen sich an. Der Fortschritt oben ist jetzt ein kleiner Zeitstrahl: Ein Zug aus dem Netzplan fährt federnd von Haltestelle zu Haltestelle, erreichte Haltestellen füllen sich, und seine Farbe gleitet fließend von der Farbe einer Haltestelle zur nächsten.
+- Ersteinrichtung, Startpunkt: Ohne Standortfreigabe folgt ein Schritt, in dem du einen festen Startpunkt wählst (überspringbar). Deine Suchen beginnen dann dort – die App funktioniert sofort, auch ganz ohne Berechtigungen.
+- Ersteinrichtung, Modi: Ein eigener Schritt für Schwarz/Weiß, Minimalismus, Ruhemodus und Planermodus, jeweils mit seinem animierten Bild wie unter „Modi & Verhalten“.
+- Farbwahl: Beim Ziehen über das Farbfeld flackerte das ganze Blatt. Ursache: Der Farbname wechselte zwischen einer und zwei Zeilen („Türkis“, „Dunkles Türkis“), dadurch sprang die Höhe. Der Name bleibt jetzt einzeilig und wird bei Bedarf etwas kleiner.
+- Suchen: Beim Wechsel von „Übersicht“ zu „Suchen“ zog sich „Abfahrt | Ankunft“ beim Einrasten sichtbar zusammen. Bei großer Systemschrift stand der Schalter genau an seiner Grenze neben dem immer freigehaltenen Platz für „Jetzt abfahren“. Dieser Platz wird jetzt nur noch frei gemacht, solange die Fläche ausgeklappt ist; der Schalter weicht dann weich zur Seite.
+- Verlässlichkeit: Ein Anschluss, der laut Prognose schon vor der Ankunft des Zubringers abfährt, bekam dieselbe Bestnote wie ein pünktlicher. Ursache: Hatte der Zubringer nur eine Abfahrtsprognose, wurde die daraus übertragene Ankunftsverspätung als „pünktlich“ gelesen. Übertragene Verspätungen zählen jetzt, frühe Abfahrten verkürzen die Umstiegszeit, und ein laut Prognose unerreichbarer Anschluss gilt als „sehr unsicher“.
+- Einstellungssuche: Sie findet jetzt jedes Wort, das auf einer Einstellungsseite steht – auch in Beschreibungen und zusammengesetzten Wörtern. „Fuß“ findet zum Beispiel die Fußabdrücke im Balkendiagramm ebenso wie das Gehtempo. Lange Treffer zeigen den passenden Ausschnitt.
+- Versionen: Kleine Folgeversionen zählen ab jetzt in einer vierten Stelle (1.2.0.1, 1.2.0.2, …).
 
 ## [1.2.0] (120) · 2026-11-25
 

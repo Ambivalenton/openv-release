@@ -1,0 +1,5 @@
+• Neue Ersteinrichtung: „App einrichten“ im Mittelpunkt, Fortschritt als Zeitstrahl mit Zug, Weiter-Knopf in jedem Schritt.
+• Neu: Startpunkt ohne Standortfreigabe und ein Schritt für die wichtigsten Modi mit animierten Bildern.
+• Farbwahl flackert nicht mehr; Abfahrt/Ankunft zieht sich nicht mehr zusammen.
+• Verlässlichkeit: ein laut Prognose verpasster Anschluss gilt als sehr unsicher.
+• Einstellungssuche findet jedes Wort.

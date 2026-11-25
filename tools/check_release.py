@@ -21,7 +21,8 @@ build = (ROOT / 'app/build.gradle.kts').read_text()
 code = re.search(r'versionCode = (\d+)', build)
 name = re.search(r'versionName = "([^"]+)"', build)
 check(code is not None and int(code[1]) >= 100, 'Missing or invalid versionCode')
-check(name is not None and re.fullmatch(r'\d+\.\d+\.\d+', name[1]) is not None, 'versionName must look like 1.2.3')
+# Build 121: small follow-up versions count in a fourth place (1.2.0.1, 1.2.0.2, …).
+check(name is not None and re.fullmatch(r'\d+\.\d+\.\d+(\.\d+)?', name[1]) is not None, 'versionName must look like 1.2.3 or 1.2.3.4')
 version_code = code[1] if code else '0'
 check('productFlavors' not in build, 'The app has one edition; product flavours are not used')
 
@@ -67,7 +68,7 @@ for path in ['PRIVACY.md', 'PRIVACY_EN.md', 'docs/legal/publisher.de.md', 'docs/
     check(not re.search(r'\{\{[A-Z_]+\}\}', text), f'Placeholder left in {path}')
 
 for tool in ['generate_translations', 'generate_glossary', 'generate_notices', 'sync_publication',
-             'generate_journey_content', 'generate_icon_content', 'generate_fonts']:
+             'generate_journey_content', 'generate_icon_content', 'generate_fonts', 'generate_settings_search']:
     result = subprocess.run([sys.executable, str(ROOT / f'tools/{tool}.py'), '--check'], capture_output=True, text=True)
     check(result.returncode == 0, f'{tool}.py --check failed; run it without --check and commit the result:\n'
           + (result.stdout + result.stderr).strip()[-600:])

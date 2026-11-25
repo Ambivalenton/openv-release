@@ -112,13 +112,15 @@ private fun Modifier.greyscale():Modifier=drawWithContent {
     }
 }
 
-@Composable private fun MonochromeCard(checked:Boolean,onChange:(Boolean)->Unit) {
+@Composable internal fun MonochromeCard(checked:Boolean,
+    description:String=tr("Zeigt die ganze App in Graustufen, zum Beispiel für weniger Ablenkung. Dein Farbdesign bleibt gespeichert."),
+    onChange:(Boolean)->Unit) {
     // Paper and ink: black on white in light designs, white on black in dark ones.
     val dark=MaterialTheme.colorScheme.background.luminance()<.5f
     val paper=if(dark) Color.Black else Color.White;val ink=if(dark) Color.White else Color.Black
     MaterialTheme(colorScheme=MaterialTheme.colorScheme.copy(primary=ink,onPrimary=paper,primaryContainer=ink,surfaceContainerHighest=paper,
         outline=ink,onSurface=ink,onSurfaceVariant=ink)) {
-        ModeSwitchCard(tr("Schwarz/Weiß"),tr("Zeigt die ganze App in Graustufen, zum Beispiel für weniger Ablenkung. Dein Farbdesign bleibt gespeichert."),
+        ModeSwitchCard(tr("Schwarz/Weiß"),description,
             checked,onChange,"mode-monochrome",paper,ink,ink,Modifier.greyscale()) {_,m->MonochromePicture(ink,paper,m)}
     }
 }
@@ -156,7 +158,7 @@ private fun Modifier.greyscale():Modifier=drawWithContent {
     }
 }
 
-@Composable private fun QuietPicture(on:Boolean,modifier:Modifier) {
+@Composable internal fun QuietPicture(on:Boolean,modifier:Modifier) {
     val colors=MaterialTheme.colorScheme
     val calm=on||LocalAppSettings.current.reduceMotion
     val settle by animateFloatAsState(if(on) 1f else 0f,tween(500,easing=FastOutSlowInEasing),label="quiet-settle")
@@ -207,7 +209,7 @@ private fun Modifier.greyscale():Modifier=drawWithContent {
 }
 
 /** A tiny screen: its hint lines and info circle fade out in minimalism, the content stays. */
-@Composable private fun MinimalPicture(on:Boolean,modifier:Modifier) {
+@Composable internal fun MinimalPicture(on:Boolean,modifier:Modifier) {
     val colors=MaterialTheme.colorScheme
     val hints by animateFloatAsState(if(on) 0f else 1f,tween(450),label="minimal-hints")
     Canvas(modifier) {
@@ -284,7 +286,7 @@ private fun Modifier.greyscale():Modifier=drawWithContent {
 }
 
 /** A start and a destination field with the swap arrows between them; on, the position mark is crossed out. */
-@Composable private fun PlannerPicture(on:Boolean,modifier:Modifier) {
+@Composable internal fun PlannerPicture(on:Boolean,modifier:Modifier) {
     val colors=MaterialTheme.colorScheme
     val cross by animateFloatAsState(if(on) 1f else 0f,tween(420,easing=FastOutSlowInEasing),label="planner-cross")
     Canvas(modifier) {

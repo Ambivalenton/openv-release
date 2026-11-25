@@ -51,9 +51,10 @@ class Sprint51OnboardingTest {
         compose.runOnIdle {assertTrue(store.onboardingDraft!!.favorites.isEmpty())}
         capture("onboarding-favorite-next")
         compose.onNodeWithTag("onboarding-next").performClick()
-        compose.onNodeWithText("Dein Design").assertExists()
+        // Build 121: the modes follow the favourite.
+        compose.onNodeWithText("Deine Modi").assertExists()
         compose.runOnIdle {
-            assertEquals(2,store.onboardingDraft!!.step)
+            assertEquals(OnboardingStage.MODES,store.onboardingDraft!!.stage)
             assertEquals(place,store.onboardingDraft!!.favorites.single().location)
             assertEquals(place.name,store.onboardingDraft!!.favorites.single().label)
             assertFalse(store.onboardingDraft!!.offerMoreFavorites)
@@ -69,7 +70,7 @@ class Sprint51OnboardingTest {
         compose.onNodeWithTag("onboarding-favorite-name").performScrollTo().performTextReplacement("Mein Ruhepol")
         compose.onNodeWithTag("onboarding-next").performClick()
         compose.onNodeWithText("Die Auswahl konnte nicht gespeichert werden. Bitte erneut versuchen.").assertExists()
-        compose.runOnIdle {assertEquals(1,store.onboardingDraft!!.step);assertTrue(store.onboardingDraft!!.favorites.isEmpty());accept=true}
+        compose.runOnIdle {assertEquals(OnboardingStage.FAVORITE,store.onboardingDraft!!.currentStage);assertTrue(store.onboardingDraft!!.favorites.isEmpty());accept=true}
         compose.onNodeWithTag("onboarding-next").performClick()
         compose.runOnIdle {assertEquals("Mein Ruhepol",store.onboardingDraft!!.favorites.single().label);assertEquals(FavoriteIcon.HOME,store.onboardingDraft!!.favorites.single().icon)}
     }
@@ -79,7 +80,7 @@ class Sprint51OnboardingTest {
         compose.setContent {OnboardingWizard(store,SetupPermissions(),{change->store=store.copy(onboardingDraft=change(store.onboardingDraft!!));true},{finishes++;true},{emptyList()})}
         compose.onNodeWithTag("onboarding-next").assertIsNotEnabled()
         compose.onNodeWithTag("onboarding-skip").performClick()
-        compose.runOnIdle {assertEquals(2,store.onboardingDraft!!.step);assertTrue(store.onboardingDraft!!.favorites.isEmpty());assertEquals(settings,store.onboardingDraft!!.settings);assertEquals(0,finishes)}
+        compose.runOnIdle {assertEquals(OnboardingStage.MODES,store.onboardingDraft!!.stage);assertTrue(store.onboardingDraft!!.favorites.isEmpty());assertEquals(settings,store.onboardingDraft!!.settings);assertEquals(0,finishes)}
     }
     @Test fun eachPresetFitsItsWholeExampleInsideTheSameFrameWithoutScrolling() {
         var preset by mutableStateOf(SentencePreset.COMPACT);var calls=0

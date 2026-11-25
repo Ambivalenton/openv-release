@@ -202,6 +202,9 @@ data class RideInput(val mode: ReliabilityMode, val lineKey: String, val planned
 /** Personal adjustment: the person's own punctuality counts for a line or mode in a time window. */
 fun interface PersonalPunctuality { fun counts(lineKey: String, mode: ReliabilityMode, window: TimeWindow): PunctualityCount? }
 
+/** The highest rating of a journey whose transfer the current forecasts already rule out (very unsafe). */
+const val FORECAST_MISSED_PERCENT = 15
+
 /** Pseudo-observations the published prior counts as against the person's own reports. */
 const val PRIOR_WEIGHT = 12.0
 
@@ -226,17 +229,24 @@ fun rateJourney(rides: List<RideInput>, walks: List<Int>, personal: PersonalPunc
     }
     fun departureGrid(i: Int) = rides[i].departureDelay?.let { DelayGrid.known(it.coerceAtLeast(0), priors[i]) } ?: DelayGrid.of(priors[i])
     fun arrivalGrid(i: Int) = rides[i].arrivalDelay?.let { DelayGrid.known(it.coerceAtLeast(0), priors[i]) } ?: DelayGrid.of(priors[i])
+    // Build 121: a transfer the current forecasts already rule out (the connection leaves before the feeder
+    // arrives plus the change) is not a matter of chance any more.
+    var forecastMissed = false
     val transfers = (0 until rides.size - 1).map { i ->
         val gap = ((rides[i + 1].plannedDeparture - rides[i].plannedArrival) / 60_000L).toInt()
         val walk = walks.getOrNull(i) ?: 0
-        // Changing without a walk still takes a minute (stairs, other side of the platform).
-        transferHolds(arrivalGrid(i), departureGrid(i + 1), gap - walk - if (walk == 0) 1 else 0)
+        // Changing without a walk still takes a minute (stairs, other side of the platform). Early arrivals
+        // add time, early departures take it away (the grids start at 0 minutes).
+        val arrival = rides[i].arrivalDelay; val departure = rides[i + 1].departureDelay
+        val slack = gap - walk - (if (walk == 0) 1 else 0) - minOf(0, arrival ?: 0) + minOf(0, departure ?: 0)
+        if (arrival != null && departure != null && arrival.coerceAtLeast(0) - departure.coerceAtLeast(0) > slack) forecastMissed = true
+        transferHolds(arrivalGrid(i), departureGrid(i + 1), slack)
     }
     val running = rides.indices.fold(1.0) { acc, i -> acc * (1 - (if (rides[i].arrivalDelay != null) priors[i].cancel * .5 else priors[i].cancel)) }
     val connections = transfers.fold(running) { acc, p -> acc * p }
     val last = rides.lastIndex
     val arrival = arrivalGrid(last).atMost((rides[last].arrivalDelay ?: 0).coerceAtLeast(0) + tolerance)
-    val percent = (100 * (.65 * connections + .35 * arrival)).roundToInt().coerceIn(0, 100)
+    val percent = (100 * (.65 * connections + .35 * arrival)).roundToInt().coerceIn(0, if (forecastMissed) FORECAST_MISSED_PERCENT else 100)
     return ReliabilityRating(transfers, connections, arrival, percent, reliabilityLevel(percent),
         rides.any { it.departureDelay != null || it.arrivalDelay != null }, personalUsed)
 }
