@@ -90,10 +90,10 @@ class Build89UiTest {
     // The destination map of the search.
     private val address=Location("Rottbruchstraße 41, 44625 Dortmund",null,51.4964,7.4655,"OSM",LocationKind.ADDRESS,category=PlaceCategory.ADDRESS)
     private val gateway=PlaceSearchGateway({listOf(address)},{flowOf(listOf(address))},true)
-    private fun search(settings:AppSettings=AppSettings(quietMode=true)) {
+    private fun search(settings:AppSettings=AppSettings(quietMode=true), searchStore: StoredState = StoredState()) {
         val vm=(compose.activity.application as OpenVApp).koin.get<AppViewModel>()
         compose.setContent {OpenVTheme(settings) {CompositionLocalProvider(LocalPlaceSearchGateway provides gateway) {
-            SearchScreen(AppUiState(store=StoredState(settings=settings),ready=true),vm,{_,_,_->},{_,_,_->},{})
+            SearchScreen(AppUiState(store=searchStore.copy(settings=settings),ready=true),vm,{_,_,_->},{_,_,_->},{})
         }}}
         compose.onNode(hasSetTextAction() and hasText("Ziel, Adresse oder Haltestelle")).performTextInput("Rott")
         compose.onNodeWithText("Rottbruchstraße 41, 44625 Dortmund").performClick()
@@ -123,6 +123,34 @@ class Build89UiTest {
         map.performTouchInput {down(c);advanceEventTime(40);repeat(10){i->moveTo(c+Offset(12f*(i+1),-8f*(i+1)));advanceEventTime(16)};up()}
         compose.waitForIdle()
         field.assert(hasText("Kartenpunkt bei",substring=true))
+    }
+
+    @Test fun clearingAndChoosingAgainKeepsThePlanEditorAndTheButtonInPlace() {
+        search(searchStore = store)
+        val list = compose.onNodeWithTag("search-list")
+        val height = map.fetchSemanticsNode().size.height
+        list.performScrollToNode(hasTestTag("network-edit"))
+        compose.onNodeWithTag("network-edit").performClick()
+        compose.waitForIdle()
+        val button = compose.onNodeWithTag("search-submit").fetchSemanticsNode()
+        val band = compose.onNodeWithTag("network-gesture-band", useUnmergedTree = true).fetchSemanticsNode()
+        assertTrue("editor covers the search button", button.positionInRoot.y + button.size.height <= band.positionInRoot.y)
+        list.performScrollToIndex(0)
+        field.performTextClearance()
+        compose.waitForIdle()
+        map.assertDoesNotExist()
+        compose.onNodeWithTag("search-submit").assertDoesNotExist()
+        compose.onNodeWithTag("time-mode-pill").assertDoesNotExist()
+        field.performTextInput("Rott")
+        compose.onNodeWithText(address.name).performClick()
+        compose.waitForIdle()
+        assertEquals(height, map.fetchSemanticsNode().size.height)
+        compose.onNodeWithTag("search-submit").assertHasClickAction()
+        list.performScrollToNode(hasTestTag("network-done"))
+        compose.onNodeWithTag("network-done").performClick()
+        list.performScrollToIndex(0)
+        compose.onNodeWithTag("time-mode-pill").assertExists()
+        assertEquals(height, map.fetchSemanticsNode().size.height)
     }
 
     @Test fun powerSavingLeavesTheMapOut() {

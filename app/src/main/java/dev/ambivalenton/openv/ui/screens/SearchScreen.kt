@@ -59,12 +59,14 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.heading
 import dev.ambivalenton.openv.ui.network.ConnectPickerDialog
 import dev.ambivalenton.openv.ui.network.EdgeDirectionDialog
+import dev.ambivalenton.openv.ui.network.NetworkEditBarGeometry
 import dev.ambivalenton.openv.ui.network.NetworkPlanFooter
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import dev.ambivalenton.openv.R
 import dev.ambivalenton.openv.data.model.*
@@ -192,7 +194,7 @@ fun SearchScreen(
         val target = if (areaWanted) 1f else 0f
         if (motionOff) area.snapTo(target) else area.animateTo(target, if (areaWanted) searchAreaSpring else searchListRiseSpring)
     }
-    LaunchedEffect(revealSerial, areaWanted) {
+    LaunchedEffect(revealSerial, areaWanted, motionOff) {
         if (!areaWanted) return@LaunchedEffect
         // The map unfolds when a place was chosen (not again after returning to the screen).
         if (motionOff || revealedSerial == revealSerial) unfold.snapTo(1f)
@@ -309,7 +311,7 @@ fun SearchScreen(
                 val ghosts = originBounds?.let { o -> destinationBounds?.let { d -> SwapGhosts(d, o, target.name, start, originGps = gpsOn) } }
                 startHint = null; destinationHint = null; sameHint = false
                 destination = plan.newDestination; destinationText = plan.newDestination.name
-                if (plan.newDestination.hasCoordinates) mapAnchor = plan.newDestination
+                mapAnchor = plan.newDestination
                 swapPendingStart = plan.newStart
                 vm.cancelPrefetch()
                 // A start held on the plan would win over the new manual start.
@@ -369,7 +371,7 @@ fun SearchScreen(
         if (oldStart == null && oldDestination == null) return
         startHint = null; destinationHint = null; sameHint = false
         plannerStart = oldDestination; destination = oldStart; destinationText = oldStart?.name.orEmpty()
-        if (oldStart?.routable == true && oldStart.hasCoordinates) mapAnchor = oldStart
+        if (oldStart?.routable == true) mapAnchor = oldStart
         plannerFields++
         swapScope.launch { plannerMotion.play(plannerCalm) }
     }
@@ -453,6 +455,15 @@ fun SearchScreen(
             val showArea = areaWanted || actionMounted || areaOpen
             val anchor = mapAnchor?.takeIf { it.hasCoordinates }
             val showMap = showArea && anchor != null && !settings.powerSaving && placement.mapHeight > 0.dp
+            val editorMotion = rememberSearchEditorMotion(editing, revealSerial.takeIf { showMap }, showMap && areaWanted, motionOff)
+            val creaseDepth = minOf(32.dp, placement.mapHeight * .13f)
+            // Borrow just enough of the vacated mode row to clear the toolbar. The sheet keeps its
+            // measured size, so editing never zooms the map or moves the network plan below.
+            val lift = (placement.mapHeight + 8.dp + NetworkEditBarGeometry.INFO_HEIGHT - 16.dp - placement.height)
+                .coerceIn(0.dp, 48.dp)
+            val intoModeRow = if (showMap) Modifier.offset {
+                IntOffset(0, -(lift.toPx() * editorMotion.paper.value * area.value.coerceIn(0f, 1f)).roundToInt())
+            } else Modifier
             Column(Modifier.layout { measurable, constraints ->
                 val p = measurable.measure(constraints.copy(minHeight = 0, maxHeight = androidx.compose.ui.unit.Constraints.Infinity))
                 val missing = if (showArea) areaFull * (1f - area.value) else 0f
@@ -540,9 +551,9 @@ fun SearchScreen(
                 ScheduleControls(selectedTime, { selectedTime = it }, mode, { mode = it },
                     onNow = { selectedTime = null; mode = TimeMode.DEPARTURE },
                     // Build 104: the open plan editor reaches up into this row; "Abfahrt/Ankunft" steps aside.
-                    modeAway = editing)
+                    modeAway = editing, modeSlide = editorMotion.row)
                 if (!planner && settings.originMode == OriginMode.AUTOMATIC && (ui.position.error != null || !locationPermissionGranted(context)))
-                    androidx.compose.foundation.layout.FlowRow(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.Center) {
+                    androidx.compose.foundation.layout.FlowRow(intoModeRow.fillMaxWidth(), verticalArrangement = Arrangement.Center) {
                         Text(
                             if (locationPermissionGranted(context)) tr("Standort fehlt") else tr("Standort nicht freigegeben"),
                             Modifier.align(Alignment.CenterVertically).padding(end = 8.dp),
@@ -556,7 +567,7 @@ fun SearchScreen(
                         TextButton({ askStart(tr("Wähle einen Start für diese Fahrt.")) }, Modifier.heightIn(min = 48.dp)) { Text(tr("Start wählen")) }
                     }
             }
-            if (showArea) Box(Modifier.fillMaxWidth().height(16.dp + placement.height)) {
+            if (showArea) Box(intoModeRow.fillMaxWidth().height(16.dp + placement.height)) {
                 // The destination map fills the space down to the navigation (not in power saving).
                 val gap = with(density) { 16.dp.toPx() }
                 val pinned = mapPin
@@ -565,14 +576,17 @@ fun SearchScreen(
                 // The merged button stands 10 dp above the map's lower edge; without the map its lower
                 // edge stays where the round button's was (the pill's height above the pill).
                 val buttonOnMap = placement.mapHeight - dev.ambivalenton.openv.ui.components.SearchActionMapGap - buttonHeight
-                if (centre != null && pinned != null) dev.ambivalenton.openv.ui.components.DestinationMap(centre, pinned,
-                    onPick = { picked -> destination = picked },
-                    unfold = { unfold.value },
-                    visibleHeight = { areaFull * area.value - gap },
-                    closing = !areaWanted,
-                    // The pin stands halfway between the map's upper edge and the button's.
-                    pinCenterY = buttonOnMap / 2,
-                    modifier = Modifier.padding(top = 16.dp).fillMaxWidth().height(placement.mapHeight))
+                if (centre != null && pinned != null) key(revealSerial, centre) {
+                    DestinationMap(centre, pinned,
+                        onPick = { picked -> if (destination?.routable == true) destination = picked },
+                        unfold = { unfold.value },
+                        visibleHeight = { areaFull * area.value - gap },
+                        closing = !areaWanted,
+                        editorCreasePx = { with(density) { creaseDepth.toPx() } * editorFold(editorMotion.paper.value) },
+                        // The pin stands halfway between the map's upper edge and the button's.
+                        pinCenterY = buttonOnMap / 2,
+                        modifier = Modifier.padding(top = 16.dp).fillMaxWidth().height(placement.mapHeight))
+                }
                 // The button falls far down and the favourites move behind the navigation pill;
                 // its lower edge keeps the pill's own height above the pill. On small screens it stays below the controls.
                 if (areaWanted || actionMounted) LiquidSearchAction(destinationEdge,revealSerial,
@@ -580,7 +594,10 @@ fun SearchScreen(
                     visible=destination?.routable==true,onHidden={actionMounted=false},
                     onRevealed={revealedSerial=revealSerial},onClick=::startSearch,
                     label=searchButtonLabel(selectedTime,mode,nowMillis),
-                    modifier=Modifier.padding(top = 16.dp),height=placement.height,
+                    modifier=Modifier.padding(top = 16.dp).offset {
+                        val travel = if (showMap) creaseDepth.toPx() * editorButtonTravel(editorMotion.paper.value) else 0f
+                        IntOffset(0, -travel.roundToInt())
+                    },height=placement.height,
                     buttonTop=if (showMap) buttonOnMap else placement.buttonTop + SEARCH_BUTTON_SIZE_DP.dp - buttonHeight)
             }
             }

@@ -170,6 +170,8 @@ private const val PIN_STRIKE_HEIGHT = 46f
     modifier: Modifier = Modifier,
     /** Where (from the map's top) the middle of the pin stands; the place itself is a little lower. */
     pinCenterY: Dp? = null,
+    /** Height taken up by the editor crease, in pixels; the camera always sees the flat sheet. */
+    editorCreasePx: () -> Float = { 0f },
 ) {
     val density = LocalDensity.current; val d = density.density
     val settings = LocalAppSettings.current
@@ -253,7 +255,8 @@ private const val PIN_STRIKE_HEIGHT = 46f
             out.animateTo(PIN_REST_OUT, spring(dampingRatio = .38f, stiffness = 900f))
         }
     }
-    val settledNow = { !closing && abs(unfold() - 1f) < .004f && visibleHeight() >= h - .5f }
+    val fullyRevealed = { !closing && abs(unfold() - 1f) < .004f && visibleHeight() >= h - .5f }
+    val settledNow by rememberUpdatedState({ fullyRevealed() && abs(editorCreasePx()) <= .5f })
     val input = Modifier.pointerInput(camera, closing) {
         val c = camera ?: return@pointerInput
         awaitEachGesture {
@@ -283,6 +286,7 @@ private const val PIN_STRIKE_HEIGHT = 46f
                     carried = clampToSheet(change.position + grab)
                     if (!change.pressed) break
                 }
+                if (!settledNow()) cancelled = true
                 val target = carried ?: before
                 lifting.cancel()
                 scope.launch {
@@ -315,7 +319,7 @@ private const val PIN_STRIKE_HEIGHT = 46f
                 if ((change.position - down.position).getDistance() > viewConfiguration.touchSlop) break
                 if (!change.pressed) { change.consume(); tap = true; break }
             }
-            if (!tap) return@awaitEachGesture
+            if (!tap || !settledNow()) return@awaitEachGesture
             val target = clampToSheet(down.position)
             val old = tip.value
             busy = true
@@ -357,13 +361,22 @@ private const val PIN_STRIKE_HEIGHT = 46f
             }
             val visible = visibleHeight().coerceIn(0f, size.height)
             val u = unfold()
-            val flat = !closing && abs(u - 1f) < .004f
+            val crease = editorCreasePx()
+            val flat = abs(u - 1f) < .004f
             if (visible <= .5f) return@Canvas
             when {
-                closing -> {
+                closing || (flat && abs(crease) > .5f) -> {
                     // Folds from the bottom up into the height the rising favourites leave free.
-                    val share = (visible / size.height).coerceIn(0f, 1f)
+                    val share = (visible / size.height) * (1f - crease / size.height)
                     if (share <= .015f) return@Canvas
+                    if (share > 1f) {
+                        // A few pixels beyond flat; the top edge stays attached as the paper settles.
+                        scale(1f, share, Offset.Zero) {
+                            clipPath(outline) { content(true) }
+                            drawPath(outline, rim, style = Stroke(1.dp.toPx()))
+                        }
+                        return@Canvas
+                    }
                     // Perspective makes the folded stack a little taller than cos·height; one correction step keeps it inside.
                     val distance = size.height * 1.3f
                     val k = sqrt(1 - share * share) * size.height / MAP_ROWS / 2 / distance
@@ -398,11 +411,11 @@ private const val PIN_STRIKE_HEIGHT = 46f
                 drawPushPin(at, motion.out, motion.elevation, 1f, pinColor, motion.tilt, d, scale = motion.scale, shadow = motion.shadow)
             }
         }
-        if (failed && tiles.isEmpty()) Text(tr("Kartenhintergrund nicht verfügbar"), Modifier.align(Alignment.Center).graphicsLayer { alpha = if (settledNow()) 1f else 0f },
+        if (failed && tiles.isEmpty()) Text(tr("Kartenhintergrund nicht verfügbar"), Modifier.align(Alignment.Center).graphicsLayer { alpha = if (fullyRevealed()) 1f else 0f },
             style = MaterialTheme.typography.labelSmall, color = scheme.onSurfaceVariant)
         // Small but legible in the upper right corner; a tap opens the copyright page.
         OutlinedMapAttribution(Modifier.align(Alignment.TopEnd).padding(top = 7.dp, end = 12.dp)
-            .graphicsLayer { alpha = if (settledNow()) 1f else 0f }
+            .graphicsLayer { alpha = if (fullyRevealed()) 1f else 0f }
             .background(scheme.surface.copy(alpha = .9f), androidx.compose.foundation.shape.RoundedCornerShape(50))
             .clickable { uri.openUri("https://www.openstreetmap.org/copyright") }.padding(horizontal = 5.dp, vertical = 1.dp)
             .testTag("destination-map-attribution"),
