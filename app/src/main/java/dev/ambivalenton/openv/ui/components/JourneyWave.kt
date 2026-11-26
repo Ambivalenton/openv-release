@@ -217,10 +217,12 @@ private fun waveShape(x: Float, wavelength: Float, phase: Float, drift: Float, j
             else -> sin(breathing.floatValue)
         }
         val width = thickness.toPx() * (1f + .3f * breath * b)
-        val room = cy - width / 2f - 1.dp.toPx()
+        // A squeezed slot (very large type in a tight card) flattens the wave instead of failing.
+        val room = (cy - width / 2f - 1.dp.toPx()).coerceAtLeast(0f)
         val amp = (amplitude.toPx() * (1f + breath * b)).coerceIn(0f, room)
         val lambda = wavelength.toPx()
-        val stop = size.width - 4.dp.toPx()
+        val stop = (size.width - 4.dp.toPx()).coerceAtLeast(0f)
+        if (stop <= 0f) return@Canvas
         val drift = t * .7f
         val jagged = pattern == WavePattern.JAGGED
         fun yAt(x: Float): Float {
@@ -267,7 +269,9 @@ private fun waveShape(x: Float, wavelength: Float, phase: Float, drift: Float, j
             }
         }
         // The dot: on the wave, where the journey stands now.
-        val dot = Offset(head.coerceIn(width, stop), yAt(head.coerceIn(width, stop)))
+        // On a very narrow slot the stop can lie left of the stroke's own width: then the dot sits on the stop.
+        val dotX = if (stop > width) head.coerceIn(width, stop) else stop.coerceAtLeast(0f)
+        val dot = Offset(dotX, yAt(dotX))
         val pop = reveal * landing.value
         drawCircle(color.copy(alpha = .22f * reveal), (width * 1.6f + 3.5.dp.toPx()) * pop, dot)
         drawCircle(color, (width * .85f + 2.dp.toPx()) * pop.coerceAtMost(1.2f), dot)
