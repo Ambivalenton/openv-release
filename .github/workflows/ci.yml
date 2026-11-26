@@ -6,7 +6,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, vorschau/1.2.0.7]
   pull_request:
   workflow_dispatch:
 
@@ -88,12 +88,19 @@ jobs:
       # Public release notes: what changed in this version (the store changelog of its versionCode,
       # one line per change) and how the preview installs; German first, English folded below.
       - name: Release „vorschau“ aktualisieren
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/vorschau/1.2.0.7')
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.apk.outputs.version }}
           CODE: ${{ steps.apk.outputs.code }}
         run: |
+          if [ "$GITHUB_REF_NAME" = 'vorschau/1.2.0.7' ]; then
+            test "$VERSION" = '1.2.0.7' && test "$CODE" = '127' || exit 1
+            test "$HAS_PREVIEW_KEY" = 'true'
+            # A newer preview may have shipped while this branch was being tested.
+            previous=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/vorschau" --jq '.object.sha')
+            test "$previous" = 'eb327a9605cfa0194c80847b0a623436a191ba53' || test "$previous" = "$GITHUB_SHA"
+          fi
           changes() { sed -e 's/^[•*-] */- /' -e '/^[[:space:]]*$/d' "fastlane/metadata/android/$1/changelogs/$CODE.txt"; }
           if [ "$HAS_PREVIEW_KEY" = "true" ]; then
             install_de="Spätere Vorschauversionen lassen sich als Update darüber installieren."
@@ -124,7 +131,7 @@ jobs:
             echo
             echo "</details>"
             echo
-            echo "Build $CODE · [${GITHUB_SHA::7}](https://github.com/$GITHUB_REPOSITORY/commit/$GITHUB_SHA) · [Alle Änderungen](https://github.com/$GITHUB_REPOSITORY/blob/main/CHANGELOG.md)"
+            echo "Build $CODE · [${GITHUB_SHA::7}](https://github.com/$GITHUB_REPOSITORY/commit/$GITHUB_SHA) · [Alle Änderungen](https://github.com/$GITHUB_REPOSITORY/blob/$GITHUB_SHA/CHANGELOG.md)"
           } > "$notes"
           gh release delete vorschau --yes --cleanup-tag 2>/dev/null || true
           gh release create vorschau "${{ steps.apk.outputs.file }}" --prerelease --target "$GITHUB_SHA" \
