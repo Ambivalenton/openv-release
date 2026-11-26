@@ -4,6 +4,15 @@ Alle nennenswerten Änderungen an Öpen-V. Versionen folgen [Semantic Versioning
 
 ## [Unveröffentlicht]
 
+## [1.2.0.6] (126) · 2026-11-26
+
+- Tauschen-Knopf: Der Pfeil bleibt nach dem Tauschen in seinem Kreis. Ursache: Beim Zeichnen meinte „Mitte“ die ganze Zeichenfläche statt des eingerückten Pfeils; die halbe Drehung spiegelte ihn um den falschen Punkt nach unten rechts.
+- Der Kreis hinter dem Pfeil ist jetzt flüssig: Ein Tipp drückt ihn von oben flach, beim Drehen schieben die vorbeistreichenden Pfeilspitzen ihn nach außen, an den anderen Stellen zieht er sich zusammen (sein Volumen bleibt), danach schwingt er nach und kommt zur Ruhe. Berechnet als kleine Physik (Rand mit Federn, Oberflächenspannung, Volumen), nicht als aufgesetzte Maße.
+- Rotationsrollen neu gestaltet:
+  - Modern: die Auswahl als schwebende Glaslinse mit Licht oben und Schatten unten; sie ist flüssig – beim Drehen dehnt sie sich in Drehrichtung, bleibt etwas zurück und schwingt beim Einrasten nach. Der eingerastete Wert springt kurz auf, ferne Werte werden auf der Walze auch schmaler.
+  - Retro: ein echtes Zählwerk – Bakelitgehäuse mit Messingeinlage und vier Messingschrauben, elfenbeinfarbene Walzen mit tiefem Zylinderlicht, gezahnte Seitenräder, die sich mitdrehen, ein Messingfenster mit Schattenwurf, Glas mit Lichtreflex und Messingnieten als Doppelpunkt; jedes Einrasten ruckt wie eine Mechanik.
+  - Display (Neon, Terminal, 8-Bit, Synthwave): schwarzes Glas mit Punktraster und leuchtendem Rand, unbeleuchtete „88“-Segmente hinter den Ziffern, leuchtende Ziffern mit Nachglühen, das beim Einrasten aufblitzt, Bildröhren-Vignette, Rasterlinien, leuchtende Schienen und Doppelpunkt; Synthwave mit Farbsaum.
+
 ## [1.2.0.5] (125) · 2026-11-26
 
 - Angepinnte Karte zeigt nur noch, was gerade zählt. In der Bahn: wo und wann du ankommst und wie viele Halte es noch sind – Linie und Ankunftsgleis wiederholt sie nicht mehr, die Anschlussfahrt wartet in einer ruhigen Zeile („Weiter mit U49 um 07:18 · 5 Min. Umstieg“). Kurz vor dem Umstieg (zwei Halte oder vier Minuten vorher) rückt der Anschluss mit Gleis, Richtung und Abfahrt nach vorn, das Aussteigen schrumpft auf eine Zeile mit Ankunftsgleis. Beim Warten zählen Linie, Richtung, Gleis und die Minuten bis zur Abfahrt; auf der letzten Fahrt heißt es kurz vor dem Ziel „Gleich aussteigen“, ein Fußweg danach steht dabei. Wechsel zwischen diesen Ansichten blenden weich über, die Kartenhöhe gleitet.

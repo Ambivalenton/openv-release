@@ -74,6 +74,9 @@ fun unambiguousPlace(text: String, suggestions: List<Location>): Location? {
     return routable.firstOrNull()?.takeIf { it.name.trim().equals(wanted, ignoreCase = true) }
 }
 
+/** How strongly a sweeping tip pushes the liquid body (per radius per second). */
+private const val PUSH = 7.5f
+
 /** The arrow's spring: a lively but short bounce. */
 private val ArrowSpring = spring<Float>(dampingRatio = .52f, stiffness = 420f)
 
@@ -96,11 +99,37 @@ private val ArrowSpring = spring<Float>(dampingRatio = .52f, stiffness = 420f)
         val target = if (visible) 1f else 0f
         if (quiet) presence.snapTo(target) else presence.animateTo(target, if (visible) ArrowSpring else spring(dampingRatio = .9f, stiffness = 520f))
     }
+    // Build 126: the round body is liquid – the tips sweeping past push it out, the rest draws in, it wobbles on.
+    val liquid = remember { LiquidRing() }
+    var liquidFrame by remember { mutableIntStateOf(0) }
+    val probe = remember { SpaceArrow(Size(78f, 78f)) }
     LaunchedEffect(taps) {
         if (taps == 0 || quiet) return@LaunchedEffect
         kotlinx.coroutines.coroutineScope {
-            launch { bounce.animateTo(.86f, tween(80, easing = FastOutLinearInEasing)); bounce.animateTo(1f, spring(dampingRatio = .42f, stiffness = 420f)) }
+            launch { bounce.animateTo(.9f, tween(80, easing = FastOutLinearInEasing)); bounce.animateTo(1f, spring(dampingRatio = .42f, stiffness = 420f)) }
             launch { flip.animateTo(taps * 180f, spring(dampingRatio = .58f, stiffness = 170f)) }
+            launch {
+                // The press dips the drop from above: flatter, wider, then it springs back.
+                liquid.squeeze((Math.PI / 2).toFloat(), -2.4f)
+                var last = withFrameNanos { it }
+                var previous: List<Triple<Float, Float, Float>>? = null
+                while (true) {
+                    val now = withFrameNanos { it }
+                    val dt = ((now - last) / 1e9f).coerceIn(0f, .05f); last = now
+                    // Tips relative to the circle (radius 50 in the probe's units: the arrow box is 78 % of the button).
+                    val tips = probe.tips(flip.value)
+                    val sources = tips.mapIndexed { i, (x, y, z) ->
+                        val rx = (x - 39f) / 50f; val ry = (y - 39f) / 50f
+                        val speed = previous?.get(i)?.let { (px, py, _) -> kotlin.math.hypot((x - px) / 50f, (y - py) / 50f) / dt.coerceAtLeast(1e-3f) } ?: 0f
+                        // Faster and nearer to the rim (and nearer to the viewer) pushes harder.
+                        LiquidRing.Source(kotlin.math.atan2(ry, rx), PUSH * speed * kotlin.math.hypot(rx, ry) * (1f + (z / 39f).coerceIn(-.5f, .5f)))
+                    }
+                    previous = tips
+                    liquid.step(dt, sources)
+                    liquidFrame++
+                    if (!flip.isRunning && liquid.resting) { liquid.reset(); liquidFrame++; break }
+                }
+            }
         }
     }
     val scheme = MaterialTheme.colorScheme
@@ -128,7 +157,8 @@ private val ArrowSpring = spring<Float>(dampingRatio = .52f, stiffness = 420f)
         Spacer(Modifier.fillMaxSize().drawWithCache {
             val arrow = SpaceArrow(Size(size.width * .78f, size.height * .78f))
             onDrawBehind {
-                drawCircle(container.copy(alpha = container.alpha * (.55f + .45f * ring)), size.minDimension / 2f)
+                @Suppress("UNUSED_EXPRESSION") liquidFrame // a new liquid frame redraws (only the drawing, no layout)
+                drawPath(liquid.path(center, size.minDimension / 2f), container.copy(alpha = container.alpha * (.55f + .45f * ring)))
                 translate(size.width * .11f, size.height * .11f) {
                     arrow.draw(this, flip.value, body.copy(alpha = ring), shadowInk.copy(alpha = shadowInk.alpha * ring), dark)
                 }
@@ -147,12 +177,15 @@ private val ArrowSpring = spring<Float>(dampingRatio = .52f, stiffness = 420f)
 internal class SpaceArrow(size: Size) {
     private val unit = size.minDimension / 100f * .86f
     private val box = 100f * unit
-    private val center = Offset(size.width / 2f, size.height / 2f)
-    private val base = swapArrowPath(unit, center - Offset(box / 2f, box / 2f)).asAndroidPath()
+    // Build 126: "pivot", not "center": inside draw (with the DrawScope as receiver) "center" meant the middle of the
+    // whole drawing area. The arrow is drawn inset, so after half a turn it was mirrored about the wrong point
+    // and slipped out of its circle.
+    private val pivot = Offset(size.width / 2f, size.height / 2f)
+    private val base = swapArrowPath(unit, pivot - Offset(box / 2f, box / 2f)).asAndroidPath()
     private val face = android.graphics.Path()
     private val matrix = android.graphics.Matrix()
     private val src = floatArrayOf(-1f, -1f, 1f, -1f, 1f, 1f, -1f, 1f).also { c ->
-        for (i in c.indices) c[i] = (if (i % 2 == 0) center.x else center.y) + c[i] * box / 2f }
+        for (i in c.indices) c[i] = (if (i % 2 == 0) pivot.x else pivot.y) + c[i] * box / 2f }
     private val dst = FloatArray(8)
     private val shadowPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
         style = android.graphics.Paint.Style.FILL_AND_STROKE; strokeWidth = 4.5f * unit
@@ -166,6 +199,22 @@ internal class SpaceArrow(size: Size) {
     private val light = floatArrayOf(-.45f, -.6f, .66f).normalized()
     private val half = floatArrayOf(light[0], light[1], light[2] + 1f).normalized()
 
+    /** Build 126: the two arrow tips at [degrees]: projected position (this arrow's box) and depth towards the viewer. */
+    fun tips(degrees: Float): List<Triple<Float, Float, Float>> {
+        val theta = Math.toRadians(degrees.toDouble())
+        val cos = kotlin.math.cos(theta).toFloat(); val sin = kotlin.math.sin(theta).toFloat()
+        val r = 1f / kotlin.math.sqrt(2f)
+        val origin = pivot - Offset(box / 2f, box / 2f)
+        return listOf(Offset(12.8f, 30.3f), Offset(72.2f, 86.5f)).map { t ->
+            val x = origin.x + t.x * unit - pivot.x; val y = origin.y + t.y * unit - pivot.y
+            val along = (x - y) * r
+            val px = x * cos + along * r * (1f - cos); val py = y * cos - along * r * (1f - cos)
+            val pz = (-x - y) * r * sin
+            val f = perspective / (perspective - pz)
+            Triple(pivot.x + px * f, pivot.y + py * f, pz)
+        }
+    }
+
     fun draw(scope: DrawScope, degrees: Float, body: Color, shadowInk: Color, dark: Boolean) = with(scope) {
         val theta = Math.toRadians(degrees.toDouble())
         val cos = kotlin.math.cos(theta).toFloat(); val sin = kotlin.math.sin(theta).toFloat()
@@ -173,14 +222,14 @@ internal class SpaceArrow(size: Size) {
         val geomCos = if (kotlin.math.abs(cos) < .03f) (if (cos < 0f) -.03f else .03f) else cos
         val r = 1f / kotlin.math.sqrt(2f)
         for (i in 0 until 4) {
-            val x = src[2 * i] - center.x; val y = src[2 * i + 1] - center.y
+            val x = src[2 * i] - pivot.x; val y = src[2 * i + 1] - pivot.y
             val along = (x - y) * r                   // u·p
             val crossX = -y * 0f; val crossZ = (-x - y) * r // u × p = (0, 0, (-x - y)/√2)·… (z only, p in the plane)
             val px = x * geomCos + along * r * (1f - geomCos) + crossX
             val py = y * geomCos - along * r * (1f - geomCos)
             val pz = crossZ * sin
             val f = perspective / (perspective - pz)
-            dst[2 * i] = center.x + px * f; dst[2 * i + 1] = center.y + py * f
+            dst[2 * i] = pivot.x + px * f; dst[2 * i + 1] = pivot.y + py * f
         }
         matrix.setPolyToPoly(src, 0, dst, 0, 4)
         face.set(base); face.transform(matrix)
@@ -212,7 +261,7 @@ internal class SpaceArrow(size: Size) {
         val tone = diffuse - rest
         val lit = if (tone >= 0f) lerp(body, Color.White, (tone * .9f).coerceAtMost(.5f)) else lerp(body, Color.Black, (-tone * .45f).coerceAtMost(.32f))
         val brush = Brush.linearGradient(listOf(lerp(lit, Color.White, if (dark) .24f else .32f), lit, lerp(lit, Color.Black, if (dark) .30f else .22f)),
-            center - Offset(box / 2f, box / 2f), center + Offset(box / 2f, box / 2f))
+            pivot - Offset(box / 2f, box / 2f), pivot + Offset(box / 2f, box / 2f))
         drawPath(shape, brush); drawPath(shape, brush, style = round)
         clipPath(shape) {
             // Edges: dark at the lower right, a bright rim at the upper left (offsets in screen space).
@@ -221,12 +270,78 @@ internal class SpaceArrow(size: Size) {
             // Sheen: a soft reflection of the light, fixed on the screen; it flares as the face turns towards it.
             val glow = ((if (dark) .30f else .45f) * specular / .48f).coerceIn(0f, .8f)
             drawCircle(Brush.radialGradient(listOf(Color.White.copy(alpha = glow), Color.Transparent),
-                center + Offset(-.14f * box, -.2f * box), .42f * box), .42f * box, center + Offset(-.14f * box, -.2f * box))
+                pivot + Offset(-.14f * box, -.2f * box), .42f * box), .42f * box, pivot + Offset(-.14f * box, -.2f * box))
         }
     }
 
     private fun FloatArray.normalized(): FloatArray {
         val l = kotlin.math.sqrt(this[0] * this[0] + this[1] * this[1] + this[2] * this[2]); return floatArrayOf(this[0] / l, this[1] / l, this[2] / l)
+    }
+}
+
+/**
+ * Build 126 · the button's round body as a little volume of liquid. Its rim is [n] points, each with a radial
+ * offset (in radii) that springs back to the circle, is pulled smooth by its neighbours (surface tension), is
+ * damped only a little (it wobbles on) and keeps the enclosed volume: what bulges out in one place is drawn in
+ * elsewhere. Sources push from inside – the arrow tips sweeping past while the arrow turns, a press from above –
+ * nothing is added to a fixed size. Pure and frame-rate independent (fixed sub-steps), so it is unit-tested.
+ */
+internal class LiquidRing(val n: Int = 40) {
+    val offset = FloatArray(n)
+    private val velocity = FloatArray(n)
+    fun angle(i: Int) = (2.0 * Math.PI * i / n).toFloat()
+    /** A push from inside towards [angle] (radians, screen coordinates) with [strength]. */
+    data class Source(val angle: Float, val strength: Float)
+    /** A sudden push: [amount] (radii per second) along [angle] and its opposite, the same amount in across. */
+    fun squeeze(angle: Float, amount: Float) {
+        for (i in 0 until n) velocity[i] += amount * kotlin.math.cos(2f * (angle(i) - angle))
+        keepVolume()
+    }
+    fun step(dt: Float, sources: List<Source>) {
+        var left = dt.coerceIn(0f, .1f)
+        val h = 1f / 480f
+        while (left > 0f) {
+            val k = minOf(h, left); left -= k
+            for (i in 0 until n) {
+                val lap = offset[(i + n - 1) % n] + offset[(i + 1) % n] - 2f * offset[i]
+                var push = 0f
+                for (s in sources) {
+                    var d = angle(i) - s.angle
+                    while (d > Math.PI) d -= (2 * Math.PI).toFloat()
+                    while (d < -Math.PI) d += (2 * Math.PI).toFloat()
+                    push += s.strength * kotlin.math.exp(-(d / SPREAD) * (d / SPREAD))
+                }
+                velocity[i] += (-STIFFNESS * offset[i] + TENSION * lap - DAMPING * velocity[i] + push) * k
+            }
+            for (i in 0 until n) offset[i] = (offset[i] + velocity[i] * k).coerceIn(-.3f, .3f)
+            keepVolume()
+        }
+    }
+    /** Incompressible: the mean radius stays the circle's (first order), velocities likewise. */
+    private fun keepVolume() {
+        val mean = offset.average().toFloat(); val meanV = velocity.average().toFloat()
+        for (i in 0 until n) { offset[i] -= mean; velocity[i] -= meanV }
+    }
+    val resting: Boolean get() = offset.all { kotlin.math.abs(it) < .002f } && velocity.all { kotlin.math.abs(it) < .02f }
+    fun reset() { offset.fill(0f); velocity.fill(0f) }
+    /** The rim as a smooth closed curve (Catmull-Rom through the points) around [c] with rest radius [radius]. */
+    fun path(c: Offset, radius: Float): Path {
+        val pts = List(n) { i -> val a = angle(i); val r = radius * (1f + offset[i]); Offset(c.x + r * kotlin.math.cos(a), c.y + r * kotlin.math.sin(a)) }
+        return Path().apply {
+            moveTo(pts[0].x, pts[0].y)
+            for (i in 0 until n) {
+                val p0 = pts[(i + n - 1) % n]; val p1 = pts[i]; val p2 = pts[(i + 1) % n]; val p3 = pts[(i + 2) % n]
+                cubicTo(p1.x + (p2.x - p0.x) / 6f, p1.y + (p2.y - p0.y) / 6f, p2.x - (p3.x - p1.x) / 6f, p2.y - (p3.y - p1.y) / 6f, p2.x, p2.y)
+            }
+            close()
+        }
+    }
+    companion object {
+        /** About two wobbles a second, lightly damped; tension smooths the rim; a push spreads over ~±30°. */
+        const val STIFFNESS = 170f
+        const val DAMPING = 6.5f
+        const val TENSION = 700f
+        const val SPREAD = .55f
     }
 }
 
