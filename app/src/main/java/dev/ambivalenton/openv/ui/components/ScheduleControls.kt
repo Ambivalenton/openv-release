@@ -396,11 +396,12 @@ private const val SWAY_INERTIA = .13f
     // in the neon and terminal ones, the accent tint otherwise.
     val look = wheelLook(visuals.theme)
     val fill = when (look) {
-        WheelLook.MECHANICAL -> Color(0xFFE9DDC4)
+        // Build 127: the same bakelite as the counter housing it grows out of.
+        WheelLook.MECHANICAL -> Color(0xFF2E231B)
         WheelLook.DIGITAL -> Color(0xFF07090B)
         WheelLook.MODERN -> lerp(frame.compositeOver(scheme.background), scheme.primary, .16f).copy(alpha = frame.alpha.coerceAtLeast(.92f))
     }
-    val ink = if (look == WheelLook.MECHANICAL) Color(0xFF2A2219) else scheme.primary
+    val ink = if (look == WheelLook.MECHANICAL) Color(0xFFE8C77E) else scheme.primary
     val rewind = remember { Animatable(0f) }
     val tapScope = rememberCoroutineScope()
     val style = visuals.theme?.shapeStyle ?: ThemeShape.ROUNDED

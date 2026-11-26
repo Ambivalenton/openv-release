@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import dev.ambivalenton.openv.ui.theme.corner
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -367,45 +368,107 @@ internal fun swapArrowPath(unit: Float, origin: Offset): Path = Path().apply {
     close()
 }
 
-/** 2.3: the two fields as they move: from their measured places to each other's. */
-data class SwapGhosts(val destinationRect: Rect, val originRect: Rect, val destinationText: String, val originText: String)
+/** 2.3: the two fields as they move: from their measured places to each other's. [originGps]: the start chip showed GPS. */
+data class SwapGhosts(val destinationRect: Rect, val originRect: Rect, val destinationText: String, val originText: String,
+    val originGps: Boolean = false)
+
+/** How one of the two fields looks at rest; the moving ghost blends every value from one to the other. */
+private data class FieldLook(val corner: androidx.compose.ui.unit.Dp, val fill: Color, val border: Color, val iconSize: Float, val iconX: Float,
+    val iconTint: Color, val textSize: androidx.compose.ui.unit.TextUnit, val weight: androidx.compose.ui.text.font.FontWeight,
+    val ink: Color, val chip: Float)
 
 /**
- * 2.3: draws both fields while they swap with a spring: the large destination field shrinks into the
- * start box and the start box grows into the destination field, aligned with their real positions.
- * The real fields are hidden meanwhile; the new state is valid from the first frame.
+ * Build 127 · both fields as they trade places, in one motion. Each ghost is drawn exactly like the field it
+ * leaves and, step by step, like the field it becomes: corner, fill and outline, icon size and colour, type size
+ * and weight, the chip's "Ab" and chevron, the field's clear button and its label all blend along the way, while the
+ * two fly past each other on gentle arcs – the rising one above, lifted by a soft shadow. At the end they lie
+ * exactly on the real fields, which fade in under them ([reveal]); nothing snaps or changes its frame at arrival.
  */
-@Composable fun SwapGhostOverlay(ghosts: SwapGhosts, progress: () -> Float, modifier: Modifier = Modifier) {
+@Composable fun SwapGhostOverlay(ghosts: SwapGhosts, progress: () -> Float, modifier: Modifier = Modifier, reveal: () -> Float = { 0f }) {
     val scheme = MaterialTheme.colorScheme
+    val visuals = dev.ambivalenton.openv.ui.theme.LocalAppVisuals.current
     val measurer = rememberTextMeasurer()
-    val big = MaterialTheme.typography.titleLarge
-    val small = MaterialTheme.typography.labelLarge
-    val fill = scheme.surfaceContainerHigh
-    val ink = scheme.onSurface
-    val chipOutline = scheme.outline
+    val t = MaterialTheme.typography
+    val place = androidx.compose.ui.res.painterResource(dev.ambivalenton.openv.R.drawable.ic_place)
+    val gps = androidx.compose.ui.res.painterResource(dev.ambivalenton.openv.R.drawable.ic_gps)
+    val chevron = androidx.compose.ui.res.painterResource(dev.ambivalenton.openv.R.drawable.ic_expand)
+    val close = androidx.compose.ui.res.painterResource(dev.ambivalenton.openv.R.drawable.ic_close)
+    val abLabel = tr("Ab"); val fieldLabel = tr("Ziel, Adresse oder Haltestelle")
+    val direction = androidx.compose.ui.platform.LocalLayoutDirection.current
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    // The two looks at rest, exactly as the real fields draw them.
+    val field = FieldLook(28.dp, scheme.surfaceContainerHigh, Color.Transparent, 24f, 12f, scheme.onSurfaceVariant,
+        t.titleLarge.fontSize, t.titleLarge.fontWeight ?: androidx.compose.ui.text.font.FontWeight.Normal, scheme.onSurface, 0f)
+    val chip = FieldLook(12.dp, scheme.surfaceContainerHigh.copy(alpha = 0f), scheme.outline, 18f, 12f, scheme.primary,
+        t.labelLarge.fontSize, androidx.compose.ui.text.font.FontWeight.SemiBold, scheme.onSurface, 1f)
+    val abLayout = remember(abLabel, t) { measurer.measure(abLabel, t.labelMedium) }
+    val labelLayout = remember(fieldLabel, t) { measurer.measure(fieldLabel, t.bodySmall) }
     Canvas(modifier.fillMaxSize().clearAndSetSemantics {}.testTag("swap-ghosts")) {
-        val t = progress()
-        fun ghost(from: Rect, to: Rect, text: String, fromBig: Boolean) {
-            val k = t.coerceIn(-.15f, 1.15f)
-            val rect = Rect(from.left + (to.left - from.left) * k, from.top + (to.top - from.top) * k,
-                from.right + (to.right - from.right) * k, from.bottom + (to.bottom - from.bottom) * k)
-            val bigness = if (fromBig) 1f - k.coerceIn(0f, 1f) else k.coerceIn(0f, 1f)
-            val corner = lerp(12.dp, 28.dp, bigness).toPx()
-            val w = max(rect.width, 1f); val h = max(rect.height, 1f)
-            drawRoundRect(fill.copy(alpha = .35f + .65f * bigness), rect.topLeft, Size(w, h), CornerRadius(corner))
-            if (bigness < 1f) drawRoundRect(chipOutline.copy(alpha = 1f - bigness), rect.topLeft, Size(w, h), CornerRadius(corner), style = Stroke(1.dp.toPx()))
-            val style = TextStyle(fontSize = androidx.compose.ui.unit.lerp(small.fontSize, big.fontSize, bigness), color = ink,
-                fontWeight = small.fontWeight)
-            val pad = lerp(12.dp, 52.dp, bigness).toPx()
-            val layout = measurer.measure(text, style, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                constraints = androidx.compose.ui.unit.Constraints(maxWidth = (w - pad - 12.dp.toPx()).toInt().coerceAtLeast(1)))
-            clipRect(rect.left, rect.top, rect.left + w, rect.top + h) {
-                drawText(layout, topLeft = Offset(rect.left + pad, rect.top + (h - layout.size.height) / 2f))
+        val k = progress()
+        val fade = 1f - reveal().coerceIn(0f, 1f)
+        if (fade <= 0f) return@Canvas
+        val lift = kotlin.math.sin(Math.PI.toFloat() * k.coerceIn(0f, 1f))
+        fun mix(a: Float, b: Float, f: Float) = a + (b - a) * f
+        fun ghost(from: Rect, to: Rect, a: FieldLook, b: FieldLook, text: String, startGps: Boolean, bow: Float, above: Boolean) {
+            val f = k.coerceIn(0f, 1f)
+            // Eased style blend; the frame follows the spring itself (with its small overshoot).
+            val s = f * f * (3f - 2f * f)
+            val scale = if (above) 1f + .035f * lift else 1f - .02f * lift
+            val cx = mix(from.center.x, to.center.x, k) + bow * lift
+            val cy = mix(from.center.y, to.center.y, k)
+            val w = mix(from.width, to.width, k).coerceAtLeast(1f) * scale
+            val h = mix(from.height, to.height, k).coerceAtLeast(1f) * scale
+            val rect = Rect(cx - w / 2f, cy - h / 2f, cx + w / 2f, cy + h / 2f)
+            val shape = visuals.corner(lerp(a.corner, b.corner, s))
+            val outline = shape.createOutline(Size(w, h), direction, density)
+            translate(rect.left, rect.top) {
+                if (above && lift > 0f) for (layer in 1..3) translate(0f, (layer * 1.6f).dp.toPx() * lift) {
+                    drawOutline(outline, Color.Black.copy(alpha = .05f * lift * fade))
+                }
+                drawOutline(outline, lerp(a.fill, b.fill, s).let { it.copy(alpha = it.alpha * fade) })
+                val border = lerp(a.border, b.border, s)
+                if (border.alpha > 0f) drawOutline(outline, border.copy(alpha = border.alpha * fade), style = Stroke(1.dp.toPx()))
+                val path = Path().apply { addOutline(outline) }
+                clipPath(path) {
+                    val chipness = mix(a.chip, b.chip, s)
+                    // Icon: place or GPS, its size and colour blending.
+                    val iconPx = mix(a.iconSize, b.iconSize, s).dp.toPx()
+                    val iconLeft = mix(a.iconX, b.iconX, s).dp.toPx()
+                    val iconTint = lerp(a.iconTint, b.iconTint, s)
+                    fun icon(painter: androidx.compose.ui.graphics.painter.Painter, alpha: Float) = translate(iconLeft, (h - iconPx) / 2f) {
+                        with(painter) { draw(Size(iconPx, iconPx), alpha = alpha * fade, colorFilter = ColorFilter.tint(iconTint)) }
+                    }
+                    val gpsWeight = if (startGps) 1f - s else 0f
+                    if (gpsWeight > 0f) icon(gps, gpsWeight)
+                    if (gpsWeight < 1f) icon(place, 1f - gpsWeight)
+                    // "Ab" only on the chip, the text right after it there; in the field the text starts after the icon slot.
+                    val abX = iconLeft + iconPx + 8.dp.toPx()
+                    if (chipness > .01f) drawText(abLayout, lerp(a.ink, b.ink, s).copy(alpha = .72f), Offset(abX, (h - abLayout.size.height) / 2f), alpha = chipness * fade)
+                    val textX = mix(52.dp.toPx(), abX + abLayout.size.width + 8.dp.toPx(), chipness)
+                    val trailing = mix(48.dp.toPx(), 12.dp.toPx() + 16.dp.toPx() + 6.dp.toPx(), chipness)
+                    val style = TextStyle(fontSize = androidx.compose.ui.unit.lerp(a.textSize, b.textSize, s),
+                        fontWeight = androidx.compose.ui.text.font.FontWeight(mix(a.weight.weight.toFloat(), b.weight.weight.toFloat(), s).toInt().coerceIn(1, 1000)),
+                        fontFamily = t.titleLarge.fontFamily, color = lerp(a.ink, b.ink, s))
+                    val layout = measurer.measure(text, style, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                        constraints = androidx.compose.ui.unit.Constraints(maxWidth = (w - textX - trailing).toInt().coerceAtLeast(1)))
+                    drawText(layout, topLeft = Offset(textX, (h - layout.size.height) / 2f), alpha = fade)
+                    // Trailing: the chip's chevron, the field's clear button.
+                    val chevronPx = 16.dp.toPx(); val closePx = 24.dp.toPx()
+                    if (chipness > .01f) translate(w - 12.dp.toPx() - chevronPx, (h - chevronPx) / 2f) {
+                        with(chevron) { draw(Size(chevronPx, chevronPx), alpha = chipness * fade, colorFilter = ColorFilter.tint(lerp(a.ink, b.ink, s))) }
+                    }
+                    if (chipness < .99f) translate(w - 12.dp.toPx() - closePx, (h - closePx) / 2f) {
+                        with(close) { draw(Size(closePx, closePx), alpha = (1f - chipness) * fade, colorFilter = ColorFilter.tint(scheme.onSurfaceVariant)) }
+                    }
+                }
+                // The field's label sits on its upper edge; it fades in as the ghost becomes the field (and out the other way).
+                val labelAlpha = ((1f - mix(a.chip, b.chip, s)) - .55f).coerceAtLeast(0f) / .45f
+                if (labelAlpha > 0f) drawText(labelLayout, scheme.onSurfaceVariant, Offset(16.dp.toPx(), -labelLayout.size.height / 2f), alpha = labelAlpha * fade)
             }
         }
-        // The destination text travels into the start box, the start text into the destination field.
-        ghost(ghosts.destinationRect, ghosts.originRect, ghosts.destinationText, fromBig = true)
-        ghost(ghosts.originRect, ghosts.destinationRect, ghosts.originText, fromBig = false)
+        // The start text sinks into the destination field (below), the destination rises into the start chip (above).
+        ghost(ghosts.originRect, ghosts.destinationRect, chip, field, ghosts.originText, ghosts.originGps, -14.dp.toPx(), above = false)
+        ghost(ghosts.destinationRect, ghosts.originRect, field, chip, ghosts.destinationText, false, 14.dp.toPx(), above = true)
     }
 }
 

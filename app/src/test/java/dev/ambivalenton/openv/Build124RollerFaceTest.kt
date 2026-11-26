@@ -104,7 +104,7 @@ class Build124RollerFaceTest {
             }
         }
         for ((s, t, name) in listOf(Triple(1f, null, "modern-1.0"), Triple(1.3f, AppTheme.SYNTHWAVE, "synthwave-1.3"), Triple(2f, null, "modern-2.0"),
-            Triple(1.3f, AppTheme.VINTAGE_TRANSIT, "mechanical-1.3"), Triple(1.3f, AppTheme.SPACE_TERMINAL, "digital-1.3"), Triple(1f, AppTheme.CLASSIC_DARK, "classic-dark-1.0"))) {
+            Triple(1.3f, AppTheme.VINTAGE_TRANSIT, "mechanical-1.3"), Triple(1.3f, AppTheme.SPACE_TERMINAL, "digital-1.3"), Triple(1f, AppTheme.CLASSIC_DARK, "classic-dark-1.0"), Triple(1f, AppTheme.TILE_COBALT, "tiles-1.0"), Triple(1f, AppTheme.TILE_DAYLIGHT, "tiles-light-1.0"))) {
             compose.runOnIdle { scale = s; theme = t }
             compose.mainClock.advanceTimeBy(2_000); compose.waitForIdle()
             compose.onAllNodesWithTag("roller-day").assertCountEquals(2)

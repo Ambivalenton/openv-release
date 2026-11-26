@@ -4,6 +4,12 @@ Alle nennenswerten Änderungen an Öpen-V. Versionen folgen [Semantic Versioning
 
 ## [Unveröffentlicht]
 
+## [1.2.0.7] (127) · 2026-11-26
+
+- Start und Ziel tauschen in einer einzigen Bewegung: Beide Felder verwandeln sich unterwegs stufenlos in die Form ihres neuen Platzes – Ecken, Füllung und Rand, Schriftgröße und -stärke, das Orts- bzw. GPS-Symbol, „Ab“ und Pfeil des Startfelds, das Löschen-Kreuz und die Beschriftung „Ziel, Adresse oder Haltestelle“ blenden auf dem Weg über. Sie fliegen auf leichten Bögen aneinander vorbei, das aufsteigende Feld darüber mit einem weichen Schatten, und liegen am Ende deckungsgleich auf den echten Feldern, die darunter einblenden. Bisher behielten die Felder unterwegs ihre alte Form und wechselten Rahmen und Beschriftung erst beim Ankommen mit einem Ruck.
+- Rotationswalzen passen sich dem Design an: Linse, Walzen und Gehäuse übernehmen dessen Eckenform (eckig, abgeschrägt, Pixel, rund …); flache Designs bekommen eine flache Linse ohne Schatten und Verlauf. Zählwerk (Retro) und Display sind jetzt selbst der Rahmen der Zeitwahl statt eines Kastens im Kasten, und „Jetzt abfahren“ wächst beim Zählwerk aus demselben Bakelit mit Messingschrift.
+- Neue Design-Gruppe „Kacheln & Farbe“: neun bunte, eckige und minimale Designs – flache Kachelflächen ohne Schatten und Muster, rechte Winkel, große leichte Überschriften, kräftige Akzentfarben (Kobalt, Magenta, Smaragd, Petrol, Karmin, Anthrazit, Weiß, Limette, Signalorange); die Zeitwahl wählt dort mit einer vollfarbigen Kachel.
+
 ## [1.2.0.6] (126) · 2026-11-26
 
 - Tauschen-Knopf: Der Pfeil bleibt nach dem Tauschen in seinem Kreis. Ursache: Beim Zeichnen meinte „Mitte“ die ganze Zeichenfläche statt des eingerückten Pfeils; die halbe Drehung spiegelte ihn um den falschen Punkt nach unten rechts.

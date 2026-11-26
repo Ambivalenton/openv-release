@@ -1,0 +1,3 @@
+• Swapping start and destination is one motion: the fields turn into their new form on the way, nothing snaps.
+• The rollers take the design's corners and style; counter and display are the frame themselves.
+• New design group "Tiles & Colour": colourful, angular, minimal.

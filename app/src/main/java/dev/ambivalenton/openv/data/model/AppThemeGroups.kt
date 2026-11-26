@@ -24,6 +24,8 @@ enum class AppThemeGroup(private val titleKey:String,private val descriptionKey:
     JAPANDI("Japandi & Stille","Warme Naturtöne, viel Weißraum und eine einzelne ruhige Geste."),
     ORGANIC("Organische Formen","Weiche, unregelmäßige Rundungen und fließende Formen – wie Kiesel, Blätter und Tropfen."),
     GLOW_EDGE("Nacht & Leuchtkante","Tiefe dunkle Flächen, haarfeine Lichtkanten und ein einzelner leuchtender Akzent."),
+    // Build 127: colourful square tiles, light large type, nothing but plain planes.
+    TILES("Kacheln & Farbe","Bunte, gerade Kacheln, leichte große Schrift und viel Luft – flach, eckig und minimal."),
     SOFT("Weich & taktil","Soft UI und Clay: erhabene Flächen, weiche Schatten und griffige runde Formen."),
     GLASS("Glas & Licht","Milchglas, Lichtkanten und Verlaufsglut über ruhigen Farbräumen."),
     BOLD("Kante & Kontrast","Swiss Style, Industrie und Comic: strenge Raster, Signalfarben und Tuschkonturen."),
@@ -102,6 +104,7 @@ fun appThemeGroup(t:AppTheme):AppThemeGroup=t.themeLanguage.themeGroup ?: when {
     t.name.startsWith("FESTIVAL_")->AppThemeGroup.FESTIVALS
     t.name.startsWith("RAINBOW_")->AppThemeGroup.RAINBOWS
     t.name.startsWith("OS_")->AppThemeGroup.SYSTEMS
+    t.name.startsWith("TILE_")->AppThemeGroup.TILES
     else->languageGroupOf[t] ?: AppThemeGroup.CLEAN
 }
 fun groupedAppThemes(quiet:Boolean=false):List<Pair<AppThemeGroup,List<AppTheme>>> {

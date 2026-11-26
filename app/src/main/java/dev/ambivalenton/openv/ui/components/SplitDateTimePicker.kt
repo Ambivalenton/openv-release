@@ -56,14 +56,20 @@ fun SplitDateTimePicker(
     // Build 122: chosen in the stops' local time, like every time the search shows.
     val zone = dev.ambivalenton.openv.data.model.transitZone
     val shown = Instant.ofEpochMilli(timeMillis ?: System.currentTimeMillis()).atZone(zone)
+    // Build 127: a counter or display housing is the frame itself (same outline, no box inside a box);
+    // modern drums sit directly on the card.
+    val housed = wheelLook(dev.ambivalenton.openv.ui.theme.LocalAppVisuals.current.theme) != WheelLook.MODERN
+    val frame = dev.ambivalenton.openv.ui.theme.appCorner(24.dp)
     Surface(
         // Build 115: the date and time can be changed – a quiet pulse in the first hours of use.
         modifier.fillMaxWidth().gestureHint(dev.ambivalenton.openv.data.model.GestureHintKeys.SEARCH_TIME, dev.ambivalenton.openv.ui.hints.HintKind.PULSE, 3400L),
-        shape = dev.ambivalenton.openv.ui.theme.appCorner(24.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        shape = frame,
+        color = if (housed) androidx.compose.ui.graphics.Color.Transparent else MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
         // Build 123: rotating rollers for the day, the hour and the minute; a tap opens the calendar or the typed time.
-        TimeRollers(timeMillis, { onChange(it) }, onPickDate = { dialog = "date" }, onPickTime = { dialog = "time" },
+        if (housed) TimeRollers(timeMillis, { onChange(it) }, onPickDate = { dialog = "date" }, onPickTime = { dialog = "time" },
+            height = 92.dp, frameShape = frame)
+        else TimeRollers(timeMillis, { onChange(it) }, onPickDate = { dialog = "date" }, onPickTime = { dialog = "time" },
             Modifier.padding(horizontal = 12.dp, vertical = 4.dp))
     }
     if (dialog == "date") {
