@@ -455,7 +455,9 @@ fun SearchScreen(
             val showArea = areaWanted || actionMounted || areaOpen
             val anchor = mapAnchor?.takeIf { it.hasCoordinates }
             val showMap = showArea && anchor != null && !settings.powerSaving && placement.mapHeight > 0.dp
-            val editorMotion = rememberSearchEditorMotion(editing, revealSerial.takeIf { showMap }, showMap && areaWanted, motionOff)
+            val editorMotion = rememberSearchEditorMotion(editing, revealSerial.takeIf { showMap }, showMap && areaWanted, motionOff) {
+                unfold.value == 1f && !unfold.isRunning && area.value == 1f && !area.isRunning
+            }
             val creaseDepth = minOf(32.dp, placement.mapHeight * .13f)
             // Borrow just enough of the vacated mode row to clear the toolbar. The sheet keeps its
             // measured size, so editing never zooms the map or moves the network plan below.
@@ -570,7 +572,7 @@ fun SearchScreen(
             if (showArea) Box(intoModeRow.fillMaxWidth().height(16.dp + placement.height)) {
                 // The destination map fills the space down to the navigation (not in power saving).
                 val gap = with(density) { 16.dp.toPx() }
-                val pinned = mapPin
+                val pinned = destination?.takeIf { it.routable } ?: mapPin
                 val centre = anchor?.takeIf { showMap }
                 val buttonHeight = dev.ambivalenton.openv.ui.components.searchButtonHeight()
                 // The merged button stands 10 dp above the map's lower edge; without the map its lower

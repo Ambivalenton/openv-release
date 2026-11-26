@@ -8,7 +8,11 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.flow.first
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos
@@ -24,11 +28,18 @@ internal class SearchEditorMotion(
  * current editor endpoint. A departing sheet keeps its last pose for the normal destination exit.
  */
 @Composable
-internal fun rememberSearchEditorMotion(editing: Boolean, sheetKey: Int?, mapWanted: Boolean, quiet: Boolean): SearchEditorMotion {
+internal fun rememberSearchEditorMotion(
+    editing: Boolean,
+    sheetKey: Int?,
+    mapWanted: Boolean,
+    quiet: Boolean,
+    sheetRevealed: () -> Boolean = { true },
+): SearchEditorMotion {
     val target = if (editing) 1f else 0f
     val row = remember { Animatable(target) }
     val paper = remember(sheetKey) { Animatable(target) }
     val motion = remember(row, paper) { SearchEditorMotion(row, paper) }
+    val revealed by rememberUpdatedState(sheetRevealed)
     LaunchedEffect(editing, mapWanted, paper, quiet) {
         if (quiet) {
             row.snapTo(target)
@@ -44,6 +55,8 @@ internal fun rememberSearchEditorMotion(editing: Boolean, sheetKey: Int?, mapWan
         }
         if (editing) slideRow()
         if (mapWanted && paper.value != target) {
+            // Keep the horizontal destination reveal and the vertical editor fold on separate frames.
+            snapshotFlow { revealed() }.first { it }
             val duration = (460 * abs(target - paper.value)).roundToInt().coerceAtLeast(1)
             paper.animateTo(target, tween(duration, easing = FastOutSlowInEasing))
         }
