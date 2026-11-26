@@ -121,7 +121,9 @@ class Build117ChoicesTest {
         } } }
         compose.waitForIdle()
         compose.onNodeWithTag("pinned-journey-page").assertExists()
-        compose.onNodeWithTag("journey-reliability", useUnmergedTree = true).assertExists()
+        // Build 125: a safe journey needs no rating line of its own on the page (it appears when it warns).
+        compose.onNodeWithTag("journey-reliability", useUnmergedTree = true).assertDoesNotExist()
+        // The RE1 arrives in three minutes: the end of the ride is the moment to ask how it went.
         compose.onNodeWithText("Wie fährt die RE1?").assertExists()
         compose.onAllNodesWithTag("journey-choice", useUnmergedTree = true).assertCountEquals(3)
         save("page-choices")

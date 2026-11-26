@@ -279,7 +279,7 @@ fun tightTransferText(trip: Trip): String? = tightestTransferMinutes(trip)?.take
 }
 
 /** Build 117 · the estimated reliability of the rest of the running journey, quietly on the journey page. */
-@Composable fun JourneyReliabilityLine(session: PinnedJourneySession) {
+@Composable fun JourneyReliabilityLine(session: PinnedJourneySession, onlyWhenNotable: Boolean = false) {
     val actions = LocalJourneyChoiceActions.current ?: return
     val rating = remember(session.trip, session.completedRideKeys, actions.memory) {
         rateTrip(session.trip, actions.memory) { stationRideKey(it) in session.completedRideKeys }
@@ -289,6 +289,7 @@ fun tightTransferText(trip: Trip): String? = tightestTransferMinutes(trip)?.take
         session.trip.copy(segments = session.trip.segments.filterNot { !it.isWalk && stationRideKey(it) in session.completedRideKeys })
     }
     val tight = remember(remaining) { tightTransferText(remaining) }
+    if (onlyWhenNotable && tight == null && rating.level.ordinal <= ReliabilityLevel.SAFE.ordinal) return
     Column(Modifier.fillMaxWidth().testTag("journey-reliability"), verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(tr("Verlässlichkeit"), Modifier.weight(1f), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)

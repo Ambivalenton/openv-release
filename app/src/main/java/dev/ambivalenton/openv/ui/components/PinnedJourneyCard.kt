@@ -69,7 +69,10 @@ import dev.ambivalenton.openv.localization.tr
             }
             // Build 116: every fact once – the step in focus, the onward ride with its platform, the arrival only when it moves.
             val brief=pinnedJourneyBrief(session,focus,now,alert)
-            PinnedJourneyBriefView(brief,nextColor,arrivalColor,expanded)
+            PinnedJourneyBriefView(brief,nextColor,arrivalColor,expanded,now)
+            // Build 125: the question how the ride went comes at its end (or when a due ride has not come yet),
+            // not right after boarding, where it only filled the page.
+            val askNow=brief.kind==BriefStepKind.BOARD || brief.stage==BriefStage.SOON
             val quietStatus=navigationError?:if(state.status==PinnedTrackingStatus.PAUSED)tr("Reisebegleitung pausiert")else summary.notice?.takeIf {alert==null}
             if(!quietStatus.isNullOrBlank())Text(quietStatus,Modifier.fillMaxWidth().testTag("card-status"),style=t.bodySmall,
                 color=scheme.onSurfaceVariant)
@@ -78,11 +81,14 @@ import dev.ambivalenton.openv.localization.tr
                 // The rest of the way takes the free middle; on a short screen it is cut at the bottom, never the actions below.
                 Box(Modifier.fillMaxWidth().weight(1f).clipToBounds()) {
                     // Build 124: measured at its own height (cut below), never squeezed: a tight height made the stop names shrink to nothing.
-                    Column(Modifier.wrapContentHeight(Alignment.Top,unbounded=true)) {Spacer(Modifier.height(8.dp));JourneyRemainingSteps(session,focus.legIndex ?: 0)}
+                    // Build 125: only the rides the brief does not show already (it shows the current one and the onward one).
+                    val shownRides=(if(session.trip.segments.getOrNull(focus.legIndex ?: -1)?.isWalk==false)1 else 0)+(if(brief.next!=null)1 else 0)
+                    Column(Modifier.wrapContentHeight(Alignment.Top,unbounded=true)) {Spacer(Modifier.height(8.dp));JourneyRemainingSteps(session,focus.legIndex ?: 0,skipRides=shownRides)}
                 }
-                JourneyReliabilityLine(session)
+                // Build 125: the rating only when it has something to say (a safe journey needs no line of its own).
+                JourneyReliabilityLine(session,onlyWhenNotable=true)
                 // Build 117: the person's own report on the ride in focus (once it is under way or due).
-                session.trip.segments.getOrNull(focus.legIndex ?: -1)?.takeIf {!it.isWalk && (!focus.boarding || now>=it.plannedStartTime) &&
+                if(askNow) session.trip.segments.getOrNull(focus.legIndex ?: -1)?.takeIf {!it.isWalk && (!focus.boarding || now>=it.plannedStartTime) &&
                     stationRideKey(it) !in session.completedRideKeys}?.let {RideFeedbackRow(session,it)}
             }
             // Build 117: at a station (start, change or on the way to it) up to three other connections.

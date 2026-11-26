@@ -43,7 +43,63 @@ object JourneyTimePolicy {
     const val APPROXIMATE_SPREAD_SECONDS=180
     /** Transfers with less reserve than this are tight. */
     const val TIGHT_TRANSFER_MILLIS=3*60_000L
+    /** Build 125: a held local estimate follows the passenger's progress only in steps of at least this. */
+    const val HELD_STEP_MILLIS=60_000L
+    /** Build 125: a held local estimate without any confirming fix is dropped after this. */
+    const val HELD_MAX_AGE_MILLIS=20*60_000L
 }
+
+/**
+ * Build 125 · the passenger's own arrival estimate for the ride under way, held steady. Before, every GPS fix
+ * compared the estimate with the provider's forecast afresh; the threshold also widens with the fix's accuracy,
+ * which varies a lot on a train. Around the limit the card flipped between "07:13" and "ca. 07:16 +3 Min."
+ * minute by minute. Now the decision has a memory: it switches to the own estimate once it clearly disagrees,
+ * follows it in steps of a minute and goes back to the provider only when both clearly agree again (or the
+ * provider's forecast reaches it). [time] null: evaluated, the provider's value holds.
+ */
+@kotlinx.serialization.Serializable data class LocalArrivalHold(val legKey:String,val time:Long?,val updatedAt:Long)
+
+/** The hold of [session] after a GPS fix at [now] (pure; called by the GPS tracking with every usable fix). */
+fun holdLocalArrival(session:PinnedJourneySession,now:Long):PinnedJourneySession {
+    if(session.usesServerProgress)return if(session.localArrival==null)session else session.copy(localArrival=null)
+    val cursor=session.gpsCursor?.takeIf {it.departed} ?: return session
+    val leg=gpsCursorLeg(session)?.takeUnless {it.value.isWalk} ?: return session
+    if(stationRideKey(leg.value) in session.completedRideKeys)return session
+    val key=journeyLegKey(leg.index,leg.value)
+    val stops=focusStops(session.trip).filter {it.legId=="${leg.index}:${leg.value.id}"}
+    val accuracy=session.lastTrackedPresence?.accuracyMeters
+    val local=localRideArrival(leg.value,stops,RideProgressEvidence(leg.index,cursor.alongMeters,cursor.updatedAt,null,accuracy)) ?: return session
+    val provider=leg.value.effectiveArrival()
+    val threshold=maxOf(JourneyTimePolicy.LOCAL_OVERRIDE_MILLIS,positionSlackMillis(leg.value,stops,accuracy))
+    val mayShorten=when(leg.value.arrivalTimeSource()) {
+        TimeSource.PROGNOSIS->false
+        TimeSource.CARRIED->cursor.alongMeters>=JourneyTimePolicy.DEPARTED_EVIDENCE_METERS
+        else->true
+    }
+    val next=decideLocalArrivalHold(session.localArrival?.takeIf {it.legKey==key},key,local.time,provider,threshold,mayShorten,now)
+    return if(next==session.localArrival)session else session.copy(localArrival=next)
+}
+
+/**
+ * The decision itself (pure, unit-tested): switch to the own estimate [local] once it disagrees with the
+ * [provider] by more than [threshold] (later; earlier only when [mayShorten]); while held, follow it only in
+ * steps of [JourneyTimePolicy.HELD_STEP_MILLIS] (later) or twice that (earlier); release only in clear agreement
+ * (a third of the threshold).
+ */
+fun decideLocalArrivalHold(held:LocalArrivalHold?,key:String,local:Long,provider:Long,threshold:Long,mayShorten:Boolean,now:Long):LocalArrivalHold {
+    val heldTime=held?.time
+    val disagrees=local>provider+threshold || (mayShorten && provider-local>threshold)
+    return when {
+        heldTime==null->LocalArrivalHold(key,local.takeIf {disagrees},now)
+        abs(local-provider)<=threshold/3->LocalArrivalHold(key,null,now)
+        // A growing delay is followed from a minute on; catching up only from two (GPS noise mostly wavers back).
+        local-heldTime>=JourneyTimePolicy.HELD_STEP_MILLIS || heldTime-local>=2*JourneyTimePolicy.HELD_STEP_MILLIS->LocalArrivalHold(key,local,now)
+        else->held.copy(updatedAt=now)
+    }
+}
+
+/** A held arrival for the projection: the ride and its time (null: the provider's). */
+data class HeldArrival(val legIndex:Int,val time:Long?)
 
 /** Normalised source of the departure, also for journeys stored before provenance existed. */
 fun TripSegment.departureTimeSource():TimeSource = when {
@@ -159,7 +215,8 @@ private fun combine(provider:ProjectedEvent,local:ProjectedEvent?,threshold:Long
 
 /** Pure projection of a trip. [evidence] is optional local progress on the current ride. */
 fun projectJourneyTimes(trip:Trip,now:Long,evidence:RideProgressEvidence?=null,speed:WalkingSpeed=WalkingSpeed.AVERAGE,
-    ignoreWalking:Boolean=false,completedRideKeys:Set<String> = emptySet(),calls:ObservedCallEvidence?=null):JourneyTimeProjection {
+    ignoreWalking:Boolean=false,completedRideKeys:Set<String> = emptySet(),calls:ObservedCallEvidence?=null,
+    held:HeldArrival?=null):JourneyTimeProjection {
     val legs=ArrayList<ProjectedLeg>(trip.segments.size)
     var previous:ProjectedEvent?=null
     var afterRide=false
@@ -181,7 +238,13 @@ fun projectJourneyTimes(trip:Trip,now:Long,evidence:RideProgressEvidence?=null,s
             val arrivalSource=leg.arrivalTimeSource()
             val providerArrival=leg.effectiveArrival()
             var arrival=ProjectedEvent(providerArrival,leg.plannedEndTime,arrivalSource,spread(arrivalSource,leg.realtimeReceivedAt,now))
-            if(usable!=null && usable.legIndex==index && stationRideKey(leg) !in completedRideKeys) {
+            if(held!=null && held.legIndex==index && stationRideKey(leg) !in completedRideKeys) {
+                // Build 125: the steady decision of the GPS tracking (see LocalArrivalHold) – no new comparison here.
+                held.time?.let {time->
+                    val mayShorten=arrival.source!=TimeSource.PROGNOSIS
+                    if(time>arrival.time || mayShorten)arrival=ProjectedEvent(time,leg.plannedEndTime,TimeSource.LOCAL,120)
+                }
+            } else if(usable!=null && usable.legIndex==index && stationRideKey(leg) !in completedRideKeys) {
                 val stops=focus.filter {it.legId=="$index:${leg.id}"}
                 val threshold=maxOf(JourneyTimePolicy.LOCAL_OVERRIDE_MILLIS,positionSlackMillis(leg,stops,usable.accuracyMeters))
                 arrival=combine(arrival,localRideArrival(leg,stops,usable),threshold,usable.alongMeters>=JourneyTimePolicy.DEPARTED_EVIDENCE_METERS)
@@ -242,8 +305,11 @@ fun projectSessionTimes(session:PinnedJourneySession,now:Long):JourneyTimeProjec
                 session.lastTrackedPresence?.accuracyMeters)
         }
     }
+    val held=if(session.usesServerProgress)null else session.localArrival?.takeIf {now-it.updatedAt in 0..JourneyTimePolicy.HELD_MAX_AGE_MILLIS}?.let {hold->
+        session.trip.segments.withIndex().firstOrNull {!it.value.isWalk && journeyLegKey(it.index,it.value)==hold.legKey}?.let {HeldArrival(it.index,hold.time)}
+    }
     return projectJourneyTimes(session.trip,now,evidence,session.routing.walkingSpeed,session.routing.ignoreWalking,session.completedRideKeys,
-        if(session.usesServerProgress)null else observedCallEvidence(session,now))
+        if(session.usesServerProgress)null else observedCallEvidence(session,now),held)
 }
 
 /** Median residual of the last stop passages of one ride against the provider's current times. */

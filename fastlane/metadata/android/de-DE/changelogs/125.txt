@@ -1,0 +1,3 @@
+• Angepinnte Karte zeigt nur das Nötige: in der Bahn Ankunft und Halte, kurz vor dem Umstieg rückt der Anschluss mit Gleis nach vorn.
+• Kein Flackern mehr zwischen Fahrplan- und GPS-Zeit – die App entscheidet ruhig und mit Gedächtnis.
+• Zeiten stehen in einer festen Spalte, nichts bricht mehr um.

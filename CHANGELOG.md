@@ -4,6 +4,13 @@ Alle nennenswerten Änderungen an Öpen-V. Versionen folgen [Semantic Versioning
 
 ## [Unveröffentlicht]
 
+## [1.2.0.5] (125) · 2026-11-26
+
+- Angepinnte Karte zeigt nur noch, was gerade zählt. In der Bahn: wo und wann du ankommst und wie viele Halte es noch sind – Linie und Ankunftsgleis wiederholt sie nicht mehr, die Anschlussfahrt wartet in einer ruhigen Zeile („Weiter mit U49 um 07:18 · 5 Min. Umstieg“). Kurz vor dem Umstieg (zwei Halte oder vier Minuten vorher) rückt der Anschluss mit Gleis, Richtung und Abfahrt nach vorn, das Aussteigen schrumpft auf eine Zeile mit Ankunftsgleis. Beim Warten zählen Linie, Richtung, Gleis und die Minuten bis zur Abfahrt; auf der letzten Fahrt heißt es kurz vor dem Ziel „Gleich aussteigen“, ein Fußweg danach steht dabei. Wechsel zwischen diesen Ansichten blenden weich über, die Kartenhöhe gleitet.
+- Kein Flackern mehr zwischen „07:13“ und „ca. 07:16 +3 Min.“: Die eigene GPS-Schätzung wurde bei jeder Messung neu gegen die Prognose des Fahrplandienstes gestellt; die Schwelle hängt zusätzlich von der GPS-Genauigkeit ab, die im Zug stark schwankt. Jetzt entscheidet die App mit Gedächtnis: Sie wechselt erst bei klarer Abweichung zur eigenen Schätzung, folgt ihr in Minutenschritten und kehrt erst bei klarer Übereinstimmung zur Prognose zurück. Karte, Benachrichtigung und Bubble zeigen denselben Stand.
+- Die Uhrzeit steht in einer eigenen Spalte („an“, „ca. an“, „ab“ darüber, Verspätung darunter); ein „ca.“ oder „+3 Min.“ bricht den Ort nicht mehr um.
+- Seite „Unterwegs“: „Dein weiterer Weg“ listet nur noch Fahrten, die oben nicht schon stehen; die Verlässlichkeit erscheint nur, wenn sie warnt; „Wie fährt die S2?“ fragt erst gegen Ende der Fahrt (dann weißt du es) statt direkt nach dem Einsteigen.
+
 ## [1.2.0.4] (124) · 2026-11-26
 
 - Tagesrolle aufgeräumt: Wochentag und Datum stehen jetzt in einer Zeile („Di. 01.12.“, die ersten beiden Tage „Heute“ und „Morgen“), die Linse ist so hoch wie bei Stunde und Minute. Bei großer Systemschrift liefen die beiden Zeilen bisher in die Nachbartage und die Linse stand höher als die anderen. Alle Werte einer Rolle haben eine gemeinsame, passende Größe; die Ziffern wachsen mit der Systemschrift nur so weit, wie die Walze Platz hat. Die Ziffern sitzen optisch mittig in der Linse; der gewählte Wochentag trägt die Akzentfarbe, auf den Retro-Zählwerken ist der Sonntag rot wie auf einem Abreißkalender.

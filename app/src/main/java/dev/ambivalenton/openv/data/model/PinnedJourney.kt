@@ -43,6 +43,8 @@ data class PinnedJourneySession(
     val stayAboard:StayAboard? = null,
     /** The passenger rides an earlier or later service than the pinned one (build 73). */
     val rideDeviation:RideDeviationObservation? = null,
+    /** Build 125: the steady decision between the own arrival estimate and the provider's (see [LocalArrivalHold]). */
+    val localArrival:LocalArrivalHold? = null,
 )
 
 enum class PinnedTrackingStatus { STARTING, RUNNING, PAUSED }

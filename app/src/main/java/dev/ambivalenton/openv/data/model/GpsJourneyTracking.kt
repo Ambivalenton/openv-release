@@ -154,6 +154,8 @@ fun advanceGpsJourney(session:PinnedJourneySession,fix:DevicePresence?,observati
     return session.copy(lastTrackedPresence=measured,gpsCursor=freshCursor,completedRideKeys=completed,stationArrival=waiting,visitedWaypoints=visited,
         activeLegAnchor=if(departed) ActiveJourneyAnchor(key,chosen.index,session.activeLegAnchor?.takeIf {it.key==key}?.confirmedAt ?: now) else null,
         movement=movement).let {observeAssistantCalls(it,measured,session.stationArrival!=null && session.gpsCursor?.departed!=true)}
+        // Build 125: the own arrival estimate is decided here once per fix, with a memory (no flipping views).
+        .let {holdLocalArrival(it,now)}
 }
 
 fun resolvedJourneyProgress(session:PinnedJourneySession,now:Long,presence:DevicePresence?):VisualJourneyProgress {

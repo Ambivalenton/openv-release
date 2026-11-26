@@ -17,7 +17,7 @@ fun PinnedJourneySession.withPowerSaving(enabled:Boolean):PinnedJourneySession {
 
 val PinnedJourneySession.usesServerProgress:Boolean get()=routing.powerSaving || locationUnavailable
 fun PinnedJourneySession.withoutGpsEvidence()=copy(gpsCursor=null,stationArrival=null,movement=JourneyMovementState(),
-    activeLegAnchor=null,missedBoarding=null,lastTrackedPresence=null,observedCalls=emptyList(),rideDeviation=null)
+    activeLegAnchor=null,missedBoarding=null,lastTrackedPresence=null,observedCalls=emptyList(),rideDeviation=null,localArrival=null)
 fun PinnedJourneySession.withLocationAvailability(available:Boolean):PinnedJourneySession =
     copy(locationUnavailable=!available).let {if(it.usesServerProgress)it.withoutGpsEvidence()else it}
 
