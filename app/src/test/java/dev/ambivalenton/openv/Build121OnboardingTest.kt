@@ -112,6 +112,27 @@ class Build121OnboardingTest {
         compose.onNodeWithText("Dein erster Favorit").assertExists()
     }
 
+    @Test fun setupOffersGlassAndRestoresSystemBrightnessInBothDirections() {
+        val draft = OnboardingDraft(stage = OnboardingStage.DESIGN, settings = AppSettings(themeMode = ThemeMode.DARK))
+        var store by mutableStateOf(StoredState(onboardingDraft = draft))
+        compose.setContent { OnboardingWizard(store, SetupPermissions(), { change ->
+            store = store.copy(onboardingDraft = change(store.onboardingDraft!!))
+            true
+        }, { true }, { emptyList() }) }
+        compose.onNodeWithTag("onboarding-design-CLASSIC_DARK").assertDoesNotExist()
+        compose.onNodeWithTag("onboarding-design-SEA_GLASS").performScrollTo().performClick()
+        compose.runOnIdle { assertEquals(AppTheme.SEA_GLASS, store.onboardingDraft!!.settings.appTheme) }
+        compose.onNodeWithTag("onboarding-design-STANDARD").performScrollTo().performClick()
+        compose.runOnIdle {
+            val settings = store.finishFirstLaunchSetup().settings
+            assertNull(settings.appTheme)
+            assertEquals(ThemeMode.SYSTEM, settings.themeMode)
+            assertFalse(settings.appearanceIsDark(systemDark = false))
+            assertTrue(settings.appearanceIsDark(systemDark = true))
+            assertNull(settings.copy(quietMode = true).normalizedQuietAppearance().appTheme)
+        }
+    }
+
     @Test fun theModesSwitchAndShowTheirEffectAtOnce() {
         var store by mutableStateOf(StoredState(onboardingDraft=OnboardingDraft(stage=OnboardingStage.MODES)))
         compose.setContent {OnboardingWizard(store,SetupPermissions(),{change->store=store.copy(onboardingDraft=change(store.onboardingDraft!!));true},{true},{emptyList()})}

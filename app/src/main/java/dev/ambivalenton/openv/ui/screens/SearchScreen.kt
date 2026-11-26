@@ -146,9 +146,7 @@ fun SearchScreen(
     val plannerMotion = dev.ambivalenton.openv.ui.components.rememberPlannerSwapMotion()
     val plannerCalm = dev.ambivalenton.openv.ui.components.plannerMotionCalm()
     var swapGhosts by remember { mutableStateOf<dev.ambivalenton.openv.ui.components.SwapGhosts?>(null) }
-    val swapProgress = remember { androidx.compose.animation.core.Animatable(0f) }
-    // Build 127: the hand-over from the moving ghosts to the real fields (they fade in under the landed ghosts).
-    val swapReveal = remember { androidx.compose.animation.core.Animatable(0f) }
+    var swapProgress by remember { mutableFloatStateOf(0f) }
     var swapPendingStart by remember { mutableStateOf<Location?>(null) }
     val swapScope = rememberCoroutineScope()
     var screenOrigin by remember { mutableStateOf(Offset.Zero) }
@@ -254,7 +252,7 @@ fun SearchScreen(
     // "my location" afterwards ended in "Start und Ziel sind gleich" although the person was elsewhere.
     val windowStart = scheduledNode?.takeIf { !gpsOn }
     val start =
-        if (overrideNode != null) tr("Standort: %1\$s", overrideNode.label)
+        swapPendingStart?.name ?: if (overrideNode != null) tr("Standort: %1\$s", overrideNode.label)
         else if (windowStart != null) tr("%1\$s (Zeitfenster)", windowStart.label)
         else if (settings.originMode == OriginMode.MANUAL) settings.manualOrigin?.name ?: tr("Start wählen")
         else if (snapped != null) tr("%1\$s (in der Nähe)", snapped.label)
@@ -318,19 +316,14 @@ fun SearchScreen(
                 overrideNode?.let { vm.toggleLocationOverride(it.id) }
                 vm.settings { it.copy(originMode = OriginMode.MANUAL, manualOrigin = plan.newStart) }
                 if (ghosts != null && !motionOff) {
+                    swapProgress = 0f
                     swapGhosts = ghosts
                     swapScope.launch {
                         try {
-                            swapReveal.snapTo(0f); swapProgress.snapTo(0f)
-                            // One motion: the real fields start fading in under the ghosts once these turn back
-                            // from their small overshoot, so the arrival flows straight into the hand-over.
-                            var handing: kotlinx.coroutines.Job? = null
-                            swapProgress.animateTo(1f, SwapMotionSpring) {
-                                if (handing == null && value > 1f && velocity < 0f)
-                                    handing = swapScope.launch { swapReveal.animateTo(1f, androidx.compose.animation.core.tween(220)) }
+                            androidx.compose.animation.core.animate(0f, 1f, animationSpec = SwapMotionSpring) { value, _ ->
+                                swapProgress = value
                             }
-                            (handing ?: swapScope.launch { swapReveal.animateTo(1f, androidx.compose.animation.core.tween(180)) }).join()
-                        } finally { swapGhosts = null; swapReveal.snapTo(0f) }
+                        } finally { swapGhosts = null }
                     }
                 }
             }
@@ -475,7 +468,7 @@ fun SearchScreen(
                     vm::findLocations,
                     {destination=it;destinationHint=null
                         if(it?.routable==true){mapAnchor=it;revealSerial++}},
-                    modifier=fieldModifier.graphicsLayer { alpha = if (swapGhosts != null) swapReveal.value else 1f }
+                    modifier=fieldModifier.graphicsLayer { alpha = if (swapGhosts != null) swapFieldReveal(swapProgress) else 1f }
                         .onGloballyPositioned {val b=it.boundsInRoot();destinationEdge=Offset(b.center.x,b.bottom);destinationBounds=b.translate(-screenOrigin)},
                     onSuggestionLongClick={addLocation=it;edit=null;add=true},
                     expressive = true,
@@ -532,7 +525,7 @@ fun SearchScreen(
                         clearRequest = startClear,
                         favorites = ui.store.favorites,
                         missing = startMissing,
-                        modifier = Modifier.zIndex(1f).graphicsLayer { alpha = if (swapGhosts != null) swapReveal.value else 1f }
+                        modifier = Modifier.zIndex(1f).graphicsLayer { alpha = if (swapGhosts != null) swapFieldReveal(swapProgress) else 1f }
                             .onGloballyPositioned { originBounds = it.boundsInRoot().translate(-screenOrigin) },
                     )
                 }
@@ -781,7 +774,11 @@ fun SearchScreen(
         }
     }
     // 2.3: both fields as they swap, drawn over the hidden real fields.
-    swapGhosts?.let { ghosts -> SwapGhostOverlay(ghosts, { swapProgress.value }, reveal = { swapReveal.value }) }
+    swapGhosts?.let { ghosts ->
+        SwapGhostOverlay(ghosts, { swapProgress }, reveal = { swapFieldReveal(swapProgress) },
+            landedOrigin = { originBounds ?: ghosts.originRect },
+            landedDestination = { destinationBounds ?: ghosts.destinationRect })
+    }
     }
     if (add || edit != null)
         FavoriteEditor(

@@ -32,7 +32,7 @@ class Build127SwapMorphTest {
         var k by mutableFloatStateOf(0f)
         var theme by mutableStateOf<AppTheme?>(null)
         // Places as the search screen measures them (px at xhdpi): the start chip above, the destination field below.
-        val ghosts = SwapGhosts(Rect(40f, 230f, 782f, 370f), Rect(40f, 120f, 640f, 200f), "Berufsförderungswerk Dortmund", "Rottbruchstraße 41, Herne",
+        val ghosts = SwapGhosts(Rect(40f, 230f, 782f, 370f), Rect(40f, 120f, 640f, 200f), "Hauptbahnhof, Ausgang Nord", "Stadtpark",
             originGps = true)
         compose.setContent { OpenVTheme(AppSettings(appTheme = theme)) { Surface(Modifier.fillMaxSize()) {
             SwapGhostOverlay(ghosts, { k })

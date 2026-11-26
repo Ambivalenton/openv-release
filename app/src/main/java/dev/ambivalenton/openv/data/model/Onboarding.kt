@@ -51,6 +51,10 @@ fun AppSettings.withSetupStart(place: Location?, now: Long = System.currentTimeM
     if (place == null) copy(originMode = OriginMode.AUTOMATIC, manualOrigin = null)
     else copy(originMode = OriginMode.MANUAL, manualOrigin = place, manualOriginChangedAt = now)
 
+/** Standard keeps following Android after the setup, including when resuming a draft with a fixed mode. */
+fun AppSettings.withSetupDesign(theme: AppTheme?): AppSettings =
+    copy(appTheme = theme, themeMode = if (theme == null) ThemeMode.SYSTEM else themeMode)
+
 /** The start place chosen in the setup, if any. */
 val AppSettings.setupStart: Location? get() = manualOrigin?.takeIf { originMode == OriginMode.MANUAL }
 

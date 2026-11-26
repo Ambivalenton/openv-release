@@ -4,6 +4,10 @@ package dev.ambivalenton.openv.ui.components
 import android.os.Build
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -228,7 +232,8 @@ internal fun dayRollerLabel(index: Int, today: LocalDate, todayWord: String, tom
     val dayLabels = remember(today, todayWord, tomorrowWord) { List(WHEEL_DAYS) { dayRollerLabel(it, today, todayWord, tomorrowWord) } }
     // All faces of a roller share one size: the widest that can come up (every weekday word, the widest digits) fits.
     val daySample = remember(dayLabels) { dayLabels.take(9).map { it.copy(text = "28.08.") } }
-    val blink = timeMillis == null && !quiet
+    val blink = timeMillis == null && !quiet && android.animation.ValueAnimator.areAnimatorsEnabled() &&
+        !day.dragging && !hour.dragging && !minute.dragging
     val colors = rollerColors(look)
     // Build 126: the retro counter and the display sit in a housing of their own; the rollers inside it.
     val inset = when (look) { WheelLook.MECHANICAL -> 6.dp; WheelLook.DIGITAL -> 5.dp; WheelLook.MODERN -> 0.dp }
@@ -325,40 +330,43 @@ private fun Modifier.rollerHousing(look: WheelLook, colors: RollerColors, shape:
     }
 }
 
-/**
- * The colon between hour and minute: lit while a time is chosen, blinking with the seconds while it is "now".
- * The blink is read only while drawing (no recomposition) and only its short fades ask for frames. Build 126: two
- * ink dots on modern drums, brass rivets on the counter, glowing points on the display.
- */
+/** In live time, both dots breathe together. Only their canvas reads the animated value. */
 @Composable private fun Colon(look: WheelLook, colors: RollerColors, blinking: Boolean) {
-    val alpha = remember { Animatable(1f) }
-    LaunchedEffect(blinking) {
-        if (!blinking) { alpha.animateTo(1f, tween(220)); return@LaunchedEffect }
-        while (true) {
-            alpha.animateTo(.25f, tween(260)); kotlinx.coroutines.delay(740)
-            alpha.animateTo(1f, tween(260)); kotlinx.coroutines.delay(740)
-        }
-    }
+    val pulse = if (blinking) {
+        rememberInfiniteTransition(label = "live-clock").animateFloat(
+            initialValue = 1f, targetValue = 0f,
+            animationSpec = infiniteRepeatable(tween(2000, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+            label = "colon-radius",
+        )
+    } else null
     Canvas(Modifier.width(14.dp).fillMaxHeight()) {
-        val r = 2.7.dp.toPx(); val c = Offset(size.width / 2f, size.height / 2f)
-        val a = alpha.value
-        listOf(-1f, 1f).forEach {
-            val p = c + Offset(0f, it * 7.dp.toPx())
-            when (look) {
-                WheelLook.MODERN -> drawCircle(colors.ink.copy(alpha = a), r, p)
-                WheelLook.MECHANICAL -> {
-                    drawCircle(Color.Black.copy(alpha = .5f), r, p + Offset(0f, .8.dp.toPx()))
-                    drawCircle(Brush.radialGradient(listOf(Color(0xFFFFF0B8), Color(0xFFC79A48), Color(0xFF6E4F1E)), p - Offset(r * .4f, r * .4f), r * 1.5f),
-                        r, p, alpha = .55f + .45f * a)
-                }
-                WheelLook.DIGITAL -> {
-                    drawCircle(colors.glow.copy(alpha = .22f * a), r * 2.4f, p)
-                    drawCircle(colors.glow.copy(alpha = .35f * a), r * 1.5f, p)
-                    drawCircle(lerp(colors.glow, Color.White, .45f).copy(alpha = .15f + .85f * a), r * .9f, p)
-                }
+        drawRollerColon(look, colors, pulse?.value ?: 1f)
+    }
+}
+
+internal fun DrawScope.drawRollerColon(look: WheelLook, colors: RollerColors, amount: Float) {
+    // A zero-radius radial gradient is invalid, and all layers should disappear together.
+    val r = 2.7.dp.toPx() * amount
+    if (r < .05f) return
+    val centerX = size.width / 2f
+    fun dot(y: Float) {
+        val p = Offset(centerX, y)
+        when (look) {
+            WheelLook.MODERN -> drawCircle(colors.ink, r, p, alpha = amount)
+            WheelLook.MECHANICAL -> {
+                drawCircle(Color.Black, r, p + Offset(0f, .8.dp.toPx() * amount), alpha = .5f * amount)
+                drawCircle(Brush.radialGradient(listOf(Color(0xFFFFF0B8), Color(0xFFC79A48), Color(0xFF6E4F1E)),
+                    p - Offset(r * .4f, r * .4f), r * 1.5f), r, p, alpha = amount)
+            }
+            WheelLook.DIGITAL -> {
+                drawCircle(colors.glow, r * 2.4f, p, alpha = .22f * amount)
+                drawCircle(colors.glow, r * 1.5f, p, alpha = .35f * amount)
+                drawCircle(lerp(colors.glow, Color.White, .45f), r * .9f, p, alpha = amount)
             }
         }
     }
+    dot(size.height / 2f - 7.dp.toPx())
+    dot(size.height / 2f + 7.dp.toPx())
 }
 
 /**

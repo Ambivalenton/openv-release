@@ -384,7 +384,8 @@ private data class FieldLook(val corner: androidx.compose.ui.unit.Dp, val fill: 
  * two fly past each other on gentle arcs – the rising one above, lifted by a soft shadow. At the end they lie
  * exactly on the real fields, which fade in under them ([reveal]); nothing snaps or changes its frame at arrival.
  */
-@Composable fun SwapGhostOverlay(ghosts: SwapGhosts, progress: () -> Float, modifier: Modifier = Modifier, reveal: () -> Float = { 0f }) {
+@Composable fun SwapGhostOverlay(ghosts: SwapGhosts, progress: () -> Float, modifier: Modifier = Modifier, reveal: () -> Float = { 0f },
+    landedOrigin: () -> Rect = { ghosts.originRect }, landedDestination: () -> Rect = { ghosts.destinationRect }) {
     val scheme = MaterialTheme.colorScheme
     val visuals = dev.ambivalenton.openv.ui.theme.LocalAppVisuals.current
     val measurer = rememberTextMeasurer()
@@ -467,9 +468,17 @@ private data class FieldLook(val corner: androidx.compose.ui.unit.Dp, val fill: 
             }
         }
         // The start text sinks into the destination field (below), the destination rises into the start chip (above).
-        ghost(ghosts.originRect, ghosts.destinationRect, chip, field, ghosts.originText, ghosts.originGps, -14.dp.toPx(), above = false)
-        ghost(ghosts.destinationRect, ghosts.originRect, field, chip, ghosts.destinationText, false, 14.dp.toPx(), above = true)
+        // Material reserves half a label line above an outlined field. The chip has no such inset.
+        fun fieldBody(bounds: Rect) = bounds.copy(top = (bounds.top + labelLayout.size.height / 2f).coerceAtMost(bounds.bottom))
+        ghost(ghosts.originRect, fieldBody(landedDestination()), chip, field, ghosts.originText, ghosts.originGps, -14.dp.toPx(), above = false)
+        ghost(fieldBody(ghosts.destinationRect), landedOrigin(), field, chip, ghosts.destinationText, false, 14.dp.toPx(), above = true)
     }
+}
+
+/** Hand off while the fields are arriving, on the same timeline as their movement. */
+internal fun swapFieldReveal(progress: Float): Float {
+    val t = ((progress - .88f) / .12f).coerceIn(0f, 1f)
+    return t * t * (3f - 2f * t)
 }
 
 /** Spring of the swap itself: fluid, with a small overshoot. */
