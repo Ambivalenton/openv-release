@@ -945,6 +945,10 @@ private fun OpenVNavigation(
     // Without the pill, content still keeps clear of the system's gesture bar.
     val systemBottom=WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     val clearance=if(bottomClear) navHeight else if(navVisible) systemBottom+8.dp else 0.dp
+    // Build 124: sheets and dialogs only keep clear of a pill that is really there. While the plan is edited the
+    // page keeps the pill's room (so the plan does not move), but a sheet opened from the edit bar (favourite
+    // settings) used to end above that empty room – a wide dark band at the bottom.
+    val modalClearance=if(pillShown || hoverCard) navHeight else if(navVisible) systemBottom+8.dp else 0.dp
     // 0 = the pill in place, 1 = below the screen edge. Out with a short lift and a drop, back in with a spring.
     val pillOffset=remember {androidx.compose.animation.core.Animatable(if(pillShown) 0f else 1f)}
     LaunchedEffect(pillShown,navVisible,quiet) {
@@ -963,7 +967,7 @@ private fun OpenVNavigation(
     CompositionLocalProvider(LocalNavigationClearance provides clearance,
         dev.ambivalenton.openv.ui.components.LocalLiquidStage provides liquidStage) {
     Box(Modifier.fillMaxSize().appThemeBackground().imePadding().testTag("floating-navigation-root")) {
-    AppOverlayHost(overlays,Modifier.fillMaxSize(),modalBottomPadding=clearance,
+    AppOverlayHost(overlays,Modifier.fillMaxSize(),modalBottomPadding=modalClearance,
         foreground={
             SnackbarHost(snackbar,Modifier.align(Alignment.BottomCenter).padding(bottom=clearance+8.dp)) {data->
                 Snackbar(data,Modifier.testTag("app-snackbar-message"))

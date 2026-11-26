@@ -4,6 +4,17 @@ Alle nennenswerten Änderungen an Öpen-V. Versionen folgen [Semantic Versioning
 
 ## [Unveröffentlicht]
 
+## [1.2.0.4] (124) · 2026-11-26
+
+- Tagesrolle aufgeräumt: Wochentag und Datum stehen jetzt in einer Zeile („Di. 01.12.“, die ersten beiden Tage „Heute“ und „Morgen“), die Linse ist so hoch wie bei Stunde und Minute. Bei großer Systemschrift liefen die beiden Zeilen bisher in die Nachbartage und die Linse stand höher als die anderen. Alle Werte einer Rolle haben eine gemeinsame, passende Größe; die Ziffern wachsen mit der Systemschrift nur so weit, wie die Walze Platz hat. Die Ziffern sitzen optisch mittig in der Linse; der gewählte Wochentag trägt die Akzentfarbe, auf den Retro-Zählwerken ist der Sonntag rot wie auf einem Abreißkalender.
+- „Jetzt abfahren“ zeigt wieder die Uhr mit der aktuellen Uhrzeit (sie wächst mit der Schrift). Beim Tippen dreht ihr Minutenzeiger eine Runde zurück, während die Rollen zurückspulen.
+- „Abfahrt | Ankunft“ wird von „Jetzt abfahren“ nicht mehr gestaucht: Die Umschaltung behält ihre natürliche Breite, der Jetzt-Bereich nimmt den Platz daneben und bricht seinen Text notfalls in zwei Zeilen um.
+- Angepinnte Fahrt: Die Welle läuft jetzt über die ganze Breite und lebt – sie atmet, plustert sich auf und zieht sich zusammen, Wellenberge wandern an ihr entlang; Tempo, Dicke und Farbe folgen der Situation (ruhig beim Warten, pochend rot beim Einsteigen, langsam grün bei pünktlicher Fahrt, unruhig bei Verspätung, in Schritten zu Fuß, flach auslaufend am Ziel). Alle zehn Sekunden und bei jeder Änderung zeigt sie kurz den Fortschritt: Ein Lichtschimmer läuft bis zur aktuellen Stelle, dort landet ein Punkt, der Rest tritt kurz zurück. Bisher war sie zu Fahrtbeginn nur ein Punkt auf einer flachen Linie. Mit „Bewegung reduzieren“ steht die Welle still und zeigt den Fortschritt dauerhaft.
+- Angepinnter Zeitstrahl: Lange Haltestellennamen werden zuerst etwas kleiner und brechen sonst nur zwischen Wörtern oder nach „-“ und „/“ um – nicht mehr „Westfalenpar|k“ oder „DO-Wischling|en S“.
+- „Dein weiterer Weg“: Die Strecken wurden bei großer Schrift und wenig Platz winzig klein; die Liste behält jetzt ihre Schriftgröße und wird unten abgeschnitten.
+- Favoriten-Einstellungen aus dem Netzplan: Das Blatt reicht wieder bis kurz über den unteren Rand. Es hielt den Platz der ausgeblendeten Navigationsleiste frei, unten blieb ein breiter dunkler Streifen.
+- Der Doppelpunkt zwischen Stunde und Minute blinkt jetzt nur noch in der Zeichenebene; die Rollen werden nicht mehr jede Sekunde neu aufgebaut (spart Energie).
+
 ## [1.2.0.3] (123) · 2026-11-26
 
 - Neu: Rotationsrollen für Datum und Uhrzeit unter „Suchen“. Eine Rolle für den Tag (Wochentag und Datum auf dem Ziffernblatt, nach oben gedreht kommen die nächsten Tage), je eine für Stunde und Minute. Sie drehen wie Walzen, rasten mit spürbarem Ticken und einer Feder ein, nehmen beim Loslassen etwas Schwung mit und tragen über wie ein Kilometerzähler (nach :59 dreht die Stunde weiter, nach 23 Uhr der Tag). Ein Tipp auf die Tagesrolle drückt sie wie einen Knopf hinein und öffnet den Kalender, ein Tipp auf die Uhrzeit die Eingabe per Tastatur. Solange „jetzt“ gilt, laufen die Rollen mit der Uhr und der Doppelpunkt blinkt.

@@ -118,9 +118,14 @@ class Build104PlanEditTest {
         val plan = bounds("network-plan")
         val pitch = plan.width / 6f
         val work = Offset(4.5f * pitch, 3.5f * pitch)
-        compose.onNodeWithTag("network-plan").performTouchInput { down(work); advanceEventTime(900); moveBy(Offset(0f, -20f)) }
+        // Hold, then move: the test clock passes the hold time between the two (in one injected batch the move
+        // could arrive before the hold timeout ran, depending on what ran before in the same process).
+        compose.onNodeWithTag("network-plan").performTouchInput { down(work) }
+        compose.mainClock.advanceTimeBy(900)
+        compose.onNodeWithTag("network-plan").performTouchInput { advanceEventTime(900); moveBy(Offset(0f, -20f)) }
         compose.waitForIdle()
-        // While moving, the tools give way to the delete zone.
+        // While moving, the tools give way to the delete zone (it slides in: wait until it is there).
+        compose.waitUntil(5_000) { compose.onAllNodesWithTag("network-delete-zone", useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty() }
         val zone = bounds("network-delete-zone")
         compose.onNodeWithText("Hierhin verschieben, um den Favoriten zu löschen", useUnmergedTree = true).assertExists()
         compose.onNodeWithTag("network-plan").performTouchInput { moveTo(Offset(zone.center.x - plan.left, zone.center.y - plan.top)) }

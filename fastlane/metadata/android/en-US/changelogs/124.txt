@@ -1,0 +1,5 @@
+• Day roller on one line ("Tue 01.12."), all lenses the same height, also at large font sizes.
+• "Depart now" shows the current time again; "Departure | Arrival" is no longer squeezed.
+• Pinned journey: a living wave across the full width that shows the progress now and then.
+• Timeline: long stop names no longer break inside a word.
+• Favourite settings without an empty band at the bottom.

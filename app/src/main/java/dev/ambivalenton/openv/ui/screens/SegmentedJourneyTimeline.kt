@@ -74,10 +74,22 @@ import dev.ambivalenton.openv.ui.theme.timelineColorPalette
         val labelWidth=with(density) {(maxWidth.roundToPx()-railWidth.roundToPx()-timeWidthPx-10.dp.roundToPx()).coerceAtLeast(1)}
         val name=remember(stop.location,stop.lineType) {displayStopName(stop.location,stop.lineType)}
         val fittedStyle=remember(name,nameStyle,labelWidth,density,stop.lineType) {
-            if(!stop.location.isRailStationName())nameStyle else {
+            val base=if(!stop.location.isRailStationName())nameStyle else {
                 val natural=measurer.measure(name,nameStyle,softWrap=false,maxLines=1).size.width
                 nameStyle.copy(fontSize=nameStyle.fontSize*railStopNameScale(natural.toFloat(),labelWidth.toFloat(),true))
             }
+            // Build 124: a long name first gets a little smaller on one line; only then it takes a second line,
+            // broken between words, after "-" or "/" ("DO-Nette/" | "Oestrich S") – never inside a word
+            // ("Westfalenpar" | "k"). Smaller still only when even that does not fit.
+            fun fits(scale:Float,lines:Int):Boolean {
+                val l=measurer.measure(name,base.copy(fontSize=base.fontSize*scale),softWrap=lines>1,maxLines=lines,
+                    constraints=Constraints(maxWidth=labelWidth))
+                return !l.didOverflowWidth && !l.didOverflowHeight && l.lineCount<=lines && dev.ambivalenton.openv.ui.components.breaksOnlyBetweenWords(l)
+            }
+            val scale=listOf(1f,.94f,.88f,.82f).firstOrNull {fits(it,1)}
+                ?: listOf(1f,.94f,.88f,.82f,.76f).firstOrNull {fits(it,2)}
+                ?: listOf(.76f,.7f,.64f,.58f,.52f).firstOrNull {fits(it,1)||fits(it,2)} ?: .5f
+            if(scale==1f) base else base.copy(fontSize=base.fontSize*scale)
         }
         val layout=remember(name,fittedStyle,labelWidth,density) {
             measurer.measure(name,fittedStyle,softWrap=false,maxLines=1,constraints=Constraints(maxWidth=labelWidth))
@@ -93,7 +105,7 @@ import dev.ambivalenton.openv.ui.theme.timelineColorPalette
             Column(Modifier.weight(1f).padding(top=topInset,end=10.dp,bottom=14.dp)) {
                 // Build 122: no ticker – long names and lines wrap onto a second line.
                 Text(name,Modifier.fillMaxWidth().testTag("focus-label-${stop.key}").semantics {contentDescription=stop.location.name},
-                    style=fittedStyle,maxLines=2,overflow=androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                    style=fittedStyle,maxLines=2,overflow=androidx.compose.ui.text.style.TextOverflow.Clip)
                 Text(stop.line,style=MaterialTheme.typography.labelSmall,color=color,maxLines=2,overflow=androidx.compose.ui.text.style.TextOverflow.Ellipsis)
             }
             Text(clockTime(stop.time),Modifier.padding(top=topInset).width(with(density) {timeWidthPx.toDp()}),style=timeStyle,maxLines=1,

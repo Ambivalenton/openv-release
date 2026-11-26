@@ -40,7 +40,9 @@ internal fun clockHandAngles(minutes: Float): Pair<Float, Float> = (minutes * .5
  * ("Jetzt") it shows the current time and follows the minute tick of the shared wall clock.
  * Purely decorative for TalkBack; the time is spoken by the text next to it.
  */
-@Composable fun AnalogClockIcon(timeMillis: Long?, modifier: Modifier = Modifier, tint: Color = LocalContentColor.current) {
+@Composable fun AnalogClockIcon(timeMillis: Long?, modifier: Modifier = Modifier, tint: Color = LocalContentColor.current,
+    /** Build 124: extra turn of the minute hand in degrees (read while drawing) – "Jetzt abfahren" winds it back once. */
+    minuteTurn: () -> Float = { 0f }) {
     val wall = rememberWallClock()
     val shown = if (timeMillis == null) wall else Instant.ofEpochMilli(timeMillis).atZone(dev.ambivalenton.openv.data.model.transitZone)
     val minutes = shown.hour * 60 + shown.minute
@@ -57,7 +59,7 @@ internal fun clockHandAngles(minutes: Float): Pair<Float, Float> = (minutes * .5
             drawLine(tint, c, c + Offset(cos(a).toFloat() * length * s, sin(a).toFloat() * length * s), width * s, StrokeCap.Round)
         }
         hand(hour, 4.4f, 2f)
-        hand(minute, 6.4f, 1.5f)
+        hand(minute + minuteTurn(), 6.4f, 1.5f)
         drawCircle(tint, 1.4f * s, c)
     }
 }

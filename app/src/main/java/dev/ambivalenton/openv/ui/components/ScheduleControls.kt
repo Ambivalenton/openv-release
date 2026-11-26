@@ -110,6 +110,9 @@ private val ScheduleGap = 8.dp
     // only makes room – softly – when the area springs out.
     val reserve by animateFloatAsState(if (timeMillis != null) 1f else 0f,
         if (quiet) snap() else spring(dampingRatio = .86f, stiffness = 420f), label = "schedule-now-room")
+    // Build 124: "Abfahrt | Ankunft" comes first. The "Jetzt" area takes what the pill leaves at its natural size
+    // (its text then wraps or shrinks a little) and only takes room from the pill when even its minimum does not fit.
+    val pillNatural = rememberTimeModeNaturalWidth()
     Column(modifier.fillMaxWidth()) {
         // The frame is drawn above the area that slides out from underneath it.
         Box(Modifier.zIndex(1f).onSizeChanged { frameHeight = it.height }) { SplitDateTimePicker(timeMillis, onTime) }
@@ -121,8 +124,9 @@ private val ScheduleGap = 8.dp
             .then(if (modeAway) Modifier.clearAndSetSemantics {} else Modifier).testTag("schedule-mode-row")) { measurables, constraints ->
             val width = constraints.maxWidth
             val gap = ScheduleGap.roundToPx()
-            val tabWidth = measurables[1].maxIntrinsicWidth(ModePillHeight.roundToPx()).plus(32.dp.roundToPx())
+            val preferred = measurables[1].maxIntrinsicWidth(ModePillHeight.roundToPx()).plus(32.dp.roundToPx())
                 .coerceIn((width * .34f).toInt(), (width * .46f).toInt())
+            val tabWidth = nowAreaWidth(width, pillNatural, preferred, 8.dp.roundToPx())
             val room = ((tabWidth + 8.dp.roundToPx()) * reserve).roundToInt()
             val pill = measurables[0].measure(Constraints(maxWidth = (width - room).coerceAtLeast(0)))
             val height = gap + max(pill.height, ModePillHeight.roundToPx())
@@ -137,6 +141,31 @@ private val ScheduleGap = 8.dp
 }
 
 /**
+ * Build 124 · the width of the "Jetzt" area (pure, unit-tested): what it would like ([preferred]), but never more
+ * than the pill at its natural width leaves free, and never less than 30 % of the row.
+ */
+internal fun nowAreaWidth(width: Int, pillNatural: Int, preferred: Int, gap: Int): Int =
+    preferred.coerceAtMost(width - pillNatural - gap).coerceAtLeast((width * .3f).toInt())
+
+private val TimeModeOptions @Composable get() = listOf(TimeMode.DEPARTURE to tr("Abfahrt"), TimeMode.ARRIVAL to tr("Ankunft"))
+
+/** The widest label of "Abfahrt | Ankunft" in pixels (both weights: a theme font may draw its medium cut wider). */
+@Composable private fun rememberTimeModeWidest(options: List<Pair<TimeMode, String>>, base: androidx.compose.ui.text.TextStyle): Int {
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    return remember(options, base, density) {
+        options.maxOf { (_, label) -> listOf(FontWeight.SemiBold, FontWeight.Medium).maxOf { w ->
+            measurer.measure(label, base.copy(fontWeight = w), maxLines = 1, softWrap = false).size.width } }
+    }
+}
+
+/** The width "Abfahrt | Ankunft" takes with all the room it wants: both labels at full size with their padding. */
+@Composable internal fun rememberTimeModeNaturalWidth(): Int {
+    val widest = rememberTimeModeWidest(TimeModeOptions, MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold))
+    return with(LocalDensity.current) { 2 * (widest + 2 * TimeModeLabelPadding.roundToPx()) + 2 * ModePillInset.roundToPx() + 2 }
+}
+
+/**
  * A miniature of the navigation pill: one shell, one travelling capsule that bulges the shell.
  * Both labels share one font size that always fits the slot ("Ankunft" was cut off at
  * larger system fonts or narrow screens), and the pill grows in height with the system font.
@@ -144,15 +173,12 @@ private val ScheduleGap = 8.dp
 @Composable fun TimeModeSwitch(mode: TimeMode, onMode: (TimeMode) -> Unit, modifier: Modifier = Modifier,
     /** Build 105: how the capsule's two ends swing on their own while the pill moves. */
     capsuleSway: CapsuleSwayState? = null) {
-    val options = listOf(TimeMode.DEPARTURE to tr("Abfahrt"), TimeMode.ARRIVAL to tr("Ankunft"))
+    val options = TimeModeOptions
     val base = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold)
     val measurer = rememberTextMeasurer()
     val density = LocalDensity.current
     // Both weights are measured: a theme font may draw its medium cut wider than its semi-bold one.
-    val widest = remember(options, base, density) {
-        options.maxOf { (_, label) -> listOf(FontWeight.SemiBold, FontWeight.Medium).maxOf { w ->
-            measurer.measure(label, base.copy(fontWeight = w), maxLines = 1, softWrap = false).size.width } }
-    }
+    val widest = rememberTimeModeWidest(options, base)
     val lineHeight = remember(base, density) { measurer.measure("Ag", base, maxLines = 1).size.height }
     BoxWithConstraints(modifier) {
         val inset = with(density) { ModePillInset.toPx() }
@@ -446,14 +472,17 @@ private const val SWAY_INERTIA = .13f
                     transformOrigin = TransformOrigin(.5f, 0f)
                 }
                 .clickable(enabled = open, role = Role.Button, onClickLabel = tr("Jetzt abfahren")) {
-                    // The arrow turns back once while the rollers spool back to the current time.
-                    if (!quiet) tapScope.launch { rewind.animateTo(rewind.value - 360f, spring(dampingRatio = .62f, stiffness = 170f)) }
+                    // Build 124: the clock shows the current time again; while the rollers spool back, its minute
+                    // hand winds back once round the face and settles on the current minute with a small swing.
+                    if (!quiet) tapScope.launch { rewind.snapTo(360f); rewind.animateTo(0f, spring(dampingRatio = .62f, stiffness = 170f)) }
                     onNow()
                 }
                 .semantics(mergeDescendants = true) { contentDescription = tr("Jetzt abfahren") }
                 .testTag("search-now"),
                 horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-                RewindGlyph(ink, Modifier.size(18.dp).graphicsLayer { rotationZ = rewind.value })
+                // The clock grows with the system font, like the text beside it.
+                val clock = with(LocalDensity.current) { 18.sp.toDp() }.coerceIn(18.dp, 26.dp)
+                AnalogClockIcon(null, Modifier.size(clock), tint = ink, minuteTurn = { rewind.value })
                 Spacer(Modifier.width(4.dp))
                 // M05: the reset says what it does: departure from now (also from an arrival search).
                 FittedText(tr("Jetzt abfahren"), Modifier.weight(1f, fill = false),
@@ -464,18 +493,3 @@ private const val SWAY_INERTIA = .13f
     }
 }
 
-
-/** Build 123 · a circular arrow turning back: "to the current time" (the rollers spool back). */
-@Composable private fun RewindGlyph(ink: Color, modifier: Modifier) = androidx.compose.foundation.Canvas(modifier) {
-    val stroke = 2.dp.toPx(); val r = size.minDimension / 2f - stroke
-    val c = Offset(size.width / 2f, size.height / 2f)
-    drawArc(ink, -60f, -270f, false, c - Offset(r, r), Size(r * 2, r * 2), style = Stroke(stroke, cap = StrokeCap.Round))
-    // The head at the arc's start, pointing back (counter-clockwise).
-    val a = Math.toRadians(-60.0); val tip = c + Offset((r * kotlin.math.cos(a)).toFloat(), (r * kotlin.math.sin(a)).toFloat())
-    val h = r * .62f
-    drawLine(ink, tip, tip + Offset(-h * .15f, -h), stroke, StrokeCap.Round)
-    drawLine(ink, tip, tip + Offset(-h, -h * .05f), stroke, StrokeCap.Round)
-    // The hand: back at twelve.
-    drawLine(ink, c, c + Offset(0f, -r * .55f), stroke * .9f, StrokeCap.Round)
-    drawCircle(ink, stroke * .7f, c)
-}

@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.util.VelocityTracker
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.CustomAccessibilityAction
@@ -45,6 +46,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import dev.ambivalenton.openv.data.model.AppTheme
 import dev.ambivalenton.openv.data.model.AppThemeGroup
@@ -119,11 +121,25 @@ fun wheelLook(theme: AppTheme?): WheelLook = when {
 private const val ROW_ANGLE = 34f // degrees between two values on the drum
 private const val DRUM_RADIUS = .62f // of the roller's height
 
-/** The day roller's values stand further apart: each carries two lines (weekday and date). */
-private const val DAY_ROW_ANGLE = 50f
-
 /** The height of one value at the front of the drum, for a roller [height] pixels high. */
 internal fun rollerRowPx(height: Float, angle: Float = ROW_ANGLE): Float = 2f * height * DRUM_RADIUS * sin((angle / 2f) * PI.toFloat() / 180f)
+
+/**
+ * Build 124 · what one value shows: the main text and, on the day roller, a smaller word in front of it on the
+ * same line ("Di." or "Heute" before "01.12."). One line on every roller, so all three lenses stand at the same
+ * height and nothing overlaps at a large system font. [sunday] gets the red of a printed calendar on the
+ * mechanical rollers.
+ */
+internal data class RollerLabel(val text: String, val prefix: String = "", val sunday: Boolean = false)
+
+/** The day's face on the roller (pure, unit-tested): "Heute"/"Morgen" for the first two days, else the weekday. */
+internal fun dayRollerLabel(index: Int, today: LocalDate, todayWord: String, tomorrowWord: String,
+    locale: Locale = if (dev.ambivalenton.openv.localization.serviceLanguage() == "de") Locale.GERMAN else Locale.ENGLISH): RollerLabel {
+    val d = today.plusDays(index.toLong())
+    // The weekday in the app's language ("Di." / "Tue").
+    val prefix = when (index) { 0 -> todayWord; 1 -> tomorrowWord; else -> d.format(DateTimeFormatter.ofPattern("EEE", locale)) }
+    return RollerLabel(d.format(DateTimeFormatter.ofPattern("dd.MM.", Locale.GERMAN)), prefix, d.dayOfWeek == java.time.DayOfWeek.SUNDAY)
+}
 
 /**
  * The rollers of the search: [timeMillis] null means "now" – the rollers show the current time and keep turning
@@ -138,11 +154,10 @@ internal fun rollerRowPx(height: Float, angle: Float = ROW_ANGLE): Float = 2f * 
     val view = LocalView.current
     val scope = rememberCoroutineScope()
     val look = wheelLook(LocalAppVisuals.current.theme)
-    // The current minute (the rollers follow it while no time is chosen).
-    var nowTick by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    LaunchedEffect(Unit) {
-        while (true) { kotlinx.coroutines.delay(1_000); nowTick = System.currentTimeMillis() }
-    }
+    // The current minute (the rollers follow it while no time is chosen). Build 124: the shared minute clock –
+    // no second ticker any more that recomposed the rollers every second; the colon blinks in the draw phase.
+    val wall = rememberWallClock()
+    val nowTick = wall.toInstant().toEpochMilli()
     val today = remember(nowTick / 60_000) { java.time.Instant.ofEpochMilli(nowTick).atZone(zone).toLocalDate() }
     val target = wheelTotal(timeMillis ?: nowTick, today, zone)
     val latestTarget by rememberUpdatedState(target)
@@ -194,30 +209,27 @@ internal fun rollerRowPx(height: Float, angle: Float = ROW_ANGLE): Float = 2f * 
         latestChange(wheelTime(next, today, zone))
         scope.launch { follow(next) }
     }
-    val dayLabels = remember(today) {
-        val weekday = DateTimeFormatter.ofPattern("EEE", Locale.GERMAN)
-        val date = DateTimeFormatter.ofPattern("dd.MM.", Locale.GERMAN)
-        List(WHEEL_DAYS) { i ->
-            val d = today.plusDays(i.toLong())
-            val top = when (i) { 0 -> tr("Heute"); 1 -> tr("Morgen"); else -> d.format(weekday) }
-            top to d.format(date)
-        }
-    }
-    val blink = timeMillis == null && !quiet && (nowTick / 1000) % 2 == 0L
+    val todayWord = tr("Heute"); val tomorrowWord = tr("Morgen")
+    val dayLabels = remember(today, todayWord, tomorrowWord) { List(WHEEL_DAYS) { dayRollerLabel(it, today, todayWord, tomorrowWord) } }
+    // All faces of a roller share one size: the widest that can come up (every weekday word, the widest digits) fits.
+    val daySample = remember(dayLabels) { dayLabels.take(9).map { it.copy(text = "28.08.") } }
+    val blink = timeMillis == null && !quiet
     val colors = rollerColors(look)
     Row(modifier.fillMaxWidth().height(height).testTag("time-rollers"), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-        Roller(day, WHEEL_DAYS, bounded = true, look = look, colors = colors, modifier = Modifier.weight(1.25f).fillMaxHeight().testTag("roller-day"),
-            description = tr("Tag"), valueText = { i -> dayLabels[i.coerceIn(0, WHEEL_DAYS - 1)].let { "${it.first}, ${it.second}" } },
-            label = { i -> dayLabels.getOrNull(i)?.let { "${it.first}\n${it.second}" } ?: "" },
-            onStep = { stepped(1440, it) }, onTap = onPickDate, pressDown = true, onSettled = { scope.launch { follow(committed) } }, rowAngle = DAY_ROW_ANGLE,
+        // Build 124: the day roller carries a whole line ("Di. 01.12."), the time rollers two digits each.
+        Roller(day, WHEEL_DAYS, bounded = true, look = look, colors = colors, height = height,
+            modifier = Modifier.weight(1.6f).fillMaxHeight().testTag("roller-day"),
+            description = tr("Tag"), valueText = { i -> dayLabels[i.coerceIn(0, WHEEL_DAYS - 1)].let { "${it.prefix}, ${it.text}" } },
+            label = { i -> dayLabels.getOrNull(i) ?: RollerLabel("") }, sample = daySample, mainScale = .86f,
+            onStep = { stepped(1440, it) }, onTap = onPickDate, pressDown = true, onSettled = { scope.launch { follow(committed) } },
             later = tr("Einen Tag später"), earlier = tr("Einen Tag früher"))
         RollerGap(look, colors)
-        Roller(hour, 24, bounded = false, look = look, colors = colors, modifier = Modifier.weight(1f).fillMaxHeight().testTag("roller-hour"),
-            description = tr("Stunde"), valueText = { i -> "%02d".format(Math.floorMod(i, 24)) }, label = { i -> "%02d".format(Math.floorMod(i, 24)) },
+        Roller(hour, 24, bounded = false, look = look, colors = colors, height = height, modifier = Modifier.weight(1f).fillMaxHeight().testTag("roller-hour"),
+            description = tr("Stunde"), valueText = { i -> "%02d".format(Math.floorMod(i, 24)) }, label = { i -> RollerLabel("%02d".format(Math.floorMod(i, 24))) },
             onStep = { stepped(60, it) }, onTap = onPickTime, onSettled = { scope.launch { follow(committed) } }, later = tr("Eine Stunde später"), earlier = tr("Eine Stunde früher"))
-        Colon(look, colors, lit = !blink)
-        Roller(minute, 60, bounded = false, look = look, colors = colors, modifier = Modifier.weight(1f).fillMaxHeight().testTag("roller-minute"),
-            description = tr("Minute"), valueText = { i -> "%02d".format(Math.floorMod(i, 60)) }, label = { i -> "%02d".format(Math.floorMod(i, 60)) },
+        Colon(look, colors, blinking = blink)
+        Roller(minute, 60, bounded = false, look = look, colors = colors, height = height, modifier = Modifier.weight(1f).fillMaxHeight().testTag("roller-minute"),
+            description = tr("Minute"), valueText = { i -> "%02d".format(Math.floorMod(i, 60)) }, label = { i -> RollerLabel("%02d".format(Math.floorMod(i, 60))) },
             onStep = { stepped(1, it) }, onTap = onPickTime, onSettled = { scope.launch { follow(committed) } }, later = tr("Eine Minute später"), earlier = tr("Eine Minute früher"))
     }
 }
@@ -242,13 +254,23 @@ internal data class RollerColors(val ink: Color, val faint: Color, val accent: C
     Spacer(Modifier.width(if (look == WheelLook.MECHANICAL) 6.dp else 10.dp))
 }
 
-/** The colon between hour and minute: lit while a time is chosen, blinking with the seconds while it is "now". */
-@Composable private fun Colon(look: WheelLook, colors: RollerColors, lit: Boolean) {
-    val alpha by androidx.compose.animation.core.animateFloatAsState(if (lit) 1f else .25f, tween(220), label = "roller-colon")
+/**
+ * The colon between hour and minute: lit while a time is chosen, blinking with the seconds while it is "now".
+ * The blink is read only while drawing (no recomposition) and only its short fades ask for frames.
+ */
+@Composable private fun Colon(look: WheelLook, colors: RollerColors, blinking: Boolean) {
+    val alpha = remember { Animatable(1f) }
+    LaunchedEffect(blinking) {
+        if (!blinking) { alpha.animateTo(1f, tween(220)); return@LaunchedEffect }
+        while (true) {
+            alpha.animateTo(.25f, tween(260)); kotlinx.coroutines.delay(740)
+            alpha.animateTo(1f, tween(260)); kotlinx.coroutines.delay(740)
+        }
+    }
     Canvas(Modifier.width(14.dp).fillMaxHeight()) {
         val r = 2.6.dp.toPx(); val c = Offset(size.width / 2f, size.height / 2f)
         val ink = if (look == WheelLook.MODERN) colors.ink else colors.accent
-        listOf(-1f, 1f).forEach { drawCircle(ink.copy(alpha = alpha), r, c + Offset(0f, it * 7.dp.toPx())) }
+        listOf(-1f, 1f).forEach { drawCircle(ink.copy(alpha = alpha.value), r, c + Offset(0f, it * 7.dp.toPx())) }
     }
 }
 
@@ -257,20 +279,27 @@ internal data class RollerColors(val ink: Color, val faint: Color, val accent: C
  * clicks; let go, it flies on a little and settles with a spring. A tap presses it down ([pressDown]) and
  * calls [onTap].
  */
-@Composable private fun Roller(state: RollerState, count: Int, bounded: Boolean, look: WheelLook, colors: RollerColors, modifier: Modifier,
-    description: String, valueText: (Int) -> String, label: (Int) -> String, onStep: (Int) -> Unit, onTap: () -> Unit,
-    later: String, earlier: String, pressDown: Boolean = false, onSettled: () -> Unit = {}, rowAngle: Float = ROW_ANGLE) {
+@Composable private fun Roller(state: RollerState, count: Int, bounded: Boolean, look: WheelLook, colors: RollerColors, height: Dp, modifier: Modifier,
+    description: String, valueText: (Int) -> String, label: (Int) -> RollerLabel, onStep: (Int) -> Unit, onTap: () -> Unit,
+    later: String, earlier: String, pressDown: Boolean = false, onSettled: () -> Unit = {},
+    /** The widest faces that can come up; all faces share the size at which these fit. */
+    sample: List<RollerLabel> = listOf(RollerLabel("88")), mainScale: Float = 1f) {
     val quiet = LocalAppSettings.current.reduceMotion
     val scope = rememberCoroutineScope()
     val measurer = rememberTextMeasurer()
     val visuals = LocalAppVisuals.current
-    val baseStyle = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center,
-        fontFamily = when (look) {
-            WheelLook.DIGITAL -> FontFamily.Monospace
-            WheelLook.MECHANICAL -> visuals.headingFamily
-            WheelLook.MODERN -> visuals.headingFamily
-        })
-    val small = baseStyle.copy(fontSize = baseStyle.fontSize * .62f, fontWeight = FontWeight.Medium)
+    val density = LocalDensity.current
+    val title = MaterialTheme.typography.titleLarge
+    // Build 124: the digits grow with the system font up to the height of one row of the drum, never beyond –
+    // at a very large font the values would otherwise run into their neighbours.
+    val valueSize = with(density) {
+        val cap = rollerRowPx(height.toPx())
+        if (title.fontSize.toPx() > cap) cap.toSp() else title.fontSize
+    }
+    val family = if (look == WheelLook.DIGITAL) FontFamily.Monospace else visuals.headingFamily
+    val mainStyle = title.copy(fontSize = valueSize * mainScale, lineHeight = TextUnit.Unspecified, fontWeight = FontWeight.SemiBold,
+        textAlign = TextAlign.Center, fontFamily = family)
+    val prefixStyle = mainStyle.copy(fontSize = valueSize * .64f, fontWeight = FontWeight.Medium)
     val press = remember { Animatable(0f) }
     val stepLatest by rememberUpdatedState(onStep)
     val tapLatest by rememberUpdatedState(onTap)
@@ -310,7 +339,7 @@ internal data class RollerColors(val ink: Color, val faint: Color, val accent: C
                 onDragStart = {
                     state.dragging = true; tracker.resetTracking()
                     // The finger moves the drum exactly: one value is one row of the drawn cylinder.
-                    rowPx = rollerRowPx(size.height.toFloat(), rowAngle)
+                    rowPx = rollerRowPx(size.height.toFloat())
                     lastIndex = state.position.value.roundToInt()
                     scope.launch { state.position.stop() }
                 },
@@ -339,21 +368,32 @@ internal data class RollerColors(val ink: Color, val faint: Color, val accent: C
                 if (index != lastIndex) { stepLatest(index - lastIndex); lastIndex = index }
             }
         }) {
-        val layouts = remember(baseStyle, small, look) { HashMap<String, TextLayoutResult>() }
-        fun layout(text: String, style: TextStyle) = layouts.getOrPut(text + style.fontSize.value) { measurer.measure(text, style) }
+        val layouts = remember(mainStyle, prefixStyle) { HashMap<String, TextLayoutResult>() }
+        val fits = remember(mainStyle, prefixStyle, sample) { HashMap<Int, Float>() }
+        fun layout(text: String, style: TextStyle) = layouts.getOrPut(text + "\u0000" + style.fontSize.value) { measurer.measure(text, style, maxLines = 1, softWrap = false) }
+        val gap = with(density) { mainStyle.fontSize.toPx() } * .3f
+        val mainPx = with(density) { mainStyle.fontSize.toPx() }
+        fun face(l: RollerLabel) = RollerFace(l.prefix.takeIf { it.isNotEmpty() }?.let { layout(it, prefixStyle) }, layout(l.text, mainStyle), gap, mainPx, l.sunday)
         Canvas(Modifier.fillMaxSize()) {
-            drawRoller(state.position.value, count, bounded, look, colors, shown, rowAngle) { index ->
-                val text = label(index)
-                if (text.contains('\n')) text.split('\n').let { (a, b) -> listOf(layout(a, small), layout(b, baseStyle.copy(fontSize = baseStyle.fontSize * .78f))) }
-                else listOf(layout(text, baseStyle))
+            // One size for all faces of this roller: the widest possible face fits between the edges.
+            val fit = fits.getOrPut(size.width.roundToInt()) {
+                val room = size.width - 12.dp.toPx()
+                (room / sample.maxOf { face(it).width }).coerceIn(.3f, 1f)
             }
+            drawRoller(state.position.value, count, bounded, look, colors, shown, fit) { index -> face(label(index)) }
         }
     }
 }
 
+/** One value laid out: the smaller word and the main text on one baseline. */
+private class RollerFace(val prefix: TextLayoutResult?, val main: TextLayoutResult, val gap: Float, val mainPx: Float, val sunday: Boolean) {
+    val width: Float get() = (prefix?.let { it.size.width + gap } ?: 0f) + main.size.width
+}
+
 /** Draws the drum: the values around [position] on a cylinder, the look's lens/window, shading and edges. */
 private fun DrawScope.drawRoller(position: Float, count: Int, bounded: Boolean, look: WheelLook, colors: RollerColors, chosen: Int,
-    rowAngle: Float, text: (Int) -> List<TextLayoutResult>) {
+    fit: Float, text: (Int) -> RollerFace) {
+    val rowAngle = ROW_ANGLE
     val w = size.width; val h = size.height; val cy = h / 2f
     val radius = h * DRUM_RADIUS
     val row = rollerRowPx(h, rowAngle)
@@ -389,22 +429,30 @@ private fun DrawScope.drawRoller(position: Float, count: Int, bounded: Boolean, 
             val squash = cos(rad)
             val front = squash * squash
             val isChosen = abs(offset) < .5f
-            val layouts = text(index)
-            val total = layouts.sumOf { it.size.height }.toFloat()
+            val face = text(index)
             val ink = when (look) {
                 WheelLook.MODERN -> lerp(colors.faint, colors.ink, if (isChosen) 1f else .2f).copy(alpha = .25f + .75f * front)
                 WheelLook.MECHANICAL -> colors.ink.copy(alpha = .35f + .65f * front)
                 WheelLook.DIGITAL -> if (isChosen) colors.ink else colors.faint.copy(alpha = colors.faint.alpha * front)
             }
-            scale(1f, squash.coerceAtLeast(.05f), Offset(w / 2f, y)) {
-                var top = y - total / 2f
-                layouts.forEach { l ->
-                    val x = (w - l.size.width) / 2f
-                    if (look == WheelLook.MECHANICAL) drawText(l, Color.White.copy(alpha = .45f * front), Offset(x, top + 1.dp.toPx()))
-                    if (look == WheelLook.DIGITAL && isChosen) drawText(l, colors.glow.copy(alpha = .35f), Offset(x, top), )
-                    drawText(l, ink, Offset(x, top))
-                    top += l.size.height
-                }
+            // The word in front: the accent on the chosen day of a modern roller, a calendar's red on Sundays
+            // of a mechanical one, otherwise a little softer than the date.
+            val wordInk = when {
+                look == WheelLook.MECHANICAL && face.sunday -> Color(0xFFA3261C).copy(alpha = ink.alpha)
+                look == WheelLook.MODERN && isChosen -> colors.accent
+                else -> ink.copy(alpha = ink.alpha * .86f)
+            }
+            fun part(l: TextLayoutResult, x: Float, top: Float, color: Color) {
+                if (look == WheelLook.MECHANICAL) drawText(l, Color.White.copy(alpha = .45f * front), Offset(x, top + 1.dp.toPx()))
+                if (look == WheelLook.DIGITAL && isChosen) drawText(l, colors.glow.copy(alpha = .35f), Offset(x, top))
+                drawText(l, color, Offset(x, top))
+            }
+            scale(fit, squash.coerceAtLeast(.05f) * fit, Offset(w / 2f, y)) {
+                // Optically centred: the middle of the digits (not of the line with its descent) sits on the row.
+                val baseline = y + face.mainPx * .36f
+                var x = (w - face.width) / 2f
+                face.prefix?.let { p -> part(p, x, baseline - p.firstBaseline, wordInk); x += p.size.width + face.gap }
+                part(face.main, x, baseline - face.main.firstBaseline, ink)
             }
         }
     }

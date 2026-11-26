@@ -77,7 +77,8 @@ import dev.ambivalenton.openv.localization.tr
             if(expanded) {
                 // The rest of the way takes the free middle; on a short screen it is cut at the bottom, never the actions below.
                 Box(Modifier.fillMaxWidth().weight(1f).clipToBounds()) {
-                    Column {Spacer(Modifier.height(8.dp));JourneyRemainingSteps(session,focus.legIndex ?: 0)}
+                    // Build 124: measured at its own height (cut below), never squeezed: a tight height made the stop names shrink to nothing.
+                    Column(Modifier.wrapContentHeight(Alignment.Top,unbounded=true)) {Spacer(Modifier.height(8.dp));JourneyRemainingSteps(session,focus.legIndex ?: 0)}
                 }
                 JourneyReliabilityLine(session)
                 // Build 117: the person's own report on the ride in focus (once it is under way or due).

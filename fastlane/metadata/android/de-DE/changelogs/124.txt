@@ -1,0 +1,5 @@
+• Tagesrolle in einer Zeile („Di. 01.12.“), alle Linsen gleich hoch, passend auch bei großer Schrift.
+• „Jetzt abfahren“ zeigt wieder die aktuelle Uhrzeit; „Abfahrt | Ankunft“ wird nicht mehr gestaucht.
+• Angepinnte Fahrt: lebendige Welle über die ganze Breite, zeigt den Fortschritt immer wieder kurz.
+• Zeitstrahl: lange Haltestellen ohne Wortbruch.
+• Favoriten-Einstellungen ohne leeren Streifen unten.
