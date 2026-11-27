@@ -297,8 +297,8 @@ import kotlinx.coroutines.launch
                                 OnboardingStage.FAVORITE->OnboardingFavorites(draft,store,studio,studioLook,search,busy,canAddFavorite,
                                     onStudio={studio=it},onLook={studioLook=it},onAdd={addFavorite()})
                                 OnboardingStage.MODES->OnboardingModes(draft.settings,!busy) {edit->change {it.copy(settings=edit(it.settings))}}
-                                OnboardingStage.DESIGN->DesignChoices(draft.settings.appTheme,enabled=!busy) {theme->
-                                    change {it.copy(settings=it.settings.copy(appTheme=theme))}
+                                OnboardingStage.DESIGN->DesignChoices(draft.settings,enabled=!busy) {theme->
+                                    change {it.copy(settings=it.settings.withSetupDesign(theme))}
                                 }
                             }
                             Spacer(Modifier.height(8.dp))
@@ -554,13 +554,15 @@ internal fun onboardingStopColors(accent: Color,count: Int): List<Color> {
 }
 
 /** Build 102: a few designs of different moods instead of all; the whole setup changes with a tap. */
-internal val onboardingDesigns: List<AppTheme?> = listOf(null,AppTheme.CLASSIC_DARK,AppTheme.FOREST,AppTheme.SUNSET_POSTCARD,
+internal val onboardingDesigns: List<AppTheme?> = listOf(null,AppTheme.SEA_GLASS,AppTheme.FOREST,AppTheme.SUNSET_POSTCARD,
     AppTheme.BLUE_HOUR,AppTheme.SYNTHWAVE)
 
-@Composable private fun DesignChoices(selected: AppTheme?,enabled: Boolean,onSelect: (AppTheme?)->Unit) {
+@Composable private fun DesignChoices(settings: AppSettings,enabled: Boolean,onSelect: (AppTheme?)->Unit) {
     Text(tr("Weitere Designs findest du später in den Einstellungen."),style=MaterialTheme.typography.bodyLarge,
         color=MaterialTheme.colorScheme.onSurfaceVariant)
-    val shown=if(selected in onboardingDesigns) onboardingDesigns else listOf(selected)+onboardingDesigns.dropLast(1)
+    val selected = settings.appTheme
+    val choices = if (settings.quietMode) listOf(null) + quietAppThemes else onboardingDesigns
+    val shown = if (selected in choices) choices else listOf(selected) + choices.dropLast(1)
     Column(Modifier.fillMaxWidth().selectableGroup().testTag("onboarding-designs"),verticalArrangement=Arrangement.spacedBy(12.dp)) {
         shown.chunked(2).forEach {row->
             Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(12.dp)) {

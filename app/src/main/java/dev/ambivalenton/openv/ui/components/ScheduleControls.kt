@@ -74,34 +74,34 @@ private val ScheduleGap = 8.dp
 @Composable fun ScheduleControls(timeMillis: Long?, onTime: (Long?) -> Unit, mode: TimeMode, onMode: (TimeMode) -> Unit,
     onNow: () -> Unit, modifier: Modifier = Modifier,
     /** Build 104: the row with "Abfahrt/Ankunft" leaves to the left (the open plan editor needs its room). */
-    modeAway: Boolean = false) {
+    modeAway: Boolean = false, modeSlide: Animatable<Float, AnimationVector1D>? = null) {
     var frameHeight by remember { mutableIntStateOf(0) }
     var tabLeft by remember { mutableIntStateOf(0) }
     var rowWidth by remember { mutableIntStateOf(0) }
     val density = LocalDensity.current
-    val quiet = LocalAppSettings.current.reduceMotion
+    val quiet = LocalAppSettings.current.reduceMotion || !android.animation.ValueAnimator.areAnimatorsEnabled()
     // The row follows its spring: coming back, it shoots in with a small overshoot. Build 105: the capsule
     // inside the pill is not glued to it but hangs on two soft springs (one per end) that feel the row's
     // acceleration – it lags and stretches, swings on when the row brakes, swings back and settles.
-    val rowX = remember { Animatable(0f) }
+    val row = modeSlide ?: rememberSearchEditorMotion(modeAway, null, false, quiet).row
+    val travelPx = -(rowWidth + with(density) { 32.dp.toPx() })
     val sway = remember { CapsuleSwayState() }
-    LaunchedEffect(modeAway, rowWidth, quiet) {
-        val target = if (modeAway) -(rowWidth + with(density) { 32.dp.toPx() }) else 0f
-        if (quiet || rowWidth == 0) { rowX.snapTo(target); sway.reset(); return@LaunchedEffect }
-        val damping = if (modeAway) .8f else .58f
-        val stiffness = if (modeAway) 340f else 260f
-        launch { rowX.animateTo(target, spring(dampingRatio = damping, stiffness = stiffness)) }
-        val perDp = density.density
+    val target = row.targetValue
+    LaunchedEffect(row, target, travelPx, quiet) {
+        if (quiet || rowWidth == 0) { sway.reset(); return@LaunchedEffect }
+        val damping = if (target == 1f) .8f else .58f
+        val stiffness = if (target == 1f) 340f else 260f
+        val travelDp = travelPx / density.density
         var last = withFrameNanos { it }
         while (true) {
             val now = withFrameNanos { it }
             val dt = ((now - last) / 1e9f).coerceIn(0f, 1f / 30f); last = now
-            val x = (rowX.value - target) / perDp; val v = rowX.velocity / perDp
+            val x = (row.value - target) * travelDp; val v = row.velocity * travelDp
             // The row's own spring gives its acceleration exactly (dp/s²).
             val a = -stiffness * x - 2f * damping * kotlin.math.sqrt(stiffness) * v
             sway.physics.step(dt, v, a)
             sway.publish()
-            if (!rowX.isRunning && rowX.value == target && sway.physics.resting) { sway.reset(); break }
+            if (!row.isRunning && row.value == target && sway.physics.resting) { sway.reset(); break }
         }
     }
     // Build 121: the room of the "Jetzt" area is only kept free while the area is out. Before, it was always
@@ -112,6 +112,7 @@ private val ScheduleGap = 8.dp
         if (quiet) snap() else spring(dampingRatio = .86f, stiffness = 420f), label = "schedule-now-room")
     // Build 124: "Abfahrt | Ankunft" comes first. The "Jetzt" area takes what the pill leaves at its natural size
     // (its text then wraps or shrinks a little) and only takes room from the pill when even its minimum does not fit.
+    val rowHidden by remember(modeAway, row) { derivedStateOf { modeAway || row.value >= .98f } }
     val pillNatural = rememberTimeModeNaturalWidth()
     Column(modifier.fillMaxWidth()) {
         // The frame is drawn above the area that slides out from underneath it.
@@ -120,8 +121,8 @@ private val ScheduleGap = 8.dp
             TimeModeSwitch(mode, onMode, capsuleSway = sway)
             NowExtension(timeMillis != null, onNow, { frameHeight }, { tabLeft })
         }, modifier = Modifier.fillMaxWidth().zIndex(0f).onSizeChanged { rowWidth = it.width }
-            .graphicsLayer { translationX = rowX.value }
-            .then(if (modeAway) Modifier.clearAndSetSemantics {} else Modifier).testTag("schedule-mode-row")) { measurables, constraints ->
+            .graphicsLayer { translationX = travelPx * row.value }
+            .then(if (rowHidden) Modifier.clearAndSetSemantics {} else Modifier).testTag("schedule-mode-row")) { measurables, constraints ->
             val width = constraints.maxWidth
             val gap = ScheduleGap.roundToPx()
             val preferred = measurables[1].maxIntrinsicWidth(ModePillHeight.roundToPx()).plus(32.dp.roundToPx())
@@ -396,11 +397,12 @@ private const val SWAY_INERTIA = .13f
     // in the neon and terminal ones, the accent tint otherwise.
     val look = wheelLook(visuals.theme)
     val fill = when (look) {
-        WheelLook.MECHANICAL -> Color(0xFFE9DDC4)
+        // Build 127: the same bakelite as the counter housing it grows out of.
+        WheelLook.MECHANICAL -> Color(0xFF2E231B)
         WheelLook.DIGITAL -> Color(0xFF07090B)
         WheelLook.MODERN -> lerp(frame.compositeOver(scheme.background), scheme.primary, .16f).copy(alpha = frame.alpha.coerceAtLeast(.92f))
     }
-    val ink = if (look == WheelLook.MECHANICAL) Color(0xFF2A2219) else scheme.primary
+    val ink = if (look == WheelLook.MECHANICAL) Color(0xFFE8C77E) else scheme.primary
     val rewind = remember { Animatable(0f) }
     val tapScope = rememberCoroutineScope()
     val style = visuals.theme?.shapeStyle ?: ThemeShape.ROUNDED

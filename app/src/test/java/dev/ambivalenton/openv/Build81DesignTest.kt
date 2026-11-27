@@ -18,7 +18,8 @@ import org.robolectric.annotation.GraphicsMode
 @Config(sdk=[35],application=OpenVApp::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class Build81DesignTest {
-    private val catalog=catalogThemeGroups.toSet()+AppThemeGroup.SYSTEMS
+    // Build 127: "Kacheln & Farbe" is a collection in one language (flat tiles), like the catalogue collections.
+    private val catalog=catalogThemeGroups.toSet()+AppThemeGroup.SYSTEMS+AppThemeGroup.TILES
     // The ten ThemeLanguage collections (own frames, see Build81DesignLanguageTest) are not part of the redesign.
     private val redesigned=AppTheme.entries.filter {appThemeGroup(it) !in catalog && it.themeLanguage==ThemeLanguage.STANDARD} - quietAppThemes.toSet()
 
@@ -35,7 +36,7 @@ class Build81DesignTest {
         // operating systems and the quiet baseline keep Material.
         val collections=mapOf("COSMOS_" to DesignLanguage.GLASS,"MINERAL_" to DesignLanguage.CHROME,"TEXTILE_" to DesignLanguage.STITCH,
             "ARCH_" to DesignLanguage.SWISS,"CAFE_" to DesignLanguage.SOFT,"PRINT_" to DesignLanguage.EDITORIAL,"GAME_" to DesignLanguage.PIXEL,
-            "PET_" to DesignLanguage.CLAY)
+            "PET_" to DesignLanguage.CLAY,"TILE_" to DesignLanguage.FLAT)
         (AppTheme.entries-redesigned.toSet()).forEach {t->
             val own=collections.entries.firstOrNull {t.name.startsWith(it.key)}?.value ?: DesignLanguage.MATERIAL
             assertEquals(t.name,own,t.language)

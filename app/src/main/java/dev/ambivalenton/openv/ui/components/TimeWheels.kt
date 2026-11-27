@@ -4,6 +4,10 @@ package dev.ambivalenton.openv.ui.components
 import android.os.Build
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -14,6 +18,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import dev.ambivalenton.openv.ui.theme.corner
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -21,6 +26,10 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.addOutline
+import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.drawscope.scale
@@ -55,6 +64,8 @@ import dev.ambivalenton.openv.data.model.AppThemeGroup
 import dev.ambivalenton.openv.data.model.DesignLanguage
 import dev.ambivalenton.openv.data.model.appThemeGroup
 import dev.ambivalenton.openv.data.model.reduceMotion
+import dev.ambivalenton.openv.data.model.spec
+import dev.ambivalenton.openv.data.model.themeLanguage
 import dev.ambivalenton.openv.localization.tr
 import dev.ambivalenton.openv.ui.theme.LocalAppSettings
 import dev.ambivalenton.openv.ui.theme.LocalAppVisuals
@@ -154,7 +165,9 @@ internal fun dayRollerLabel(index: Int, today: LocalDate, todayWord: String, tom
  * time when a roller is tapped.
  */
 @Composable fun TimeRollers(timeMillis: Long?, onChange: (Long) -> Unit, onPickDate: () -> Unit, onPickTime: () -> Unit,
-    modifier: Modifier = Modifier, height: Dp = 84.dp) {
+    modifier: Modifier = Modifier, height: Dp = 84.dp,
+    /** Build 127: the outline of the frame the rollers sit in; a housing (retro, display) takes exactly this form. */
+    frameShape: androidx.compose.ui.graphics.Shape? = null) {
     val zone = dev.ambivalenton.openv.data.model.transitZone
     val quiet = LocalAppSettings.current.reduceMotion
     val view = LocalView.current
@@ -219,12 +232,14 @@ internal fun dayRollerLabel(index: Int, today: LocalDate, todayWord: String, tom
     val dayLabels = remember(today, todayWord, tomorrowWord) { List(WHEEL_DAYS) { dayRollerLabel(it, today, todayWord, tomorrowWord) } }
     // All faces of a roller share one size: the widest that can come up (every weekday word, the widest digits) fits.
     val daySample = remember(dayLabels) { dayLabels.take(9).map { it.copy(text = "28.08.") } }
-    val blink = timeMillis == null && !quiet
+    val blink = timeMillis == null && !quiet && android.animation.ValueAnimator.areAnimatorsEnabled() &&
+        !day.dragging && !hour.dragging && !minute.dragging
     val colors = rollerColors(look)
     // Build 126: the retro counter and the display sit in a housing of their own; the rollers inside it.
     val inset = when (look) { WheelLook.MECHANICAL -> 6.dp; WheelLook.DIGITAL -> 5.dp; WheelLook.MODERN -> 0.dp }
     val rollerHeight = height - inset * 2
-    Row(modifier.fillMaxWidth().height(height).rollerHousing(look, colors).padding(horizontal = inset + if (inset > 0.dp) 2.dp else 0.dp, vertical = inset)
+    val housingShape = frameShape ?: dev.ambivalenton.openv.ui.theme.appCorner(12.dp)
+    Row(modifier.fillMaxWidth().height(height).rollerHousing(look, colors, housingShape).padding(horizontal = inset + if (inset > 0.dp) 2.dp else 0.dp, vertical = inset)
         .testTag("time-rollers"), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
         // Build 124: the day roller carries a whole line ("Di. 01.12."), the time rollers two digits each.
         Roller(day, WHEEL_DAYS, bounded = true, look = look, colors = colors, height = rollerHeight,
@@ -252,7 +267,11 @@ internal data class RollerColors(val ink: Color, val faint: Color, val accent: C
     val s = MaterialTheme.colorScheme
     return when (look) {
         // The shade is the frame's own colour: values run softly into it at the top and bottom.
-        WheelLook.MODERN -> RollerColors(s.onSurface, s.onSurfaceVariant, s.primary, s.primary, s.surfaceContainerHigh, s.outlineVariant, s.primary,
+        // Build 127: the tile designs choose with a solid accent tile and light digits.
+        WheelLook.MODERN -> if (LocalAppVisuals.current.theme?.name?.startsWith("TILE_") == true)
+            RollerColors(s.onSurface, s.onSurfaceVariant, s.primary, s.primary, s.surfaceContainerHigh, s.outlineVariant, s.primary,
+                lens = s.primary, lensInk = s.onPrimary)
+        else RollerColors(s.onSurface, s.onSurfaceVariant, s.primary, s.primary, s.surfaceContainerHigh, s.outlineVariant, s.primary,
             lens = s.primaryContainer, lensInk = s.onPrimaryContainer)
         // Rollers of a counter: ivory drums, dark ink, edges falling into shadow, a brass window in a bakelite housing.
         WheelLook.MECHANICAL -> RollerColors(Color(0xFF1C1712), Color(0xFF4A423A), Color(0xFFB98B3E),
@@ -274,17 +293,20 @@ internal data class RollerColors(val ink: Color, val faint: Color, val accent: C
  * brass screws. Display: black glass with a faint dot grid, a lit edge and a soft glow around it. Modern: none –
  * the drums sit directly on the card.
  */
-private fun Modifier.rollerHousing(look: WheelLook, colors: RollerColors): Modifier = when (look) {
+private fun Modifier.rollerHousing(look: WheelLook, colors: RollerColors, shape: androidx.compose.ui.graphics.Shape): Modifier = when (look) {
     WheelLook.MODERN -> this
     WheelLook.MECHANICAL -> drawBehind {
-        val r = CornerRadius(12.dp.toPx())
-        drawRoundRect(Brush.verticalGradient(listOf(Color(0xFF3B2C21), Color(0xFF2A1F17), Color(0xFF1B140F))), cornerRadius = r)
+        // Build 127: the housing takes the design's own corners (it is the frame itself, not a box inside it).
+        val o = shape.createOutline(size, layoutDirection, this)
+        drawOutline(o, Brush.verticalGradient(listOf(Color(0xFF3B2C21), Color(0xFF2A1F17), Color(0xFF1B140F))))
         // Bevel: light along the top, dark along the bottom; a fine brass inlay inside.
-        drawRoundRect(Brush.verticalGradient(0f to Color.White.copy(alpha = .16f), .12f to Color.Transparent, .88f to Color.Transparent,
-            1f to Color.Black.copy(alpha = .45f)), cornerRadius = r, style = Stroke(1.5.dp.toPx()))
+        drawOutline(o, Brush.verticalGradient(0f to Color.White.copy(alpha = .16f), .12f to Color.Transparent, .88f to Color.Transparent,
+            1f to Color.Black.copy(alpha = .45f)), style = Stroke(1.5.dp.toPx()))
         val i = 3.dp.toPx()
-        drawRoundRect(colors.frame.copy(alpha = .45f), Offset(i, i), Size(size.width - 2 * i, size.height - 2 * i), CornerRadius(9.dp.toPx()),
-            style = Stroke(.8.dp.toPx()))
+        translate(i, i) {
+            drawOutline(shape.createOutline(Size(size.width - 2 * i, size.height - 2 * i), layoutDirection, this), colors.frame.copy(alpha = .45f),
+                style = Stroke(.8.dp.toPx()))
+        }
         // Four brass screws, each slot at its own angle.
         val sr = 2.4.dp.toPx(); val e = 5.2.dp.toPx()
         listOf(Offset(e, e) to 28f, Offset(size.width - e, e) to -14f, Offset(e, size.height - e) to 61f, Offset(size.width - e, size.height - e) to 7f)
@@ -296,51 +318,55 @@ private fun Modifier.rollerHousing(look: WheelLook, colors: RollerColors): Modif
             }
     }
     WheelLook.DIGITAL -> drawBehind {
-        val r = CornerRadius(9.dp.toPx())
-        // A soft glow around the glass, then the glass itself with a dot grid and a lit edge.
-        for (k in 3 downTo 1) drawRoundRect(colors.glow.copy(alpha = .05f), Offset(-k * 2f, -k * 2f), Size(size.width + k * 4f, size.height + k * 4f),
-            CornerRadius(r.x + k * 2f), style = Stroke(k * 2f))
-        drawRoundRect(Brush.verticalGradient(listOf(Color(0xFF0B0E12), Color(0xFF030405))), cornerRadius = r)
-        val step = 4.dp.toPx(); var y = step
-        while (y < size.height) { var x = step; while (x < size.width) { drawCircle(colors.glow.copy(alpha = .05f), .5.dp.toPx(), Offset(x, y)); x += step }; y += step }
-        drawRoundRect(colors.frame.copy(alpha = .6f), cornerRadius = r, style = Stroke(1.dp.toPx()))
+        val o = shape.createOutline(size, layoutDirection, this)
+        // A soft glow along the edge, then the glass itself with a dot grid and a lit edge – in the design's own form.
+        for (k in 3 downTo 1) drawOutline(o, colors.glow.copy(alpha = .06f), style = Stroke(k * 3f))
+        drawOutline(o, Brush.verticalGradient(listOf(Color(0xFF0B0E12), Color(0xFF030405))))
+        clipPath(Path().apply { addOutline(o) }) {
+            val step = 4.dp.toPx(); var y = step
+            while (y < size.height) { var x = step; while (x < size.width) { drawCircle(colors.glow.copy(alpha = .05f), .5.dp.toPx(), Offset(x, y)); x += step }; y += step }
+        }
+        drawOutline(o, colors.frame.copy(alpha = .6f), style = Stroke(1.dp.toPx()))
     }
 }
 
-/**
- * The colon between hour and minute: lit while a time is chosen, blinking with the seconds while it is "now".
- * The blink is read only while drawing (no recomposition) and only its short fades ask for frames. Build 126: two
- * ink dots on modern drums, brass rivets on the counter, glowing points on the display.
- */
+/** In live time, both dots breathe together. Only their canvas reads the animated value. */
 @Composable private fun Colon(look: WheelLook, colors: RollerColors, blinking: Boolean) {
-    val alpha = remember { Animatable(1f) }
-    LaunchedEffect(blinking) {
-        if (!blinking) { alpha.animateTo(1f, tween(220)); return@LaunchedEffect }
-        while (true) {
-            alpha.animateTo(.25f, tween(260)); kotlinx.coroutines.delay(740)
-            alpha.animateTo(1f, tween(260)); kotlinx.coroutines.delay(740)
-        }
-    }
+    val pulse = if (blinking) {
+        rememberInfiniteTransition(label = "live-clock").animateFloat(
+            initialValue = 1f, targetValue = 0f,
+            animationSpec = infiniteRepeatable(tween(2000, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+            label = "colon-radius",
+        )
+    } else null
     Canvas(Modifier.width(14.dp).fillMaxHeight()) {
-        val r = 2.7.dp.toPx(); val c = Offset(size.width / 2f, size.height / 2f)
-        val a = alpha.value
-        listOf(-1f, 1f).forEach {
-            val p = c + Offset(0f, it * 7.dp.toPx())
-            when (look) {
-                WheelLook.MODERN -> drawCircle(colors.ink.copy(alpha = a), r, p)
-                WheelLook.MECHANICAL -> {
-                    drawCircle(Color.Black.copy(alpha = .5f), r, p + Offset(0f, .8.dp.toPx()))
-                    drawCircle(Brush.radialGradient(listOf(Color(0xFFFFF0B8), Color(0xFFC79A48), Color(0xFF6E4F1E)), p - Offset(r * .4f, r * .4f), r * 1.5f),
-                        r, p, alpha = .55f + .45f * a)
-                }
-                WheelLook.DIGITAL -> {
-                    drawCircle(colors.glow.copy(alpha = .22f * a), r * 2.4f, p)
-                    drawCircle(colors.glow.copy(alpha = .35f * a), r * 1.5f, p)
-                    drawCircle(lerp(colors.glow, Color.White, .45f).copy(alpha = .15f + .85f * a), r * .9f, p)
-                }
+        drawRollerColon(look, colors, pulse?.value ?: 1f)
+    }
+}
+
+internal fun DrawScope.drawRollerColon(look: WheelLook, colors: RollerColors, amount: Float) {
+    // A zero-radius radial gradient is invalid, and all layers should disappear together.
+    val r = 2.7.dp.toPx() * amount
+    if (r < .05f) return
+    val centerX = size.width / 2f
+    fun dot(y: Float) {
+        val p = Offset(centerX, y)
+        when (look) {
+            WheelLook.MODERN -> drawCircle(colors.ink, r, p, alpha = amount)
+            WheelLook.MECHANICAL -> {
+                drawCircle(Color.Black, r, p + Offset(0f, .8.dp.toPx() * amount), alpha = .5f * amount)
+                drawCircle(Brush.radialGradient(listOf(Color(0xFFFFF0B8), Color(0xFFC79A48), Color(0xFF6E4F1E)),
+                    p - Offset(r * .4f, r * .4f), r * 1.5f), r, p, alpha = amount)
+            }
+            WheelLook.DIGITAL -> {
+                drawCircle(colors.glow, r * 2.4f, p, alpha = .22f * amount)
+                drawCircle(colors.glow, r * 1.5f, p, alpha = .35f * amount)
+                drawCircle(lerp(colors.glow, Color.White, .45f), r * .9f, p, alpha = amount)
             }
         }
     }
+    dot(size.height / 2f - 7.dp.toPx())
+    dot(size.height / 2f + 7.dp.toPx())
 }
 
 /**
@@ -452,13 +478,16 @@ private fun Modifier.rollerHousing(look: WheelLook, colors: RollerColors): Modif
         val mainPx = with(density) { mainStyle.fontSize.toPx() }
         fun face(l: RollerLabel) = RollerFace(l.prefix.takeIf { it.isNotEmpty() }?.let { layout(it, prefixStyle) }, layout(l.text, mainStyle), gap, mainPx, l.sunday)
         val ghostFace = if (ghost && look == WheelLook.DIGITAL) face(RollerLabel("88")) else null
+    // Build 127: lens and drums take the design's corners (square, cut, pixel, round …); flat designs get a flat lens.
+    val shapeOf: (Dp) -> androidx.compose.ui.graphics.Shape = { visuals.corner(it) }
+    val flat = visuals.language.spec.shadow == dev.ambivalenton.openv.data.model.LanguageShadow.NONE || visuals.theme?.themeLanguage?.flat == true
         Canvas(Modifier.fillMaxSize()) {
             // One size for all faces of this roller: the widest possible face fits between the edges.
             val fit = fits.getOrPut(size.width.roundToInt()) {
                 val room = size.width - 12.dp.toPx()
                 (room / sample.maxOf { face(it).width }).coerceIn(.3f, 1f)
             }
-            drawRoller(state.position.value, if (quiet) 0f else state.velocity, pop.value, count, bounded, look, colors, shown, fit, ghostFace) { index -> face(label(index)) }
+            drawRoller(state.position.value, if (quiet) 0f else state.velocity, pop.value, count, bounded, look, colors, shown, fit, ghostFace, shapeOf, flat) { index -> face(label(index)) }
         }
     }
 }
@@ -474,7 +503,8 @@ private class RollerFace(val prefix: TextLayoutResult?, val main: TextLayoutResu
  * behind it and wobbles back when the drum springs into place; [pop] swells the value that just clicked in.
  */
 private fun DrawScope.drawRoller(position: Float, velocity: Float, pop: Float, count: Int, bounded: Boolean, look: WheelLook, colors: RollerColors,
-    chosen: Int, fit: Float, ghost: RollerFace?, text: (Int) -> RollerFace) {
+    chosen: Int, fit: Float, ghost: RollerFace?, shapeOf: (Dp) -> androidx.compose.ui.graphics.Shape, flat: Boolean, text: (Int) -> RollerFace) {
+    fun outline(at: Offset, s: Size, corner: Dp) = shapeOf(corner).createOutline(s, layoutDirection, this) to at
     val rowAngle = ROW_ANGLE
     val w = size.width; val h = size.height; val cy = h / 2f
     val radius = h * DRUM_RADIUS
@@ -490,18 +520,26 @@ private fun DrawScope.drawRoller(position: Float, velocity: Float, pop: Float, c
             val lensW = w - 4.dp.toPx() - 5.dp.toPx() * speed
             val lensY = cy + row * .12f * lean - lensH / 2f
             val at = Offset((w - lensW) / 2f, lensY); val lensSize = Size(lensW, lensH)
-            val r = CornerRadius(minOf(lensH / 2f, corner.x + 6.dp.toPx() * speed))
-            // It floats: a soft shadow below, then the body, lighter at the top, with a bright upper and dark lower rim.
-            for (k in 1..3) drawRoundRect(Color.Black.copy(alpha = .045f), at + Offset(0f, (k * 1.2f).dp.toPx()), lensSize, r)
-            drawRoundRect(Brush.verticalGradient(listOf(lerp(colors.lens, Color.White, .22f), colors.lens, lerp(colors.lens, Color.Black, .06f)),
-                startY = at.y, endY = at.y + lensH), at, lensSize, r)
-            drawRoundRect(Brush.verticalGradient(0f to Color.White.copy(alpha = .55f), .22f to Color.Transparent, .8f to Color.Transparent,
-                1f to Color.Black.copy(alpha = .14f), startY = at.y, endY = at.y + lensH), at, lensSize, r, style = Stroke(1.2.dp.toPx()))
-            drawRoundRect(colors.accent.copy(alpha = .28f), at, lensSize, r, style = Stroke(.8.dp.toPx()))
+            // The design's own corner form, a little rounder while it is stretched (on round designs).
+            val (o, _) = outline(at, lensSize, 16.dp + 6.dp * speed)
+            translate(at.x, at.y) {
+                if (flat) {
+                    // Flat designs: one clean plane, no shadow, no gradient.
+                    drawOutline(o, colors.lens)
+                } else {
+                    // It floats: a soft shadow below, then the body, lighter at the top, with a bright upper and dark lower rim.
+                    for (k in 1..3) translate(0f, (k * 1.2f).dp.toPx()) { drawOutline(o, Color.Black.copy(alpha = .045f)) }
+                    drawOutline(o, Brush.verticalGradient(listOf(lerp(colors.lens, Color.White, .22f), colors.lens, lerp(colors.lens, Color.Black, .06f)),
+                        startY = 0f, endY = lensH))
+                    drawOutline(o, Brush.verticalGradient(0f to Color.White.copy(alpha = .55f), .22f to Color.Transparent, .8f to Color.Transparent,
+                        1f to Color.Black.copy(alpha = .14f), startY = 0f, endY = lensH), style = Stroke(1.2.dp.toPx()))
+                    drawOutline(o, colors.accent.copy(alpha = .28f), style = Stroke(.8.dp.toPx()))
+                }
+            }
         }
-        WheelLook.MECHANICAL -> drawRoundRect(colors.drum, Offset.Zero, size, CornerRadius(4.dp.toPx()))
+        WheelLook.MECHANICAL -> drawOutline(outline(Offset.Zero, size, 5.dp).first, colors.drum)
         WheelLook.DIGITAL -> {
-            drawRoundRect(Brush.verticalGradient(listOf(Color(0xFF07090C), colors.drum, Color(0xFF07090C))), Offset.Zero, size, CornerRadius(4.dp.toPx()))
+            drawOutline(outline(Offset.Zero, size, 5.dp).first, Brush.verticalGradient(listOf(Color(0xFF07090C), colors.drum, Color(0xFF07090C))))
             // The faint lens of the display: a band of the colour behind the lit row.
             drawRect(colors.lens, Offset(0f, cy - row / 2f), Size(w, row))
             // Unlit segments behind the digits, as on a real display.
@@ -571,11 +609,10 @@ private fun DrawScope.drawRoller(position: Float, velocity: Float, pop: Float, c
     }
     when (look) {
         WheelLook.MECHANICAL -> {
-            val drumCorner = CornerRadius(4.dp.toPx())
             // Cylinder light: deep shadow at the top and bottom, a bright band just above the middle.
-            drawRoundRect(Brush.verticalGradient(0f to colors.shade.copy(alpha = .82f), .16f to colors.shade.copy(alpha = .32f),
+            drawOutline(outline(Offset.Zero, size, 5.dp).first, Brush.verticalGradient(0f to colors.shade.copy(alpha = .82f), .16f to colors.shade.copy(alpha = .32f),
                 .38f to Color.White.copy(alpha = .26f), .5f to Color.White.copy(alpha = .06f), .62f to Color.Transparent,
-                .84f to colors.shade.copy(alpha = .36f), 1f to colors.shade.copy(alpha = .85f)), Offset.Zero, size, drumCorner)
+                .84f to colors.shade.copy(alpha = .36f), 1f to colors.shade.copy(alpha = .85f)))
             // Toothed side wheels that turn with the drum: embossed teeth, fading round the curve.
             val rim = 5.dp.toPx()
             val tooth = row / 4f

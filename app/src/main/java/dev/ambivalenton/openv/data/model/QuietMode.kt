@@ -48,7 +48,8 @@ fun AppSettings.normalizedQuietAppearance():AppSettings {
         quietAppearance=if(quietAppearance==oldDefault) initialQuietAppearance() else quietAppearance,
         appTheme=if(quietMode && appearanceProfile()==oldDefault) AppTheme.CLASSIC_DARK else appTheme)
     if(!migrated.quietMode) return migrated
-    return migrated.copy(appTheme=migrated.appTheme?.takeIf {it in quietAppThemes} ?: AppTheme.CLASSIC_DARK,
+    return migrated.copy(appTheme=if (migrated.appTheme == null && migrated.themeMode == ThemeMode.SYSTEM) null
+        else migrated.appTheme?.takeIf {it in quietAppThemes} ?: AppTheme.CLASSIC_DARK,
         timelineTheme=migrated.timelineTheme.takeIf {it in quietTimelineThemes} ?: TimelineTheme.MONOCHROME,
         board=migrated.board.copy(design=migrated.board.design.takeIf {it in quietBoardDesigns} ?: BoardDesign.E_PAPER))
 }

@@ -55,6 +55,9 @@ fun appColorFamily(theme:AppTheme):DesignColorFamily=when(theme) {
     AppTheme.VIVALDI_ESTATE_II,AppTheme.VIVALDI_ESTATE_III,AppTheme.VIVALDI_INVERNO_II,AppTheme.VIVALDI_INVERNO_III,AppTheme.VIVALDI_INVERNO,AppTheme.RAINBOW_SKY,AppTheme.RAINBOW_TIDAL->DesignColorFamily.ICE
     AppTheme.FESTIVAL_MUERTOS,AppTheme.FESTIVAL_HALLOWEEN,AppTheme.FESTIVAL_DIWALI,AppTheme.FESTIVAL_EID,AppTheme.FESTIVAL_HANUKKAH,AppTheme.RAINBOW_BERRY,AppTheme.RAINBOW_FLUID->DesignColorFamily.ORBIT
     AppTheme.FESTIVAL_HOLI,AppTheme.RAINBOW_CLASSIC->DesignColorFamily.PRIMARY
+    // Build 127: the tile designs pick from the bright primary family (colourful flat tiles).
+    AppTheme.TILE_COBALT,AppTheme.TILE_MAGENTA,AppTheme.TILE_EMERALD,AppTheme.TILE_TEAL,AppTheme.TILE_CRIMSON,AppTheme.TILE_SLATE,
+    AppTheme.TILE_DAYLIGHT,AppTheme.TILE_CITRUS,AppTheme.TILE_SIGNAL->DesignColorFamily.PRIMARY
     AppTheme.FESTIVAL_VESAK,AppTheme.RAINBOW_SUNSET,AppTheme.RAINBOW_LILAC->DesignColorFamily.CANDY
     AppTheme.FESTIVAL_LUNAR,AppTheme.FESTIVAL_CHRISTMAS->DesignColorFamily.AMBER
     AppTheme.RAINBOW_MOON,AppTheme.RAINBOW_AMETHYST->DesignColorFamily.INK

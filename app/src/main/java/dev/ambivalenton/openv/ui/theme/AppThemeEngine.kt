@@ -93,7 +93,9 @@ fun appTypography(visuals: AppVisuals): Typography {
     fun weight(default:FontWeight?)=when(visuals.theme) {
         AppTheme.OS_WIN_8,AppTheme.OS_ANDROID_HOLO->FontWeight.Light
         AppTheme.OS_MAC_CLASSIC,AppTheme.OS_WIN_95,AppTheme.OS_BEOS,AppTheme.OS_GNOME,AppTheme.OS_IOS_GLASS->FontWeight.SemiBold
-        else->spec?.let {FontWeight(it.headingWeight)} ?: themeLanguage.headingWeight ?: default
+        // Build 127: the tile designs speak in large, light headings.
+        else->if(visuals.theme?.name?.startsWith("TILE_")==true) FontWeight.Light
+            else spec?.let {FontWeight(it.headingWeight)} ?: themeLanguage.headingWeight ?: default
     }
     fun TextStyle.heading(display:Boolean)=copy(fontFamily=if(display) head else family,fontSize=fontSize*scale,lineHeight=lineHeight*scale,
         fontWeight=weight(fontWeight),letterSpacing=when {

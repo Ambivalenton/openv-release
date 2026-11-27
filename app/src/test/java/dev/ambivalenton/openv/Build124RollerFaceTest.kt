@@ -7,6 +7,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
@@ -39,6 +43,27 @@ import java.time.ZoneId
 class Build124RollerFaceTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
     private val zone = ZoneId.of("Europe/Berlin")
+
+    @Test fun bothClockDotsShrinkToNothingInEveryRollerStyle() {
+        val colors = RollerColors(Color.White, Color.Gray, Color.Red, Color.Black, Color.Black, Color.Gray, Color.Cyan)
+        fun dotPixels(look: WheelLook, amount: Float): Pair<Int, Int> {
+            val bitmap = Bitmap.createBitmap(48, 128, Bitmap.Config.ARGB_8888)
+            CanvasDrawScope().draw(Density(2f), LayoutDirection.Ltr,
+                androidx.compose.ui.graphics.Canvas(android.graphics.Canvas(bitmap)), Size(48f, 128f)) {
+                drawRollerColon(look, colors, amount)
+            }
+            fun pixels(rows: IntRange) = rows.sumOf { y ->
+                (0 until bitmap.width).count { x -> android.graphics.Color.alpha(bitmap.getPixel(x, y)) > 0 }
+            }
+            return (pixels(0..63) to pixels(64..127)).also { bitmap.recycle() }
+        }
+        for (look in WheelLook.entries) {
+            val full = dotPixels(look, 1f)
+            val partial = dotPixels(look, .5f)
+            assertTrue(look.name, partial.first in 1 until full.first && partial.second in 1 until full.second)
+            assertEquals(look.name, 0 to 0, dotPixels(look, 0f))
+        }
+    }
 
     @Test fun theDayFaceIsOneLine() {
         val today = LocalDate.of(2026, 11, 28) // a Saturday
@@ -104,7 +129,7 @@ class Build124RollerFaceTest {
             }
         }
         for ((s, t, name) in listOf(Triple(1f, null, "modern-1.0"), Triple(1.3f, AppTheme.SYNTHWAVE, "synthwave-1.3"), Triple(2f, null, "modern-2.0"),
-            Triple(1.3f, AppTheme.VINTAGE_TRANSIT, "mechanical-1.3"), Triple(1.3f, AppTheme.SPACE_TERMINAL, "digital-1.3"), Triple(1f, AppTheme.CLASSIC_DARK, "classic-dark-1.0"))) {
+            Triple(1.3f, AppTheme.VINTAGE_TRANSIT, "mechanical-1.3"), Triple(1.3f, AppTheme.SPACE_TERMINAL, "digital-1.3"), Triple(1f, AppTheme.CLASSIC_DARK, "classic-dark-1.0"), Triple(1f, AppTheme.TILE_COBALT, "tiles-1.0"), Triple(1f, AppTheme.TILE_DAYLIGHT, "tiles-light-1.0"))) {
             compose.runOnIdle { scale = s; theme = t }
             compose.mainClock.advanceTimeBy(2_000); compose.waitForIdle()
             compose.onAllNodesWithTag("roller-day").assertCountEquals(2)

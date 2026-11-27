@@ -374,7 +374,17 @@ import kotlinx.serialization.Serializable
     PET_GUINEA_PIG("Meerschweinchen","Karamell, Weiß und Löwenzahn",false,0xFFFFF7EC,0xFFF3E5CF,0xFF874E18,0xFF8BAA3C,1.6f,ThemeTexture.CATALOG_PAWS,ThemeFont.ROUNDED,ThemeShape.ROUNDED,language=DesignLanguage.CLAY),
     PET_VET("Tierarztpraxis","Praxisweiß mit Mint und Pfoten",false,0xFFF2FAF8,0xFFDFF1EC,0xFF0F6660,0xFFE26D5A,1.45f,ThemeTexture.CATALOG_PAWS,ThemeFont.SANS,ThemeShape.ROUNDED,language=DesignLanguage.CLAY),
     PET_CAT_MAINE_COON("Maine Coon","Waldgraue Mähne und Herbstfarben",true,0xFF1E1B17,0xFF2B2721,0xFFE0B07A,0xFF9FB38A,1.45f,ThemeTexture.CATALOG_PAWS,ThemeFont.SERIF,ThemeShape.ROUNDED,language=DesignLanguage.CLAY),
-    PET_DOG_PUG("Mops","Rehbraun mit dunkler Schnauze und Kissen",false,0xFFFBF3E8,0xFFEFE1CF,0xFF5E4330,0xFFC98B5A,1.6f,ThemeTexture.CATALOG_BONES,ThemeFont.ROUNDED,ThemeShape.ROUNDED,language=DesignLanguage.CLAY);
+    PET_DOG_PUG("Mops","Rehbraun mit dunkler Schnauze und Kissen",false,0xFFFBF3E8,0xFFEFE1CF,0xFF5E4330,0xFFC98B5A,1.6f,ThemeTexture.CATALOG_BONES,ThemeFont.ROUNDED,ThemeShape.ROUNDED,language=DesignLanguage.CLAY),
+    // Build 127 · "Kacheln & Farbe": bunt, eckig, minimal – flache Kachelflächen, leichte große Schrift, keine Schatten.
+    TILE_COBALT("Kobaltkacheln","Tiefes Kobalt, leuchtendes Himmelblau und gerade Kanten",true,0xFF0B1E4A,0xFF143A82,0xFF4FB6FF,0xFFFFB13B,0f,ThemeTexture.NONE,ThemeFont.SANS,ThemeShape.SHARP,language=DesignLanguage.FLAT,headFont="opensans",bodyFont="opensans"),
+    TILE_MAGENTA("Magentawand","Kräftiges Magenta und Cyan auf dunklem Grund",true,0xFF2A0A22,0xFF4F1240,0xFFFF4DB0,0xFF35D7FF,0f,ThemeTexture.NONE,ThemeFont.SANS,ThemeShape.SHARP,language=DesignLanguage.FLAT,headFont="opensans",bodyFont="opensans"),
+    TILE_EMERALD("Smaragdfeld","Smaragdgrün und Sonnengelb, flach und eckig",true,0xFF062A1C,0xFF0C4D33,0xFF4FE08E,0xFFFFD23F,0f,ThemeTexture.NONE,ThemeFont.SANS,ThemeShape.SHARP,language=DesignLanguage.FLAT,headFont="opensans",bodyFont="opensans"),
+    TILE_TEAL("Petrolkacheln","Petrol und Koralle mit viel Ruhe",true,0xFF00302F,0xFF00504E,0xFF3FE0D4,0xFFFF8A65,0f,ThemeTexture.NONE,ThemeFont.SANS,ThemeShape.SHARP,language=DesignLanguage.FLAT,headFont="opensans",bodyFont="opensans"),
+    TILE_CRIMSON("Karminwand","Karminrot und Bernstein auf tiefem Grund",true,0xFF2A0711,0xFF4E0D22,0xFFFF6B83,0xFFFFC24D,0f,ThemeTexture.NONE,ThemeFont.SANS,ThemeShape.SHARP,language=DesignLanguage.FLAT,headFont="opensans",bodyFont="opensans"),
+    TILE_SLATE("Anthrazit & Signal","Anthrazit mit leuchtendem Blau und Orange",true,0xFF1C1C1C,0xFF2D2D2D,0xFF2FB2FF,0xFFFF8A1F,0f,ThemeTexture.NONE,ThemeFont.SANS,ThemeShape.SHARP,language=DesignLanguage.FLAT,headFont="opensans",bodyFont="opensans"),
+    TILE_DAYLIGHT("Weiße Kachelwand","Reinweiß mit kräftigem Kobalt und Beere",false,0xFFFFFFFF,0xFFF0F0F0,0xFF0050C8,0xFFC2185B,0f,ThemeTexture.NONE,ThemeFont.SANS,ThemeShape.SHARP,language=DesignLanguage.FLAT,headFont="opensans",bodyFont="opensans"),
+    TILE_CITRUS("Limette & Weiß","Helles Grau, Limettengrün und Beere",false,0xFFF6F6F6,0xFFFFFFFF,0xFF3E6E00,0xFFB0004E,0f,ThemeTexture.NONE,ThemeFont.SANS,ThemeShape.SHARP,language=DesignLanguage.FLAT,headFont="opensans",bodyFont="opensans"),
+    TILE_SIGNAL("Signalorange","Warmes Weiß mit Signalorange und Kobalt",false,0xFFFFFAF5,0xFFFFEEE0,0xFFB34700,0xFF0050C8,0f,ThemeTexture.NONE,ThemeFont.SANS,ThemeShape.SHARP,language=DesignLanguage.FLAT,headFont="opensans",bodyFont="opensans");
     val title get()=tr(titleKey)
     val description get()=tr(detailKey)
     /** Bundled faces for headlines and running text; ThemeLanguage themes use one face for both. */
