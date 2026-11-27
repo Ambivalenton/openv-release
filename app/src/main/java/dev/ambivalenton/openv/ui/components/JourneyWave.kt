@@ -17,7 +17,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
@@ -41,10 +40,8 @@ import dev.ambivalenton.openv.data.model.PinnedTrackingStatus
 import dev.ambivalenton.openv.localization.tr
 import dev.ambivalenton.openv.ui.theme.LocalAppSettings
 import kotlin.math.PI
-import kotlin.math.abs
 import kotlin.math.exp
 import kotlin.math.floor
-import kotlin.math.max
 import kotlin.math.pow
 import kotlin.math.sin
 
@@ -123,21 +120,6 @@ internal fun heartbeat(t: Float): Float {
     return (beat(.12f) + .7f * beat(.32f)).coerceIn(0f, 1f)
 }
 
-/** Seconds between two showings of the progress (and after a change of mood or progress, at once). */
-internal const val WAVE_REVEAL_EVERY = 10f
-
-/**
- * Build 124 · how much the wave shows the progress [t] seconds after a showing began (0..1): it rises quickly,
- * holds for a little more than two seconds and fades; in between the wave is simply a wave.
- */
-internal fun progressReveal(t: Float): Float = when {
-    t < 0f -> 0f
-    t < .8f -> 1f - (1f - t / .8f).pow(3)
-    t < 3.2f -> 1f
-    t < 4.2f -> ((4.2f - t) / 1f).let { it * it * (3f - 2f * it) }
-    else -> 0f
-}
-
 /** The wave's height at [x] px for [jagged] (a sharper zigzag) or a sine with a slowly drifting overtone, -1..1. */
 private fun waveShape(x: Float, wavelength: Float, phase: Float, drift: Float, jagged: Boolean): Float {
     val u = x / wavelength * 2f * PI.toFloat() - phase
@@ -148,14 +130,8 @@ private fun waveShape(x: Float, wavelength: Float, phase: Float, drift: Float, j
     return zig * .85f + .15f * sin(u * 3.3f)
 }
 
-/**
- * Build 123/124 · a living wave across the whole width in the mood of the moment (Material 3 Expressive). It
- * breathes – puffs up and draws together – with swells running along it; how fast, how thick and in which colour
- * depends on the situation. Every few seconds (and whenever the mood or the progress changes) it shows the
- * journey's [progress] (0..1): a gleam runs up to where the journey stands, a dot lands there, the stretch still
- * ahead fades back a little; then it is just a wave again. With reduced motion the wave stands still and shows
- * the progress all the time.
- */
+/** A continuous progress indicator. The wave keeps its mood and marks the travelled
+ * distance throughout the animation, including during a transfer or a disruption. */
 @Composable fun JourneyWave(progress: Float, mood: WaveMood, modifier: Modifier = Modifier) {
     val quiet = LocalAppSettings.current.reduceMotion || !ValueAnimator.areAnimatorsEnabled()
     val look = waveLook(mood)
@@ -169,14 +145,13 @@ private fun waveShape(x: Float, wavelength: Float, phase: Float, drift: Float, j
     val breath by animateFloatAsState(if (quiet) 0f else look.breath, springy, label = "wave-breath")
     val swell by animateFloatAsState(if (quiet) 0f else look.swell, springy, label = "wave-swell")
     val landingCalm by animateFloatAsState(if (mood == WaveMood.ARRIVING) 1f else 0f, springy, label = "wave-landing")
-    val shown by animateFloatAsState(progress.coerceIn(0f, 1f), spring(dampingRatio = .8f, stiffness = Spring.StiffnessVeryLow), label = "wave-progress")
+    val shown by animateFloatAsState(progress.coerceIn(0f, 1f), if (quiet) androidx.compose.animation.core.snap() else spring(dampingRatio = .8f, stiffness = Spring.StiffnessVeryLow), label = "wave-progress")
     val period by rememberUpdatedState(look.period)
     val breathPeriod by rememberUpdatedState(look.breathPeriod)
     // Continuous phases: a change of tempo never makes the wave or its breath jump.
     val phase = remember { mutableFloatStateOf(0f) }
     val breathing = remember { mutableFloatStateOf(0f) }
     val time = remember { mutableFloatStateOf(0f) }
-    val revealFrom = remember { mutableFloatStateOf(0f) }
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val moving = !quiet && look.pattern != WavePattern.STILL
     LaunchedEffect(moving, lifecycle) {
@@ -190,14 +165,8 @@ private fun waveShape(x: Float, wavelength: Float, phase: Float, drift: Float, j
                 phase.floatValue = (phase.floatValue + dt * 2f * PI.toFloat() / period.coerceAtLeast(.2f)) % turn
                 breathing.floatValue = (breathing.floatValue + dt * 2f * PI.toFloat() / breathPeriod.coerceAtLeast(.2f)) % turn
                 time.floatValue += dt
-                if (time.floatValue - revealFrom.floatValue > WAVE_REVEAL_EVERY) revealFrom.floatValue = time.floatValue
             }
         }
-    }
-    // A new mood or a step forward shows the progress at once (unless it is being shown right now).
-    LaunchedEffect(mood, (progress * 40).toInt()) {
-        val since = time.floatValue - revealFrom.floatValue
-        if (since > 3.2f) revealFrom.floatValue = time.floatValue
     }
     // The dot lands with a little bounce on every change of mood.
     val landing = remember { Animatable(1f) }
@@ -208,8 +177,6 @@ private fun waveShape(x: Float, wavelength: Float, phase: Float, drift: Float, j
         .semantics { stateDescription = look.label }.testTag("journey-wave-${mood.name.lowercase()}")) {
         val cy = size.height / 2f
         val t = time.floatValue
-        val sinceReveal = t - revealFrom.floatValue
-        val reveal = if (quiet || pattern == WavePattern.STILL) 1f else progressReveal(sinceReveal)
         // The breath: a heartbeat for the urgent moods, an uneven one when late, otherwise a calm sine.
         val b = when {
             pattern == WavePattern.PULSE -> heartbeat(breathing.floatValue / (2f * PI.toFloat())) * 2f - .4f
@@ -244,38 +211,24 @@ private fun waveShape(x: Float, wavelength: Float, phase: Float, drift: Float, j
             WavePattern.STILL -> PathEffect.dashPathEffect(floatArrayOf(width * 3f, width * 2f), 0f)
             else -> null
         }
-        val head = stop * shown
-        if (glow > 0f) drawPath(path, color.copy(alpha = glow * flicker * (1f + .5f * breath * b).coerceAtLeast(.3f)),
-            style = Stroke(width * 3.2f, cap = StrokeCap.Round))
-        // The stretch travelled in full colour; the one ahead a little softer, and clearly back while the progress shows.
-        clipRect(right = head) { drawPath(path, color.copy(alpha = flicker), style = Stroke(width, cap = StrokeCap.Round, pathEffect = effect)) }
-        clipRect(left = head) {
-            drawPath(path, color.copy(alpha = flicker * (.78f - .5f * reveal)),
-                style = Stroke(width * (1f - .25f * reveal), cap = StrokeCap.Round, pathEffect = effect))
+        val head = stop * shown.coerceIn(0f, 1f)
+        // The remaining track stays visible at a lower weight in every mood.
+        drawPath(path, color.copy(alpha = .28f),
+            style = Stroke(width * .75f, cap = StrokeCap.Round, pathEffect = effect))
+        if (head > 0f) clipRect(right = head) {
+            if (glow > 0f) drawPath(path, color.copy(alpha = glow * flicker * (1f + .5f * breath * b).coerceAtLeast(.3f)),
+                style = Stroke(width * 3.2f, cap = StrokeCap.Round))
+            drawPath(path, color.copy(alpha = flicker), style = Stroke(width, cap = StrokeCap.Round, pathEffect = effect))
         }
-        // The destination: a small stop at the end, filled when it is near.
-        val end = Offset(stop, cy)
-        drawCircle(if (mood == WaveMood.ARRIVING) color else track.copy(alpha = .45f), 3.dp.toPx(), end)
-        if (reveal <= .01f) return@Canvas
-        // A gleam runs up to where the journey stands.
-        if (!quiet && sinceReveal in 0f..1.3f && head > 4.dp.toPx()) {
-            val k = sinceReveal / 1.3f
-            val gx = head * (1f - (1f - k).pow(2))
-            val band = 34.dp.toPx()
-            val gleam = lerp(color, Color.White, .65f).copy(alpha = .85f * (1f - k * k))
-            clipRect(right = head + width) {
-                drawPath(path, Brush.horizontalGradient(listOf(Color.Transparent, gleam, Color.Transparent), startX = gx - band, endX = gx + band),
-                    style = Stroke(width * 1.25f, cap = StrokeCap.Round))
-            }
-        }
+        drawCircle(if (head == stop) color else track.copy(alpha = .45f), 3.dp.toPx(), Offset(stop, cy))
         // The dot: on the wave, where the journey stands now.
         // On a very narrow slot the stop can lie left of the stroke's own width: then the dot sits on the stop.
         val dotX = if (stop > width) head.coerceIn(width, stop) else stop.coerceAtLeast(0f)
         val dot = Offset(dotX, yAt(dotX))
-        val pop = reveal * landing.value
-        drawCircle(color.copy(alpha = .22f * reveal), (width * 1.6f + 3.5.dp.toPx()) * pop, dot)
+        val pop = if (quiet) 1f else landing.value
+        drawCircle(color.copy(alpha = .22f), (width * 1.6f + 3.5.dp.toPx()) * pop, dot)
         drawCircle(color, (width * .85f + 2.dp.toPx()) * pop.coerceAtMost(1.2f), dot)
-        drawCircle(lerp(color, Color.White, .8f).copy(alpha = reveal), (width * .3f + .8.dp.toPx()) * pop.coerceAtMost(1.2f), dot)
+        drawCircle(lerp(color, Color.White, .8f), (width * .3f + .8.dp.toPx()) * pop.coerceAtMost(1.2f), dot)
     }
 }
 

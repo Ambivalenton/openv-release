@@ -104,7 +104,10 @@ import dev.ambivalenton.openv.localization.tr
                 // Build 123: the wave in the mood of the moment (boarding, riding on time or late, walking, tight change …).
                 JourneyWave(focus.progress,pinnedWaveMood(session,focus,brief,state.status,imminent,now),
                     Modifier.weight(1f).semantics{contentDescription=tr("Reisefortschritt")})
-                if(!imminent){Spacer(Modifier.width(8.dp));AppIcon(R.drawable.ic_place,null,Modifier.size(18.dp))}
+                if (!imminent || session.underWay(now)) {
+                    Spacer(Modifier.width(8.dp))
+                    AppIcon(R.drawable.ic_place,null,Modifier.size(18.dp))
+                }
             }
         }
     }

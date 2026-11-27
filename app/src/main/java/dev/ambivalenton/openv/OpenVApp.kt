@@ -65,6 +65,8 @@ class OpenVApp : Application() {
                             single<WalkingMapTileSource> { WalkingMapTiles(get(),get()) }
                             single { WeatherRepository(get()) }
                             single { GeocodingRepository(get()) }
+                            single { RegularRouteMemory(get<android.content.Context>()) }
+                            single { RegionalTimetable(get<android.content.Context>()) }
                             single { StaticStopCatalog(get<android.content.Context>()) }
                             single { TransitProviderFactory(get()) }
                             single { OverviewRepository(get<TransitProviderFactory>()::get) }
@@ -85,7 +87,7 @@ class OpenVApp : Application() {
                                 OverviewViewModel(get(), get(), get<DeviceLocationProvider>(), weather = get<WeatherRepository>())
                             }
                             viewModel {
-                                AppViewModel(get(), get(), get(), get(), get(), get(), get(),get(),get(),get())
+                                AppViewModel(get(), get(), get(), get(), get(), get(), get(),get(),get(),get(),get(),get())
                             }
                         }
                     )

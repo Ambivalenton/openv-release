@@ -1,0 +1,14 @@
+{
+  "feed": {
+    "feed_publisher_name": "VRR",
+    "feed_publisher_url": "http://efa.vrr.de",
+    "feed_lang": "DE",
+    "feed_start_date": "20260901",
+    "feed_end_date": "20270228",
+    "feed_version": "20261013"
+  },
+  "source_sha256": "4bfa923555d78eff2302acab3d2772c27174d649ac1ea7f830233ad5f1b3f9c7",
+  "database_sha256": "e3345152f16ef098c226a056c5e8c95715392e68fb207d7f3889528486ba646c",
+  "database_bytes": 28979200,
+  "patterns": 22510
+}

@@ -44,6 +44,8 @@ data class AppUiState(
     val query: JourneyQuery? = null,
     val trips: LoadState<List<Trip>> = LoadState(),
     val journeyWindow: JourneyWindow? = null,
+    val regionalResults: Pair<JourneyQuery,List<Trip>>? = null,
+    val regionalBoardAt: Long? = null,
     val cachedSearches:List<CachedJourneySearch> = emptyList(),
     val staleTripIds:Set<String> = emptySet(),
     val activeCacheId:String? = null,
@@ -74,7 +76,8 @@ data class AppUiState(
     val searchFromNow: Boolean = false,
 ) {
     /** One authoritative, duplicate-free list with unique IDs for chart, list and pager keys. */
-    val allTrips:List<Trip> get()=mergeDuplicateConnections(trips.value.orEmpty()+historicalTrips.takeIf {historicalQuery==query}.orEmpty(),store.settings.ignoreWalking)
+    val showingRegionalPlan get() = trips.value.isNullOrEmpty() && regionalResults?.first == query && regionalResults?.second?.isNotEmpty() == true
+    val allTrips:List<Trip> get()=mergeDuplicateConnections((if (showingRegionalPlan) regionalResults?.second.orEmpty() else trips.value.orEmpty())+historicalTrips.takeIf {historicalQuery==query}.orEmpty(),store.settings.ignoreWalking)
         .sortedBy {it.startTime}
 }
 
@@ -93,6 +96,8 @@ class AppViewModel(
     private val journeyCache:JourneySearchCache = JourneySearchCache(),
     private val stopCatalog:StaticStopCatalog? = null,
     private val personalDesigns:PersonalDesignRepository?=null,
+    private val timetable:RegionalTimetable?=null,
+    private val regularRoutes:RegularRouteMemory?=null,
 ) : ViewModel() {
     private val mutable = MutableStateFlow(AppUiState())
     val state = mutable.asStateFlow()
@@ -110,6 +115,9 @@ class AppViewModel(
     private var prefetch:JourneyPrefetch?=null
     private var historyGeneration=0L
     private var cacheGeneration=0L
+    private var boardCheckedAt=0L
+    private var fullSearchAt=0L
+    private var regularBoard:Location?=null
     private var locationJob: Job? = null
     private var sharedBoardJob: Job? = null
     private var sharedBoardRequestKey:String? = null
@@ -410,7 +418,8 @@ class AppViewModel(
             } else destination
         val query = (cacheQuery ?: JourneyQuery(source,target,time,mode,saved.settings.products))
             .copy(origin=source,destination=target,time=time,timeMode=mode,products=cacheQuery?.transportFilter?.map {it.lineType}?.toSet() ?: saved.settings.products).withWalking(saved.settings)
-        mutable.update { it.copy(query = query) }
+        val current=isCurrentDeparture(time,mode)
+        mutable.update { it.copy(query=query,searchFromNow=current) }
         // Resolve the origin first, then short-circuit *before* constructing a network provider.
         if (
             routingSameLocation(
@@ -430,17 +439,70 @@ class AppViewModel(
             return
         }
         journeyCache.initialize()
-        val current=isCurrentDeparture(time,mode)
         // A pre-search of this request is awaited instead of asking the same twice; it
         // counts only for the very same query (cache rules, 200 m for a GPS start) and while young.
-        val head=prefetched?.let {pre->
-            try {pre.job.await()} catch(e:CancellationException) {currentCoroutineContext().ensureActive();null}
-        }?.takeIf {it.matches(query,saved.settings,sourceIsDevice,current,System.currentTimeMillis())}
-        val cached=if(head==null) journeyCache.find(query,saved.settings,sourceIsDevice,current) else null
-        try {loadJourneyWindow(query,saved,sourceIsDevice,current,cached,prefetched=head)}
-        catch(_:AlreadyAtDestinationException) {
-            mutable.update {it.copy(sameLocationMessage=arrivalHumor.next(),journeyWindow=null,
-                trips=LoadState(emptyList(),updatedAt=System.currentTimeMillis()),staleTripIds=emptySet(),activeCacheId=null)}
+        val cached = journeyCache.find(query,saved.settings,sourceIsDevice,current)
+        coroutineScope {
+            // Read the independent GTFS timetable while the first live answer is in flight.
+            // An authoritative empty answer wins even if this disk read finishes afterwards.
+            var answered = false
+            val generation=cacheGeneration
+            val plan = if (cached == null && saved.settings.efaEndpoint.trimEnd('/') == TimetableServices.vrr.endpoint.trimEnd('/') &&
+                TimetableServices.active == TimetableServices.vrr && timetable != null) async {
+                val rows = timetable.direct(query)
+                if (!answered && rows.isNotEmpty()) mutable.update {
+                    if (it.query == query && it.trips.value.isNullOrEmpty()) it.copy(regionalResults=query to rows) else it
+                }
+                rows
+            } else null
+            if (plan != null && regularRoutes?.candidate(query,saved.settings,System.currentTimeMillis()) == true) {
+                val scheduled=plan.await()
+                val stop=regularRoutes.boardingStop(query,saved.settings,scheduled,System.currentTimeMillis())
+                if (stop != null && generation==cacheGeneration) {
+                    prefetched?.job?.cancel()
+                    val confirmed=try { providers.get(saved.settings).verifyDirectDepartures(query,scheduled,stop) }
+                        catch (e:CancellationException) { throw e } catch (_:Exception) { null }
+                    if (confirmed != null && generation==cacheGeneration) {
+                        regularBoard=stop
+                        fullSearchAt=System.currentTimeMillis()
+                        boardCheckedAt=fullSearchAt
+                        mutable.update { it.copy(query=query,regionalResults=query to confirmed,trips=LoadState(),
+                            searchFromNow=current,searchFailure=null,refreshFailure=null,activeCacheId=null,regionalBoardAt=boardCheckedAt) }
+                        recordJourneySearch(query)
+                        return@coroutineScope
+                    }
+                }
+            }
+            val head = if (cached != null) null else prefetched?.let { pre ->
+                try { pre.job.await() } catch (e:CancellationException) { currentCoroutineContext().ensureActive(); null }
+            }?.takeIf { it.matches(query,saved.settings,sourceIsDevice,current,System.currentTimeMillis()) }
+            try {
+                loadJourneyWindow(query,saved,sourceIsDevice,current,cached,prefetched=head)
+                answered = true
+                mutable.update { ui ->
+                    ui.copy(regionalResults=null,regionalBoardAt=null,
+                        selectedTripId=ui.selectedTripId?.takeIf { id -> ui.trips.value.orEmpty().any { it.id==id } })
+                }
+                val live=mutable.value.trips.value.orEmpty()
+                if (plan != null && live.isNotEmpty() && batchPager?.lastFailure == null && generation==cacheGeneration) {
+                    val scheduled=plan.await()
+                    if (generation==cacheGeneration && scheduled.isNotEmpty())
+                        regularRoutes?.observe(query,saved.settings,scheduled,live,System.currentTimeMillis())
+                } else plan?.cancel()
+            } catch (_:AlreadyAtDestinationException) {
+                answered = true
+                plan?.cancel()
+                mutable.update { it.copy(sameLocationMessage=arrivalHumor.next(),journeyWindow=null,regionalResults=null,
+                    trips=LoadState(emptyList(),updatedAt=System.currentTimeMillis()),staleTripIds=emptySet(),activeCacheId=null) }
+            } catch (e:CancellationException) { throw e }
+            catch (e:Exception) {
+                if ((e as? TransitException)?.kind in setOf(FailureKind.NO_CONNECTION,FailureKind.NO_COVERAGE)) {
+                    answered=true
+                    plan?.cancel()
+                    mutable.update { it.copy(regionalResults=null) }
+                } else plan?.join()
+                throw e
+            }
         }
     }
 
@@ -470,6 +532,8 @@ class AppViewModel(
         // the loading plan below then runs exactly as without them.
         val pager=JourneyBatchPager(providers.get(saved.settings),query,prefetched?.trips ?: previous,seedConfirmedAt=prefetched?.fetchedAt)
         batchPager=pager
+        fullSearchAt=if (countSearch && cached != null) cached.savedAt else System.currentTimeMillis()
+        boardCheckedAt=cached?.lastBoardCheckAt ?: fullSearchAt
         cached?.let {journeyCache.touch(it.id)}
         var cacheId=cached?.id
         val head=prefetched?.let {pager.snapshot()}
@@ -503,27 +567,46 @@ class AppViewModel(
             // H08: the journey that was open before the process ended is selected again once it is back.
             pendingSelection?.let {id->if(window.trips.any {it.id==id}){pendingSelection=null;mutable.update {it.selectConnection(id)}}}
         }
-        withContext((if(force || cached!=null) FreshTransitResponse else kotlin.coroutines.EmptyCoroutineContext) + transitRequestBudget(32)) {
-            // Phase 1: a small first page is usable immediately. Build 103: bars of the pre-search on the searched
-            // side already are that page; asking for it again only delayed the next batches.
-            if(prefetched!=null && pager.primaryCount()>0) publish(pager.snapshot(),loading=true)
-            else publish(pager.initial(),loading=pager.seededFromSnapshot)
-            // K01: every saved bar that is still boardable is confirmed individually or keeps its stand.
-            if(pager.seededFromSnapshot) pager.refreshSeed(System.currentTimeMillis()) {window,_->publish(window,loading=true)}
-            if(batchPager===pager)mutable.update {it.copy(trips=it.trips.copy(loading=false),
-                refreshAttemptAt=if(refreshing) System.currentTimeMillis() else it.refreshAttemptAt)}
-            yield()
-            // Phase 2 completes the context in the background: three more on the searched side, then three on
-            // the other side. Each direction keeps its own loading, error and end state; more follow by scrolling.
-            pager.completeWaves({batchPager===pager}) {direction,count->
-                updatePaging(direction,historyToken,loading=true,clearError=true)
-                try {publish(pager.load(direction,count))}
-                catch(e:CancellationException){throw e}
-                catch(e:Exception){updatePaging(direction,historyToken,loading=false,error=errorText(e))}
-                finally {updatePaging(direction,historyToken,loading=false)}
+        if (countSearch && !force && cached?.covers(query,System.currentTimeMillis()) == true) {
+            val window = pager.snapshot()
+            mutable.update { it.copy(journeyWindow=window,trips=LoadState(window.trips,updatedAt=cached.savedAt),
+                refreshFailure=null,refreshAttemptAt=null) }
+            pendingSelection?.let { id ->
+                pendingSelection=null
+                if (window.trips.any { it.id==id }) mutable.update { it.selectConnection(id) }
             }
+            if (System.currentTimeMillis()-(cached.lastBoardCheckAt ?: cached.savedAt) >= boardInterval(saved.settings))
+                updateBoardTimes(pager,query,generation)
+        } else {
+            withContext((if(force || cached!=null) FreshTransitResponse else kotlin.coroutines.EmptyCoroutineContext) + transitRequestBudget(32)) {
+                // Phase 1: a small first page is usable immediately. Build 103: bars of the pre-search on the searched
+                // side already are that page; asking for it again only delayed the next batches.
+                if(prefetched!=null && pager.primaryCount()>0) publish(pager.snapshot(),loading=true)
+                else publish(pager.initial(),loading=pager.seededFromSnapshot)
+                // K01: every saved bar that is still boardable is confirmed individually or keeps its stand.
+                if(pager.seededFromSnapshot) pager.refreshSeed(System.currentTimeMillis()) {window,_->publish(window,loading=true)}
+                if(batchPager===pager)mutable.update {it.copy(trips=it.trips.copy(loading=false),
+                    refreshAttemptAt=if(refreshing) System.currentTimeMillis() else it.refreshAttemptAt)}
+                yield()
+                // Phase 2 completes the context in the background: three more on the searched side, then three on
+                // the other side. Each direction keeps its own loading, error and end state; more follow by scrolling.
+                pager.completeWaves({batchPager===pager}) {direction,count->
+                    updatePaging(direction,historyToken,loading=true,clearError=true)
+                    try {publish(pager.load(direction,count))}
+                    catch(e:CancellationException){throw e}
+                    catch(e:Exception){updatePaging(direction,historyToken,loading=false,error=errorText(e))}
+                    finally {updatePaging(direction,historyToken,loading=false)}
+                }
+            }
+            if (pager.lastFailure == null && pager.confirmedAt != null) fullSearchAt=System.currentTimeMillis()
         }
-        if(countSearch)try {preferences.recordSearch(query)}catch(e:CancellationException){throw e}catch(_:Exception){messages.send(tr("Verlauf konnte nicht gespeichert werden."))}
+        if (countSearch) recordJourneySearch(query)
+    }
+
+    private suspend fun recordJourneySearch(query:JourneyQuery) {
+        try { preferences.recordSearch(query) }
+        catch(e:CancellationException) { throw e }
+        catch(_:Exception) { messages.send(tr("Verlauf konnte nicht gespeichert werden.")) }
     }
 
     /** H08: the journey to select again after a restored search. */
@@ -556,6 +639,9 @@ class AppViewModel(
     }
     fun clearJourneyCache() {
         cacheGeneration++
+        regularBoard=null
+        mutable.update { it.copy(regionalBoardAt=null) }
+        viewModelScope.launch { regularRoutes?.clear() }
         journeyCache.clear();journeyCache.persist(viewModelScope,immediate=true)
         mutable.update {it.copy(activeCacheId=null)}
     }
@@ -691,6 +777,7 @@ class AppViewModel(
         journeyCache.initialize()
         // A saved search of the same route already shows its bars at once.
         if(journeyCache.find(query,settings,automatic,current)!=null)return null
+        if (regularRoutes?.candidate(query,settings,System.currentTimeMillis()) == true) return null
         val trips=withContext(transitRequestBudget(PREFETCH_REQUEST_BUDGET)) {providers.get(settings).prefetchFirstConnections(query)}
         return PrefetchedJourneys(query,journeyCacheProvider(settings),automatic,current,trips,System.currentTimeMillis()).takeIf {trips.isNotEmpty()}
     }
@@ -858,7 +945,7 @@ class AppViewModel(
     }
 
     fun retrySearch() {
-        if (mutable.value.query != null && mutable.value.trips.value != null) refreshResults()
+        if (mutable.value.showingRegionalPlan || (mutable.value.query != null && mutable.value.trips.value != null)) refreshResults(force=true)
         else
             lastSearch?.let { search(it.destination, it.time, it.mode, it.originOverride,it.cacheQuery) }
                 ?: lastFavoriteId?.let { searchFavorite(it) }
@@ -866,7 +953,8 @@ class AppViewModel(
 
     private fun resetHistoricalConnections() {
         historyGeneration++;pastJob?.cancel();futureJob?.cancel();batchPager=null
-        mutable.update {it.copy(historicalTrips=emptyList(),historicalQuery=null,historicalBatches=0,historyLoading=false,historyError=null,
+        regularBoard=null
+        mutable.update {it.copy(regionalResults=null,regionalBoardAt=null,historicalTrips=emptyList(),historicalQuery=null,historicalBatches=0,historyLoading=false,historyError=null,
             pastLoading=false,futureLoading=false,pastError=null,futureError=null,canLoadPast=true,canLoadFuture=true)}
     }
 
@@ -888,6 +976,7 @@ class AppViewModel(
     fun loadFutureConnections()=loadConnectionBatch(past=false)
     private fun loadConnectionBatch(past:Boolean) {
         val snapshot=mutable.value;val query=snapshot.query ?: return
+        if (snapshot.showingRegionalPlan) return
         val pager=batchPager ?: return
         val direction=if(past)ConnectionDirection.EARLIER else ConnectionDirection.LATER
         val running=if(past)pastJob else futureJob
@@ -921,14 +1010,20 @@ class AppViewModel(
     fun refreshResults(force: Boolean = false) {
         if (liveFocus) return
         if (mutable.value.sameLocationMessage != null) return
-        val query = mutable.value.query ?: return
+        val snapshot=mutable.value
+        val originalQuery=snapshot.query ?: return
         if (searchJob?.isActive == true) return
+        val query=if (snapshot.searchFromNow) originalQuery.copy(time=System.currentTimeMillis()) else originalQuery
+        // Keep the scheduled fallback under the new anchor until the provider responds.
+        if (snapshot.showingRegionalPlan) mutable.update { it.copy(query=query,regionalResults=query to snapshot.regionalResults!!.second) }
+        regularBoard=null
         searchJob=viewModelScope.launch {
             try {
                 val saved=loaded();val cached=mutable.value.activeCacheId?.let {journeyCache.get(it)}
                 loadJourneyWindow(query,saved,cached?.deviceOrigin ?: query.origin.isDevicePosition,
                     cached?.currentDeparture ?: isCurrentDeparture(query.time,query.timeMode),cached,
                     previous=mutable.value.trips.value.orEmpty(),force=force,countSearch=false)
+                mutable.update { it.copy(regionalResults=null,selectedTripId=it.selectedTripId?.takeIf { id -> it.trips.value.orEmpty().any { row -> row.id==id } }) }
             } catch(e:CancellationException) {throw e}
             catch(e:Exception) {
                 val failure=transitFailure(e)
@@ -941,36 +1036,65 @@ class AppViewModel(
         }
     }
 
-    /** Automatic polling refreshes existing bars without exposing an unsolicited future batch. */
+    private fun boardInterval(settings: AppSettings) = if (settings.powerSaving) 5*60_000L else 3*60_000L
+
+    /** Only the foreground results screen calls this. Distant dates have no current departure board. */
     fun refreshLiveResults() {
-        if(liveFocus || searchJob?.isActive==true)return
-        val query=mutable.value.query ?: return
-        val pager=batchPager ?: return
-        if(mutable.value.journeyWindow?.complete!=true)return
-        searchJob=viewModelScope.launch {
-            try {
-                val page=providers.get(loaded().settings).journeyPage(query)
-                val window=pager.applyLoadedUpdates(page.trips)
-                if(batchPager!==pager || mutable.value.query!=query)return@launch
-                val now=System.currentTimeMillis()
-                mutable.update {it.copy(journeyWindow=window,trips=it.trips.copy(value=window.trips,error=null,
-                        updatedAt=confirmedStand(pager,batchSeededStand,now) ?: now),
-                    staleTripIds=pager.unconfirmedIds(now),refreshFailure=null,refreshAttemptAt=now)}
-                val saved=mutable.value;val cache=saved.activeCacheId?.let {journeyCache.get(it)}
-                persistWindow(query,saved.store.settings,cache?.deviceOrigin ?: query.origin.isDevicePosition,
-                    cache?.currentDeparture ?: isCurrentDeparture(query.time,query.timeMode),window,saved.activeCacheId,
-                    pager,batchSeededStand,immediate=false)
-            }catch(e:CancellationException){throw e}
-            catch(e:Exception){
-                // K01: an automatic refresh that fails keeps every bar and its stand; it is reported, not hidden.
-                if(batchPager===pager) {
-                    pager.noteFailure(e)
-                    mutable.update {it.copy(refreshFailure=transitFailure(e),refreshAttemptAt=System.currentTimeMillis())}
-                    val saved=mutable.value;val cache=saved.activeCacheId?.let {journeyCache.get(it)}
-                    if(cache!=null) journeyCache.put(query,saved.store.settings,cache.deviceOrigin,cache.currentDeparture,cache.window(),cache.id,
-                        retainSavedAt=cache.savedAt,attemptFailed=true)?.let {journeyCache.persist(viewModelScope)}
-                }
+        if (liveFocus || searchJob?.isActive == true) return
+        val ui = mutable.value
+        val query = ui.query ?: return
+        val now = System.currentTimeMillis()
+        if ((ui.refreshFailure ?: ui.searchFailure)?.retryAt?.let { it > now } == true) return
+        if (now-fullSearchAt >= ROUTE_RECHECK && (ui.showingRegionalPlan ||
+                ui.trips.value.orEmpty().any { it.endTime >= now && it.startTime <= now+3600_000L })) {
+            fullSearchAt = now
+            refreshResults(force=true)
+        } else if (now-boardCheckedAt >= boardInterval(ui.store.settings) && ui.showingRegionalPlan && regularBoard != null) {
+            val stop=regularBoard ?: return
+            val generation=cacheGeneration
+            boardCheckedAt=now
+            searchJob=viewModelScope.launch {
+                val updated=try { providers.get(ui.store.settings).verifyDirectDepartures(query,ui.regionalResults!!.second,stop) }
+                    catch(e:CancellationException) { throw e } catch(e:Exception) {
+                        if (generation==cacheGeneration && mutable.value.query==query)
+                            mutable.update { it.copy(refreshFailure=transitFailure(e),refreshAttemptAt=now) }
+                        return@launch
+                    }
+                if (generation!=cacheGeneration || mutable.value.query!=query) return@launch
+                if (updated != null) mutable.update { it.copy(regionalResults=query to updated,refreshFailure=null,regionalBoardAt=now) }
+                else { searchJob=null;refreshResults(force=true) }
             }
+        } else if (ui.journeyWindow?.complete == true && now-boardCheckedAt >= boardInterval(ui.store.settings)) {
+            val pager = batchPager ?: return
+            val generation = cacheGeneration
+            searchJob = viewModelScope.launch { updateBoardTimes(pager,query,generation) }
+        }
+    }
+
+    private suspend fun updateBoardTimes(pager:JourneyBatchPager, query:JourneyQuery, generation:Long) {
+        val now=System.currentTimeMillis()
+        boardCheckedAt=now
+        val ui=mutable.value
+        val stops=upcomingBoardStops(ui.trips.value.orEmpty(),now)
+        if (stops.isEmpty()) return
+        val provider=providers.get(ui.store.settings)
+        try {
+            for (stop in stops) {
+                val rows=withContext(FreshTransitResponse + transitRequestBudget(2)) { provider.departures(stop,30) }
+                if (batchPager !== pager || mutable.value.query != query || cacheGeneration != generation) return
+                val window=pager.applyBoardDepartures(rows,System.currentTimeMillis())
+                if (batchPager !== pager || cacheGeneration != generation) return
+                mutable.update { it.copy(journeyWindow=window,trips=it.trips.copy(value=window.trips),refreshFailure=null) }
+                // A board cannot renew a whole itinerary's expiry or its confirmation timestamp.
+                val cached=mutable.value.activeCacheId?.let(journeyCache::get) ?: continue
+                journeyCache.put(cached.query,ui.store.settings,cached.deviceOrigin,cached.currentDeparture,window,
+                    cached.id,retainSavedAt=cached.savedAt,attemptFailed=cached.lastAttemptFailed,boardCheckedAt=now)
+                journeyCache.persist(viewModelScope)
+            }
+        } catch (e:CancellationException) { throw e }
+        catch (e:Exception) {
+            if (batchPager === pager && cacheGeneration == generation)
+                mutable.update { it.copy(refreshFailure=transitFailure(e),refreshAttemptAt=now) }
         }
     }
 

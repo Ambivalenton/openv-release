@@ -4,6 +4,10 @@ Alle nennenswerten Änderungen an Öpen-V. Versionen folgen [Semantic Versioning
 
 ## [Unveröffentlicht]
 
+- Nach dem Schließen eines Zeitstrahls wechseln „Übersicht“, „Suchen“ und „Abfahrten“ wieder per Tipp.
+- Der Wellenbalken markiert Fortschritt und verbleibende Strecke durchgehend, auch beim Umstieg.
+- Wiederholte Suchen verwenden gespeicherte Fahrten. Bekannte Direktfahrten können aus dem lokalen VRR-Sollfahrplan kommen. Der Abfahrtsmonitor ergänzt verfügbare Echtzeitdaten.
+
 ## [1.2.0.7] (127) · 2026-11-26
 
 - Start und Ziel tauschen in einer einzigen Bewegung: Beide Felder verwandeln sich unterwegs stufenlos in die Form ihres neuen Platzes – Ecken, Füllung und Rand, Schriftgröße und -stärke, das Orts- bzw. GPS-Symbol, „Ab“ und Pfeil des Startfelds, das Löschen-Kreuz und die Beschriftung „Ziel, Adresse oder Haltestelle“ blenden auf dem Weg über. Sie fliegen auf leichten Bögen aneinander vorbei, das aufsteigende Feld darüber mit einem weichen Schatten, und liegen am Ende deckungsgleich auf den echten Feldern, die darunter einblenden. Bisher behielten die Felder unterwegs ihre alte Form und wechselten Rahmen und Beschriftung erst beim Ankommen mit einem Ruck.

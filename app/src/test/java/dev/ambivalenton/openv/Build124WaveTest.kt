@@ -20,27 +20,12 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
-import java.io.File
 
-/**
- * Build 124 · screenshot: at the start of a ride the wave was only a dot on a flat track – it only waved up to
- * the progress. Now it waves across the whole width, breathes with the situation and shows the progress
- * every few seconds.
- */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = OpenVApp::class, qualifiers = "de-rDE-w411dp-h891dp-xhdpi")
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class Build124WaveTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
-
-    @Test fun theProgressShowsNowAndThen() {
-        assertEquals(0f, progressReveal(0f), 1e-4f)
-        assertTrue(progressReveal(.4f) > .5f)
-        assertEquals(1f, progressReveal(2f), 1e-4f)
-        assertTrue(progressReveal(3.7f) in .01f..0.99f)
-        assertEquals(0f, progressReveal(5f), 1e-4f)
-        assertEquals(0f, progressReveal(WAVE_REVEAL_EVERY - .1f), 1e-4f)
-    }
 
     /** The share of the slot's columns in which the wave leaves the middle line (a flat line or a dot: almost none). */
     private fun wavingColumns(bitmap: Bitmap, top: Int, height: Int, left: Int, right: Int): Float {
@@ -63,7 +48,6 @@ class Build124WaveTest {
             }
         } } }
         compose.mainClock.autoAdvance = false
-        // Between two showings of the progress: just the wave.
         compose.mainClock.advanceTimeBy(6_000)
         val node = compose.onNodeWithTag("journey-wave-riding").fetchSemanticsNode()
         val bounds = node.boundsInRoot
@@ -73,18 +57,33 @@ class Build124WaveTest {
         }
         val share = wavingColumns(bitmap, bounds.top.toInt(), bounds.height.toInt(), bounds.left.toInt() + 40, bounds.right.toInt() - 40)
         assertTrue("the wave waves across the width at 0 %: $share", share > .5f)
-        save(bitmap, "between")
-        compose.mainClock.advanceTimeBy(3_000) // the next showing of the progress begins at 10 s
-        compose.mainClock.advanceTimeBy(1_600)
-        save(compose.runOnIdle {
-            val view = compose.activity.window.decorView
-            Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888).also { view.draw(android.graphics.Canvas(it)) }
-        }, "reveal")
         compose.mainClock.autoAdvance = true
     }
 
-    private fun save(bitmap: Bitmap, name: String) {
-        val file = File("../audit/build124/wave-$name.png"); file.parentFile!!.mkdirs()
-        file.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+    @Test fun theRemainingTrackStaysDimAcrossTheOldRevealCycle() {
+        compose.setContent {
+            OpenVTheme(AppSettings(appTheme = AppTheme.CLASSIC_DARK)) {
+                Surface(Modifier.fillMaxSize()) {
+                    Column(Modifier.padding(16.dp)) { JourneyWave(.35f, WaveMood.BOARD_NOW) }
+                }
+            }
+        }
+        compose.mainClock.autoAdvance = false
+        for (frame in listOf(500L, 1600L, 5000L, 5000L)) {
+            compose.mainClock.advanceTimeBy(frame)
+            val wave=compose.onNodeWithTag("journey-wave-board_now")
+            val bounds=wave.fetchSemanticsNode().boundsInRoot
+            val bitmap=compose.runOnIdle {
+                val view=compose.activity.window.decorView
+                Bitmap.createBitmap(view.width,view.height,Bitmap.Config.ARGB_8888).also { view.draw(android.graphics.Canvas(it)) }
+            }
+            fun redAt(from:Float,to:Float) = (bounds.left.toInt()+(bounds.width*from).toInt() until
+                bounds.left.toInt()+(bounds.width*to).toInt()).maxOf { x ->
+                (bounds.top.toInt() until bounds.bottom.toInt()).maxOf { y -> android.graphics.Color.red(bitmap.getPixel(x,y)) }
+            }
+            assertTrue("travelled and remaining portions stay distinct", redAt(.1f,.25f)>redAt(.55f,.8f)+35)
+            bitmap.recycle()
+        }
+        compose.mainClock.autoAdvance = true
     }
 }

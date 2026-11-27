@@ -301,6 +301,7 @@ internal fun efaLocation(point: JsonElement, searchResult: Boolean = false): Loc
             "VRR",
             LocationKind.STOP,
             city = place?.takeIf { it.isNotBlank() },
+            dhid = ref.text("gid")?.takeIf { it.isNotBlank() },
             category = if (searchResult) efaStopCategory(efaModes(point), title) else null,
         )
         .takeIf { it.routable }
@@ -576,11 +577,11 @@ internal fun parseEfaTrip(raw: JsonElement, receivedAt: Long = System.currentTim
 internal fun parseEfaDeparture(raw: JsonElement, fallback: Location): Departure? {
     val planned = efaObjectDate(raw.field("dateTime")) ?: return null
     val line = raw.field("servingLine") ?: return null
-    val monitored = raw.text("realtimeTripStatus")?.contains("MONITORED") == true
+    val monitored = raw.text("realtimeTripStatus")?.split(Regex("[^A-Z_]+"))?.contains("MONITORED") == true
     val delay = line.number("delay")?.takeIf { it in -180..1440 }
     val predicted =
-        if (monitored) efaObjectDate(raw.field("realDateTime")) ?: planned + (delay ?: 0) * 60_000L
-        else planned
+        if (monitored) efaObjectDate(raw.field("realDateTime")) ?: delay?.let { planned + it * 60_000L }
+        else null
     val cancelled =
         raw.text("realtimeTripStatus")?.contains("CANCEL") == true || line.number("delay") == -9999
     val name = line.text("symbol") ?: line.text("number") ?: line.text("name") ?: return null
@@ -600,9 +601,9 @@ internal fun parseEfaDeparture(raw: JsonElement, fallback: Location): Departure?
         efaType(line),
         line.text("direction") ?: tr("Richtung unbekannt"),
         planned,
-        predicted,
+        predicted ?: planned,
         DelayInfo(
-            if (monitored) ((predicted - planned) / 1000).toInt() else null,
+            predicted?.let { ((it - planned) / 1000).toInt() },
             cancelled = cancelled,
         ),
         raw.text("platformName"),

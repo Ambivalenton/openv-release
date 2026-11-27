@@ -106,6 +106,36 @@ class Build96NavigationTest {
         }
     }
 
+    @Test fun searchTabOpensAfterClosingTheTimelineAndLeavingTheResults() {
+        start()
+        val saved=state.value
+        val target=saved.favorites.single().location
+        val now=System.currentTimeMillis()
+        val query=JourneyQuery(home,target,now,products=saved.settings.products).withWalking(saved.settings)
+        val trips=(1..5).map { index ->
+            val departure=now+index*600_000L
+            Trip("fixture-$index",listOf(TripSegment("ride",home,target,departure,departure+300_000,
+                LineType.REGIONAL,"RE 1")),"VRR",now)
+        }
+        val cache=(RuntimeEnvironment.getApplication() as OpenVApp).koin.get<JourneySearchCache>()
+        compose.runOnIdle { cache.put(query,saved.settings,false,true,JourneyWindow(trips,trips.first().startTime,
+            trips.last().endTime,1f,1,finished=true,complete=true)) }
+        tapAndCheck("Suchen",1)
+        compose.onNodeWithTag("network-node-w").performClick()
+        val badge=hasContentDescription("Gesamtdauer für Verbindung",substring=true) and hasClickAction()
+        compose.waitUntil(10_000) { compose.onAllNodes(badge).fetchSemanticsNodes().isNotEmpty() }
+        compose.onAllNodes(badge).onFirst().performClick()
+        compose.onNodeWithTag("journey-details-pager").assertExists()
+        compose.onAllNodesWithContentDescription("Details schließen").onFirst().performClick()
+        compose.waitUntil(5_000) { compose.onAllNodesWithTag("journey-details-pager").fetchSemanticsNodes().isEmpty() }
+        tapAndCheck("Übersicht",0)
+        tapAndCheck("Suchen",1)
+        compose.onNodeWithTag("main-tabs-pager").performTouchInput { swipeLeft() }
+        compose.waitForIdle()
+        assertEquals(2,page())
+        tapAndCheck("Suchen",1)
+    }
+
     /** Frame by frame as on a device: the animation started by the tap reaches its page without being cut short. */
     @Test fun aTapAnimatesToItsPageFrameByFrame() {
         start()

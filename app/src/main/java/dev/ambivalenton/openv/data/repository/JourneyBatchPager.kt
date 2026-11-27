@@ -128,6 +128,11 @@ class JourneyBatchPager(private val provider:TransitRepository,val query:Journey
         succeeded();lastFailure=null
         snapshot()
     }
+    suspend fun applyBoardDepartures(departures: List<Departure>, received: Long): JourneyWindow = lock.withLock {
+        for (entry in rows.entries) entry.setValue(entry.value.withBoardDepartures(departures,received))
+        snapshot()
+    }
+
     /** K01: an automatic refresh failed; every bar keeps its stand, the failure is reported. */
     fun noteFailure(error:Throwable) {lastFailure=error}
     /** Revalidate every still boardable cached service, including bars loaded by earlier swipes. */

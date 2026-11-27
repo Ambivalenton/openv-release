@@ -141,22 +141,24 @@ internal fun umlautAlternatives(term:String):String {
 }
 
 /** Lazy, cancellable extraction on IO; verified by the generated manifest, then opened read-only. */
-internal class CatalogAsset(private val context:Context) {
+internal class CatalogAsset(private val context:Context,
+    private val manifest:String="stops/catalog.json", private val asset:String="stops/stops.catalog",
+    private val folder:String="stop-catalog") {
     private val lock=Mutex()
     private var installed:File?=null
     suspend fun file():File = lock.withLock {
         installed?.takeIf { it.isFile }?.let { return@withLock it }
-        val metadata=context.assets.open("stops/catalog.json").bufferedReader().use { JSONObject(it.readText()) }
+        val metadata=context.assets.open(manifest).bufferedReader().use { JSONObject(it.readText()) }
         val digest=metadata.getString("database_sha256")
         require(digest.matches(Regex("[0-9a-f]{64}")))
-        val directory=File(context.noBackupFilesDir,"stop-catalog").apply { mkdirs() }
+        val directory=File(context.noBackupFilesDir,folder).apply { mkdirs() }
         val target=File(directory,"stops-${digest.take(20)}.sqlite")
         // The file is only named into place after a successful checksum; interrupted copies stay temporary.
         if(!target.isFile || target.length()!=metadata.getLong("database_bytes")) {
             val temporary=File(directory,"copy.tmp")
             try {
                 val hash=MessageDigest.getInstance("SHA-256")
-                GZIPInputStream(context.assets.open("stops/stops.catalog")).use { source ->
+                GZIPInputStream(context.assets.open(asset)).use { source ->
                     temporary.outputStream().use { sink ->
                         val buffer=ByteArray(64*1024)
                         while(true) {

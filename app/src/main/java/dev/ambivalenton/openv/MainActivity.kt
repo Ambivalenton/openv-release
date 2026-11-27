@@ -346,29 +346,33 @@ private fun OpenVNavigation(
     var tabTarget by remember { mutableStateOf<Int?>(null) }
     val tabJob = remember { arrayOfNulls<kotlinx.coroutines.Job>(1) }
     val pagerDragged = homePager.interactionSource.collectIsDraggedAsState()
-    fun goToPage(page: Int, animate: Boolean = !quiet) {
+    fun goToPage(page: Int, animate: Boolean = !quiet, returning: Boolean = false) {
         tabJob[0]?.cancel()
+        if (returning) {
+            // NavHost has disposed the pager. Place it on the requested page at its next layout.
+            tabTarget = null
+            homePager.requestScrollToPage(page)
+            return
+        }
         tabTarget = page
         // Build 118: the target is cleared however the change ends – also when it is cancelled before it
         // ever ran (then its finally block never runs). A left-over target made the tab count as open.
         lateinit var change: kotlinx.coroutines.Job
         change = scope.launch {
-            try {
-                var attempt = 0
-                while (homePager.settledPage != page || homePager.currentPage != page || homePager.currentPageOffsetFraction != 0f) {
-                    // A page that is within 2 % of its place (the spring ends a pixel short when its
-                    // rounded distance misses) rests at once instead of starting another spring.
-                    val near = homePager.currentPage == page && kotlin.math.abs(homePager.currentPageOffsetFraction) < .02f
-                    try {
-                        if (!animate || near || attempt >= 2) homePager.scrollToPage(page)
-                        else homePager.animateScrollToPage(page, animationSpec = HOME_TAB_SPRING)
-                    } catch (e: CancellationException) {
-                        if (!isActive || pagerDragged.value) throw e
-                    }
-                    if (++attempt > 3 || pagerDragged.value) break
-                    withFrameNanos {}
+            var attempt = 0
+            while (homePager.settledPage != page || homePager.currentPage != page || homePager.currentPageOffsetFraction != 0f) {
+                // A page that is within 2 % of its place (the spring ends a pixel short when its
+                // rounded distance misses) rests at once instead of starting another spring.
+                val near = homePager.currentPage == page && kotlin.math.abs(homePager.currentPageOffsetFraction) < .02f
+                try {
+                    if (!animate || near || attempt >= 2) homePager.scrollToPage(page)
+                    else homePager.animateScrollToPage(page, animationSpec = HOME_TAB_SPRING)
+                } catch (e: CancellationException) {
+                    if (!isActive || pagerDragged.value) throw e
                 }
-            } finally { if (tabTarget == page) tabTarget = null }
+                if (++attempt > 3 || pagerDragged.value) break
+                withFrameNanos {}
+            }
         }
         change.invokeOnCompletion { if (tabTarget == page && tabJob[0] === change) tabTarget = null }
         tabJob[0] = change
@@ -377,8 +381,9 @@ private fun OpenVNavigation(
     LaunchedEffect(planner) { if (planner && homePager.currentPage != 1) goToPage(1, animate = false) }
     fun openHome(requested: Int) {
         val page = if (planner) 1 else requested
-        goToPage(page)
-        if (destinationRoute != "search")
+        val returning = nav.currentDestination?.route != "search"
+        goToPage(page, returning = returning)
+        if (returning)
             nav.navigate("search") {
                 popUpTo("search")
                 launchSingleTop = true
@@ -389,11 +394,12 @@ private fun OpenVNavigation(
     val keyboard=androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
     fun selectHomeTab(page:Int) {
         // M12: the active tab keeps the current task visible (details, results, settings page).
-        val active=activeHomeTab(destinationRoute,homePager.settledPage,homePager.isScrollInProgress,
+        val currentRoute = nav.currentDestination?.route ?: return
+        val active=activeHomeTab(currentRoute,homePager.settledPage,homePager.isScrollInProgress,
             tabTarget?.takeIf {tabJob[0]?.isActive==true})
         // Build 118: on the pages a tab only counts as open when its page visibly rests there; a tap is
         // never swallowed by a change that is no longer running.
-        val resting=destinationRoute!="search" || (homePager.settledPage==page && homePager.currentPage==page &&
+        val resting=currentRoute!="search" || (homePager.settledPage==page && homePager.currentPage==page &&
             kotlin.math.abs(homePager.currentPageOffsetFraction)<.01f && !homePager.isScrollInProgress)
         if(page==active && !isPinned && resting) return
         pinAnimation.cancel()
@@ -408,7 +414,7 @@ private fun OpenVNavigation(
         }
         if(nav.currentDestination?.route!="search" && !nav.popBackStack("search",false))
             nav.navigate("search") {popUpTo(nav.graph.id) {inclusive=true};launchSingleTop=true}
-        goToPage(page)
+        goToPage(page, returning = currentRoute != "search")
     }
     val snackbar = remember { SnackbarHostState() }
     val editorialHistory=remember(app) {app.koin.get<dev.ambivalenton.openv.data.repository.EditorialHistoryRepository>()}
@@ -618,7 +624,11 @@ private fun OpenVNavigation(
         lifecycle.addObserver(observer)
         onDispose {lifecycle.removeObserver(observer);pinAnimation.cancel()}
     }
-    LaunchedEffect(destinationRoute,homePager.settledPage) {pinAnimation.cancel();if(destinationRoute=="results" && homePager.settledPage!=1 && tabTarget==null) goToPage(1,animate=false)}
+    LaunchedEffect(destinationRoute,homePager.settledPage) { pinAnimation.cancel() }
+    LaunchedEffect(destinationRoute) {
+        if (destinationRoute == "results" && nav.currentDestination?.route == "results")
+            goToPage(1, returning = true)
+    }
     LaunchedEffect(pinned.session?.id,isPinned) {if(isPinned) skipFocusEntry=false}
     LaunchedEffect(isPinned,hasPinnedSession) {
         vm.setLiveFocus(isPinned)

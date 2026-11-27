@@ -104,6 +104,11 @@ fun ResultsScreen(
         allTrips.mapNotNull { trip -> tripImpossibility(trip, maxOf(clock, System.currentTimeMillis()), currentSearch = false)?.let { trip.id to it } }.toMap()
     }
     val trips = remember(allTrips, removed) { allTrips.filter { it.id !in removed } }
+    val timetableSource=if (ui.showingRegionalPlan) {
+        val checked=ui.regionalBoardAt
+        if (checked==null) tr("Direktfahrten laut VRR-Sollfahrplan · ohne Echtzeit")
+        else tr("VRR-Sollfahrplan · Abfahrten geprüft um %1\$s Uhr",clockTime(checked))
+    } else null
     val selected = allTrips.firstOrNull { it.id == selectedId }
     // H08: small search parameters survive the process; after a restart they reopen the search.
     var restoreToken by rememberSaveable { mutableStateOf<String?>(null) }
@@ -187,12 +192,16 @@ fun ResultsScreen(
                     }
                 }
             }
+            if (timetableSource!=null) item(key = "regional-timetable-source") {
+                Text(timetableSource,Modifier.padding(horizontal=20.dp).testTag("regional-timetable-source"),
+                    style=MaterialTheme.typography.bodySmall)
+            }
             if (trips.isNotEmpty()) {
                 item(key = COMPARISON_CHART_KEY) {
                     Column(Modifier.fillMaxWidth().height(chartHeight).testTag("comparison-chart-container").semantics {
                         customActions=buildList {
-                            if(!ui.pastLoading && ui.canLoadPast)add(CustomAccessibilityAction(tr("Frühere Verbindungen laden")){onHistoricalConnections();true})
-                            if(!ui.futureLoading && ui.canLoadFuture)add(CustomAccessibilityAction(tr("Weitere Verbindungen laden")){onFutureConnections();true})
+                            if(!ui.showingRegionalPlan && !ui.pastLoading && ui.canLoadPast)add(CustomAccessibilityAction(tr("Frühere Verbindungen laden")){onHistoricalConnections();true})
+                            if(!ui.showingRegionalPlan && !ui.futureLoading && ui.canLoadFuture)add(CustomAccessibilityAction(tr("Weitere Verbindungen laden")){onFutureConnections();true})
                         }
                     }) {
                         ConnectionPagingStatus(ui,onHistoricalConnections,onFutureConnections)
@@ -201,7 +210,7 @@ fun ResultsScreen(
                             trips,
                             openDetails,
                             Modifier.weight(1f),
-                            onTripLongPress = when(ui.store.settings.chartLongPress) {
+                            onTripLongPress = when(if (ui.showingRegionalPlan) ChartLongPressAction.NOTHING else ui.store.settings.chartLongPress) {
                                 ChartLongPressAction.NOTHING->null
                                 ChartLongPressAction.SHARE->handOff.run
                                 ChartLongPressAction.SAVE->onBookmark
@@ -211,8 +220,8 @@ fun ResultsScreen(
                             scrollState = chartScroll,
                             staleTripIds=ui.staleTripIds,
                             headerAnchor=headerAnchor,
-                            onPullToPast=onHistoricalConnections.takeIf {!ui.pastLoading && ui.canLoadPast},
-                            onPullToFuture=onFutureConnections.takeIf {!ui.futureLoading && ui.canLoadFuture},
+                            onPullToPast=onHistoricalConnections.takeIf {!ui.showingRegionalPlan && !ui.pastLoading && ui.canLoadPast},
+                            onPullToFuture=onFutureConnections.takeIf {!ui.showingRegionalPlan && !ui.futureLoading && ui.canLoadFuture},
                             onEdgeReached={later->if(later)onFutureConnections()else onHistoricalConnections()},
                             columns = columns,
                             fitBottomInRoot = fitBottom,
@@ -248,9 +257,10 @@ fun ResultsScreen(
             onConnectionSelected,
             isListViewVisible = ui.isListViewVisible,
             onShowList = onShowList,
-            onPinRequested=onPinRequested,pinTransition=pinTransition,onBookmark=onBookmark,
-            journeyQuery=ui.query,onWaypointRouted=onWaypointRouted,
-            unavailable=removed,onSearchOther={onCloseDetails();onSearchOther()},
+            onPinRequested=onPinRequested.takeUnless { ui.showingRegionalPlan },pinTransition=pinTransition,
+            onBookmark=onBookmark.takeUnless { ui.showingRegionalPlan },
+            journeyQuery=ui.query,onWaypointRouted=onWaypointRouted.takeUnless { ui.showingRegionalPlan },
+            unavailable=removed,onSearchOther={onCloseDetails();onSearchOther()},timetableSource=timetableSource,
         )
 }
 

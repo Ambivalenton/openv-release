@@ -38,7 +38,7 @@ private fun exactPlace(a:Location,b:Location):Boolean =
     val deviceOrigin:Boolean,val currentDeparture:Boolean,val savedAt:Long,val viewedAt:Long,
     val trips:List<Trip>,val from:Long,val until:Long,val coveredFraction:Float,val pages:Int,
     val finished:Boolean,val complete:Boolean,val viewIndex:Int=0,val viewOffset:Int=0,
-    val lastAttemptAt:Long?=null,val lastAttemptFailed:Boolean=false) {
+    val lastAttemptAt:Long?=null,val lastAttemptFailed:Boolean=false,val lastBoardCheckAt:Long?=null) {
     /** K01: when this snapshot stops being offered (unchanged by failed refreshes). */
     val expiresAt:Long get()=savedAt+JOURNEY_CACHE_TTL
     fun valid(now:Long)=now-savedAt in 0 until JOURNEY_CACHE_TTL && trips.isNotEmpty() && until>=from &&
@@ -84,7 +84,7 @@ class JourneySearchCache(private val file:File?=null,private val now:()->Long=Sy
      * the latest refresh attempt failed, without touching the stand.
      */
     @Synchronized fun put(query:JourneyQuery,settings:AppSettings,device:Boolean,current:Boolean,window:JourneyWindow,
-        id:String?=null,retainSavedAt:Long?=null,attemptFailed:Boolean=false):CachedJourneySearch? {
+        id:String?=null,retainSavedAt:Long?=null,attemptFailed:Boolean=false,boardCheckedAt:Long?=null):CachedJourneySearch? {
         if(window.trips.isEmpty() || window.trips.size>2048) return null
         val existing=id?.let {key->mutable.value.firstOrNull {it.id==key}} ?: find(query,settings,device,current)
         // A confirmed stand never moves backwards, and an older retained stand never extends a snapshot.
@@ -92,7 +92,7 @@ class JourneySearchCache(private val file:File?=null,private val now:()->Long=Sy
         val entry=CachedJourneySearch(existing?.id ?: newId(),query,journeyCacheProvider(settings),device,current,
             stand,now(),window.trips,window.from,window.until,
             window.coveredFraction,window.pages,window.finished,window.complete,existing?.viewIndex ?: 0,existing?.viewOffset ?: 0,
-            lastAttemptAt=now(),lastAttemptFailed=attemptFailed)
+            lastAttemptAt=now(),lastAttemptFailed=attemptFailed,lastBoardCheckAt=boardCheckedAt ?: existing?.lastBoardCheckAt)
         if(!entry.valid(now())) return null
         mutable.value=(listOf(entry)+mutable.value.filter {it.id!=entry.id && it.valid(now())}).take(limit.coerceIn(1,12))
         return entry

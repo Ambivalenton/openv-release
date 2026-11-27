@@ -125,14 +125,13 @@ internal val PillNavigationTop=PillNavigationPadding+PillNavigationInset
     val shell=remember {PillShellMotion()};val flash=remember {Animatable(0f)}
     var flashTab by remember {mutableIntStateOf(-1)}
     var flashJob by remember {mutableStateOf<Job?>(null)}
-    var requested by remember {mutableStateOf<Int?>(null)}
-    var sawScroll by remember {mutableStateOf(false)}
+    val select by rememberUpdatedState(onSelect)
     val selected=(selectedOverride ?: pager.currentPage).coerceIn(tabs.indices)
     val position=(selectedOverride?.toFloat() ?: (pager.currentPage+pager.currentPageOffsetFraction)).coerceIn(0f,tabs.lastIndex.toFloat())
     // Build 118: dragged along the pill, the capsule leans towards the finger and clicks into each tab (a mechanical switch).
     var lean by remember {mutableFloatStateOf(0f)}
     var tabPx by remember {mutableFloatStateOf(0f)}
-    val aimed=target ?: requested
+    val aimed=target
     val destination=(aimed?.toFloat() ?: position)+lean
     var reduced by remember {mutableStateOf(!ValueAnimator.areAnimatorsEnabled())}
     val head by animateFloatAsState(destination,if(quiet) snap() else spring(dampingRatio=PILL_HEAD_DAMPING,stiffness=650f),label="capsule-leading-edge")
@@ -155,10 +154,10 @@ internal val PillNavigationTop=PillNavigationPadding+PillNavigationInset
             }
         }
     }
-    LaunchedEffect(pager.isScrollInProgress,requested,quiet) {
+    LaunchedEffect(pager.isScrollInProgress,aimed,quiet) {
         reduced=quiet || !ValueAnimator.areAnimatorsEnabled() || coroutineContext[MotionDurationScale]?.scaleFactor==0f
         if(reduced || quiet) shell.amount.snapTo(0f)
-        else if(pager.isScrollInProgress || requested!=null) shell.inflate() else shell.settle()
+        else if(pager.isScrollInProgress || aimed!=null) shell.inflate() else shell.settle()
     }
     var last by remember {mutableIntStateOf(selectedOverride ?: pager.settledPage)}
     LaunchedEffect(pager,selectedOverride) {
@@ -169,16 +168,6 @@ internal val PillNavigationTop=PillNavigationPadding+PillNavigationInset
                 if(!reduced && !quiet) launch {shell.land()}
             }
         }
-    }
-    LaunchedEffect(pager.settledPage,pager.isScrollInProgress,requested,selectedOverride) {
-        if(pager.isScrollInProgress) sawScroll=true
-        else if(sawScroll || (requested!=null && pager.settledPage==requested && selectedOverride==null)) {
-            requested=null;sawScroll=false
-        }
-    }
-    // A finger on the pages takes over from a tapped destination at once.
-    LaunchedEffect(pager) {
-        pager.interactionSource.interactions.collect {if(it is DragInteraction.Start) requested=null}
     }
     val os=visuals.theme?.takeIf{it.isOperatingSystem}
     val surfacePalette=MaterialTheme.colorScheme.systemSurfacePalette()
@@ -329,7 +318,7 @@ internal val PillNavigationTop=PillNavigationPadding+PillNavigationInset
                 .detentSwipe(true,tabs.size,{aimed ?: selected},{tabPx},rtl=direction==androidx.compose.ui.unit.LayoutDirection.Rtl,
                     onLean={lean=it},onCommit={index->
                         if(!quiet) view.performHapticFeedback(if(Build.VERSION.SDK_INT>=34) HapticFeedbackConstants.SEGMENT_FREQUENT_TICK else HapticFeedbackConstants.CLOCK_TICK)
-                        requested=index;onSelect(index)
+                        select(index)
                     })) {
                 tabs.forEachIndexed {index,tab->
                     val interactions=remember {MutableInteractionSource()}
@@ -346,7 +335,7 @@ internal val PillNavigationTop=PillNavigationPadding+PillNavigationInset
                         interactionSource=interactions,indication=null,role=Role.Tab,
                         // Every tap aims the capsule, also back at the page the pages are just
                         // leaving (it is still the current page until they pass the middle).
-                        onClick={requested=index;onSelect(index)}),
+                        onClick={select(index)}),
                         horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.Center) {
                         // System bars (e.g. silver Leopard) carry their own readable label colour.
                         val idle=if(os!=null)Color(systemHeaderForeground(os,surfacePalette)) else MaterialTheme.colorScheme.onSurfaceVariant

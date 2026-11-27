@@ -68,6 +68,7 @@ fun JourneyDetailsSheet(
     /** 2.2: journeys that left the current offer while their sheet was open, with the reason. */
     unavailable:Map<String,TripImpossibility> = emptyMap(),
     onSearchOther:(()->Unit)?=null,
+    timetableSource:String?=null,
 ) {
     if (trips.isEmpty()) return
     val handOff = rememberJourneyHandOff()
@@ -162,7 +163,9 @@ fun JourneyDetailsSheet(
                             AppIcon(R.drawable.ic_close,tr("Details schließen"))
                         }
                     }
-                    TransitSourceAttribution(Modifier.padding(horizontal=16.dp),compact=true)
+                    if (timetableSource==null) TransitSourceAttribution(Modifier.padding(horizontal=16.dp),compact=true)
+                    else Text(timetableSource,Modifier.padding(horizontal=16.dp),
+                        style=MaterialTheme.typography.bodySmall)
                     Box(Modifier.weight(1f)) {
                     val detailsScroll=rememberScrollState()
                     LaunchedEffect(trip.id) {detailsScroll.scrollTo(0)}
