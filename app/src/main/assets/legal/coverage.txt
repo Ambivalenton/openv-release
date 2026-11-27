@@ -4,7 +4,7 @@
 
 ## Ohne Standort und ohne Internet
 
-Ein manueller Start und feste Haltestellen funktionieren ohne Standortfreigabe. Zwischen zugeordneten Haltestellen zeigt der mitgelieferte VRR-Sollfahrplan geplante Direktfahrten an. Umstiege, Live-Daten, Online-Ortsvorschläge, Karten und Wetter benötigen Internet. Favoriten, Einstellungen, Texte und der mitgelieferte Haltestellenkatalog bleiben lokal verfügbar. Zuletzt geladene Verbindungen und Abfahrten sind nur kurzzeitige Hilfen; achte auf Alter und Zeitstempel.
+Ein manueller Start und feste Haltestellen funktionieren ohne Standortfreigabe. Für deine eigenen Haltestellen (Favoriten, Abfahrtsliste, gewählter Start, in den letzten 30 Tagen gesuchte Orte) hält die App einen Auszug des VRR-Sollfahrplans: geplante Abfahrten und Direktfahrten zwischen ihnen, auch offline, ohne Echtzeit. Umstiege, Live-Daten, Online-Ortsvorschläge, Karten und Wetter benötigen Internet. Favoriten, Einstellungen, Texte und der mitgelieferte Haltestellenkatalog bleiben lokal verfügbar. Zuletzt geladene Verbindungen und Abfahrten sind nur kurzzeitige Hilfen; achte auf Alter und Zeitstempel.
 
 Ungefähre Ortung wird unterstützt. Auf AOSP-Geräten kann eine genaue GPS-Freigabe und freie Sicht zum Himmel nötig sein. Die Widgets nutzen feste Orte oder die zuletzt freigegebene Position. Öpen-V verlangt keine zusätzliche Hintergrundstandort-Berechtigung. Eine bewusst angepinnte Reise kann mit sichtbarer Benachrichtigung und Standortfreigabe weiterlaufen; die Benachrichtigungsaktion „Reise beenden“ beendet sie. Android kann Aktualisierungen verzögern oder beenden.
 

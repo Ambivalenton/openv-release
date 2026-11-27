@@ -84,6 +84,7 @@ Bis zu acht geschlossene oder ersetzte Reisen können mit dem letzten zuverläss
 | --- | --- |
 | Verbindungsansichten | Bis acht Ansichten, höchstens 30 Minuten und 8 MiB im privaten Cache. Verlauf löschen leert sie. |
 | Wiederkehrende Direktfahrtsuchen | Bis 64 lokale Einträge mit gehashtem Suchschlüssel, gehashtem Fahrplanmuster, Kennung der Einstiegshaltestelle, Zähler und Prüfzeit. Nach 48 Stunden für Schnellabfragen inaktiv, bei der nächsten Speicherung nach 14 Tagen bereinigt. „Cache löschen“ entfernt sie. |
+| Persönlicher Fahrplan | Auszug des mitgelieferten VRR-Sollfahrplans für höchstens 24 eigene Haltestellen (Favoriten, Abfahrtsliste, gewählter Start, in den letzten 30 Tagen gesuchte Orte), höchstens 8 MiB. Enthält nur Fahrplandaten und die Liste dieser Haltestellen, keine Standort- oder Echtzeitdaten. Eine Haltestelle, die nicht mehr dazugehört, fällt beim nächsten Aufbau heraus. |
 | Allgemeine HTTP-Antworten | Höchstens 20 MiB, nach Server-Cachevorgaben. Android kann sie entfernen. |
 | Gehweg-Kartenkacheln | Höchstens 32 MiB im privaten Cache und 16 MiB im RAM. Servervorgaben, sonst sieben Tage. MapLibre hat daneben einen eigenen Kartencache. |
 | Genaue Gehrouten | Bis 32 Einträge, höchstens 24 Stunden im RAM; diese Anfragen verwenden HTTP no-store. |

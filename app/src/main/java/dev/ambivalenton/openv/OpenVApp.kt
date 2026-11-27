@@ -78,6 +78,7 @@ class OpenVApp : Application() {
                                     get<LocationRepository>(),
                                     get<TransitProviderFactory>()::get,
                                     { tracker.focusIsOpen },
+                                    get<RegionalTimetable>(),
                                 )
                             }
                             single { WidgetUpdater(get()) }

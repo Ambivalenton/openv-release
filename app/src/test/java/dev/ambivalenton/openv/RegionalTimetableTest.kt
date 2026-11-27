@@ -21,6 +21,8 @@ class RegionalTimetableTest {
 
     @Test fun publishedDatesFiltersAndMissingCoverage() = runBlocking {
         val timetable=RegionalTimetable(RuntimeEnvironment.getApplication())
+        // Build 129: the device keeps only the person's own stations.
+        timetable.prepare(listOf(a.id!!,b.id!!))
         val weekday=JourneyQuery(a,b,time("2026-11-27"))
         val friday=timetable.direct(weekday)
         val holiday=timetable.direct(weekday.copy(time=time("2026-12-25")))

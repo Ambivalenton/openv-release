@@ -340,7 +340,14 @@ private fun DepartureStationCard(
                             Text(tr("Weitere laden"))
                         }
                     DepartureStopActions(listMember, stop.kind == LocationKind.STOP && stop.routable) { vm.addBoardStop(stop) }
-                    if (board != null && board.rows.updatedAt > 0)
+                    // Build 129: rows of the own timetable say so; "Nur Fahrplan" marks each of them.
+                    if (board != null && board.scheduled && (board.rows.error != null || board.rows.loading))
+                        Text(
+                            tr("VRR-Sollfahrplan · ohne Echtzeit"),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    else if (board != null && board.rows.updatedAt > 0)
                         Text(
                             tr("Stand %1\$s · %2\$s Abfahrten", clockTime(board.rows.updatedAt), departures.size),
                             style = MaterialTheme.typography.labelSmall,

@@ -1,0 +1,3 @@
+• Persönlicher Fahrplan: Für deine Favoriten, Abfahrtsliste und zuletzt gesuchten Haltestellen erscheinen Abfahrten sofort und auch ohne Internet, ohne Echtzeit gekennzeichnet als „Nur Fahrplan“. Live-Zeiten ersetzen sie, sobald sie da sind.
+• Auch Abfahrtstafel und Widget zeigen offline den Sollfahrplan.
+• Weniger Speicher: Nur noch ein Auszug für deine Haltestellen statt des ganzen VRR-Fahrplans; Unbenutztes fällt automatisch heraus.

@@ -1,0 +1,3 @@
+• Personal timetable: for your favourites, departure list and recently searched stops, departures appear at once and also offline, marked "Timetable only" without live data. Live times replace them as soon as they arrive.
+• The departure board and widget also show the timetable offline.
+• Less storage: only an extract for your stops instead of the whole VRR timetable; unused stops drop out automatically.

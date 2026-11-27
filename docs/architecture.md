@@ -171,6 +171,14 @@ Alle Fahrplanzeiten (Anzeige, Zeitwahl, Verlässlichkeit, Hinweise) laufen in `t
 
 Die Suche in den Einstellungen (`ui/screens/SettingsSearch.kt`) kennt zuerst Namen und Synonyme (`settingsSearchIndex`), danach jeden Text, der auf einer Einstellungsseite steht. `tools/generate_settings_search.py` folgt dafür von den Seiten-Composables aus (`PAGES` im Skript) den Aufrufen durch den App-Code und sammelt alle `tr("…")`-Texte nach `ui/screens/SettingsSearchTexts.kt`; Texte, die auf mehr als drei Seiten vorkommen (Knöpfe), fallen heraus. Ein Wort zählt am Anfang, am Wortanfang und innerhalb zusammengesetzter Wörter; kurze Texte werden zum Titel des Treffers, lange erscheinen als Ausschnitt unter dem Seitennamen. Nach Änderungen an Einstellungstexten den Generator ausführen.
 
+## Persönlicher Fahrplan und Caches (ab 1.2.0.9)
+
+Drei Schichten, jede begrenzt:
+
+- **Persönlicher Fahrplan** (`RegionalTimetable`): Die APK enthält den VRR-Sollfahrplan komprimiert. Auf dem Gerät liegt nur ein Auszug für die eigenen Haltestellen (`personalTimetablePlaces`: Favoriten, Abfahrtsliste, gewählter Start, Suchen der letzten 30 Tage; höchstens 24, höchstens 8 MiB, sonst weichen die unwichtigsten). `AppViewModel` ruft `prepare` auf, sobald sich die Menge der Haltestellen ändert (2 s beruhigt); der volle Index wird dafür im Cache entpackt und danach gelöscht. Linien über zwei eigene Haltestellen behalten alle Halte (Zwischenhalte einer Direktfahrt), sonst nur die Halte an eigenen Haltestellen. Abfragen (`direct`, `departures`) beantworten nur eigene Haltestellen, weil nur diese vollständig sind.
+- **Verbindungsansichten** (`JourneySearchCache`, acht Ansichten, 30 Minuten) und **wiederkehrende Direktfahrten** (`RegularRouteMemory`, 64 Einträge, 14 Tage): wiederholte Suchen zeigen sofort Balken; anstehende Fahrten werden über bis zu zwei Haltestellentafeln aktualisiert, eine volle Suche folgt nach 15 Minuten.
+- **Abfahrten**: Eine eigene Haltestelle zeigt beim Öffnen sofort ihre geplanten Abfahrten (`StationBoard.scheduled`); die Live-Antwort ersetzt sie. Scheitert die Abfrage, verbindet `mergeScheduledDepartures` die letzten Live-Zeilen, die noch bevorstehen, mit dem Sollfahrplan danach. Dasselbe gilt für die gemeinsame Tafel und das Widget (`DepartureBoardState.scheduled`, „Offline · Sollfahrplan“). Zeilen ohne Echtzeit tragen „Nur Fahrplan“.
+
 ## Leitlinien
 
 - **Aktualität vor allem:** Sollzeit, Prognose, tatsächliche Zeit und lokale Schätzung bleiben getrennt; fehlende Echtzeit heißt nicht pünktlich.

@@ -4,7 +4,7 @@
 
 Öpen-V nutzt für Verbindungen, Abfahrten und Echtzeit **VRR OpenService**. Der Schwerpunkt liegt auf Rhein-Ruhr und den Verkehren, die der VRR einbindet. Eine vollständige Abdeckung Nordrhein-Westfalens, Deutschlands oder grenzüberschreitender Wege wird nicht zugesichert. Ein Adresstreffer irgendwo auf der Welt bedeutet keine verfügbare ÖPNV-Verbindung. Weitere Fahrplandienste lassen sich anbinden, siehe [timetable-services.md](timetable-services.md).
 
-Ein manueller Start und feste Haltestellen funktionieren ohne Standortfreigabe. Neue Verbindungen, Online-Ortsvorschläge, Karten und Wetter brauchen Internet. Favoriten, Einstellungen, Texte und der mitgelieferte Haltestellenkatalog bleiben offline verfügbar. Zuletzt geladene Verbindungen und Abfahrten sind nur eine kurzzeitige Hilfe; Alter und Zeitstempel stehen dabei. Für direkte Fahrten zwischen zugeordneten Haltestellen gibt es einen regionalen Sollfahrplan auf dem Gerät.
+Ein manueller Start und feste Haltestellen funktionieren ohne Standortfreigabe. Neue Verbindungen, Online-Ortsvorschläge, Karten und Wetter brauchen Internet. Favoriten, Einstellungen, Texte und der mitgelieferte Haltestellenkatalog bleiben offline verfügbar. Zuletzt geladene Verbindungen und Abfahrten sind nur eine kurzzeitige Hilfe; Alter und Zeitstempel stehen dabei. Für die eigenen Haltestellen gibt es einen persönlichen Auszug des VRR-Sollfahrplans auf dem Gerät: geplante Abfahrten und Direktfahrten zwischen ihnen, auch offline, immer als „Nur Fahrplan“ gekennzeichnet.
 
 Echtzeitprognosen hängen vom Anbieter ab. Fehlende Prognosen bedeuten nicht, dass eine Fahrt pünktlich ist. Es gibt keine Fahrkarten, keine Buchungen und keine geprüfte barrierefreie Routenplanung.
 
@@ -14,7 +14,7 @@ Echtzeitprognosen hängen vom Anbieter ab. Fehlende Prognosen bedeuten nicht, da
 | --- | --- | --- |
 | **VRR OpenService** (EFA-JSON: StopFinder, Trip, DM, AddInfo) | Verbindungen, Abfahrten, Echtzeit, Meldungen | Einzelne, nutzerbezogene Abfragen; Regeln unten |
 | **DELFI-Haltestellenverzeichnis (zHV)** | Haltestellenvorschläge, auch offline | In der App mitgeliefert (`app/src/main/assets/stops/`), reproduzierbar mit `tools/build_stop_catalog.py`; Eingaben gehen dabei an keinen Server |
-| **Verkehrsverbund Rhein-Ruhr AöR · VRR-Sollfahrplan (CC BY)** | Geplante Direktfahrten zwischen Haltestellen im Gültigkeitszeitraum des Feeds | Lokal mitgelieferter SQLite-Index mit Verkehrstagen und Ausnahmen. Enthält ausgewählte und verdichtete Daten aus dem GTFS-Feed. [Quelle und Lizenz](https://www.opendata-oepnv.de/ht/de/organisation/verkehrsverbuende/vrr/openvrr/datensaetze) |
+| **Verkehrsverbund Rhein-Ruhr AöR · VRR-Sollfahrplan (CC BY)** | Geplante Abfahrten und Direktfahrten der eigenen Haltestellen im Gültigkeitszeitraum des Feeds | Komprimiert mitgelieferter SQLite-Index mit Verkehrstagen und Ausnahmen (ausgewählte, verdichtete Daten aus dem GTFS-Feed). Auf dem Gerät bleibt nur ein Auszug für höchstens 24 eigene Haltestellen (Favoriten, Abfahrtsliste, gewählter Start, in den letzten 30 Tagen gesuchte Orte), höchstens 8 MiB; der vollständige Index wird nur für den Aufbau kurz entpackt und danach gelöscht. [Quelle und Lizenz](https://www.opendata-oepnv.de/ht/de/organisation/verkehrsverbuende/vrr/openvrr/datensaetze) |
 | **Photon** (komoot) | Orts- und Adresssuche | Eingabepause, höchstens eine neue Anfrage pro Sekunde, zehn Minuten Suchcache |
 | **OpenStreetMap** | Kartenkacheln | Nur benötigte Kacheln, sichtbare Attribution, erkennbarer Client, Cache; keine Massendownloads |
 | **Valhalla · FOSSGIS** | Genaue Gehführung | Begrenzte Anfragen und Cache; öffentlicher Dienst ohne garantierte Kapazität |
@@ -40,7 +40,7 @@ Die lokalen Grenzen sind keine vom VRR zugesagte Quote und keine Verfügbarkeits
 
 ## VRR-Sollfahrplan aktualisieren
 
-`python3 tools/build_regional_timetable.py google_transit.zip app/src/main/assets/timetable` erstellt den regionalen Index aus dem veröffentlichten GTFS-ZIP der Verkehrsverbund Rhein-Ruhr AöR. `schedule.json` enthält Ausgabeversion, Gültigkeit und Prüfsummen. Die aktuelle Ausgabe trägt die Feedversion 20261013 und endet am 28. Februar 2027. Das Datumsfenster und die Verkehrstage begrenzen die lokale Ausgabe. Abweichende Fahrten, Adressen, Umstiege und Randfälle deckt die Onlinesuche ab.
+`python3 tools/build_regional_timetable.py google_transit.zip app/src/main/assets/timetable` erstellt den regionalen Index aus dem veröffentlichten GTFS-ZIP der Verkehrsverbund Rhein-Ruhr AöR. `schedule.json` enthält Ausgabeversion, Gültigkeit und Prüfsummen. Die aktuelle Ausgabe trägt die Feedversion 20261013 und endet am 28. Februar 2027. Das Datumsfenster und die Verkehrstage begrenzen die lokale Ausgabe. Abweichende Fahrten, Adressen, Umstiege und Randfälle deckt die Onlinesuche ab. Ohne Live-Antwort zeigt die Abfahrtstafel die letzten Live-Zeilen, die noch bevorstehen, und danach den Sollfahrplan (`mergeScheduledDepartures`); jede Zeile ohne Echtzeit trägt „Nur Fahrplan“, eine Live-Antwort ersetzt sie wieder.
 
 ## Quellen
 

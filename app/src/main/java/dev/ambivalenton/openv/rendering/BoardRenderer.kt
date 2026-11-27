@@ -137,7 +137,8 @@ fun boardPresentation(
         when {
             // H05: the cause in a few words, then the stand of the rows that are still shown.
             cached.error != null -> {
-                val stand = if (cached.fetchedAt > 0) tr("Stand %1\$s", clockTime(cached.fetchedAt)) else tr("erneut laden")
+                val stand = if (cached.scheduled) tr("Sollfahrplan")
+                    else if (cached.fetchedAt > 0) tr("Stand %1\$s", clockTime(cached.fetchedAt)) else tr("erneut laden")
                 when (cached.errorKind) {
                     "OFFLINE" -> tr("Offline · %1\$s", stand)
                     "TIMEOUT" -> tr("Keine Antwort · %1\$s", stand)

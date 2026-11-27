@@ -20,4 +20,6 @@ data class DepartureBoardState(
     /** Board choice (nearest place) this result belongs to; see boardChoiceSignature. */
     val choice: String = "",
     val requestedRows:Int=8,
+    /** Build 129: without a live answer the rows continue from the person's local timetable. */
+    val scheduled:Boolean=false,
 )

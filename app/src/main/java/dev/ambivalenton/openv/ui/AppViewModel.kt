@@ -34,6 +34,8 @@ data class StationBoard(
     val rows: LoadState<List<Departure>> = LoadState(),
     val requestedLimit: Int = 8,
     val canLoadMore: Boolean = false,
+    /** Build 129: the rows (or some of them) come from the person's local timetable, without live data. */
+    val scheduled: Boolean = false,
 )
 
 data class AppUiState(
@@ -118,6 +120,8 @@ class AppViewModel(
     private var boardCheckedAt=0L
     private var fullSearchAt=0L
     private var regularBoard:Location?=null
+    private var timetablePlaces:Set<String>?=null
+    private var timetableJob:Job?=null
     private var locationJob: Job? = null
     private var sharedBoardJob: Job? = null
     private var sharedBoardRequestKey:String? = null
@@ -246,6 +250,7 @@ class AppViewModel(
                     persistedStore=saved
                     settleFavoriteWrites(saved)
                     mutable.update { it.copy(store = withPendingFavorites(saved), ready = true, storageError = null) }
+                    preparePersonalTimetable(saved)
                 }
         }
     }
@@ -1197,6 +1202,28 @@ class AppViewModel(
             }
     }
 
+    /** Build 129: planned departures of one of the person's own stations; local, never a request. */
+    private suspend fun plannedBoard(stop: Location, limit: Int): List<Departure> {
+        val source = timetable ?: return emptyList()
+        val settings = mutable.value.store.settings
+        val rows = try { source.departures(stop, System.currentTimeMillis() - 60_000, limit) }
+            catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
+        return rows.filter { settings.includeLongDistance || !isLongDistance(it.lineType, it.lineName) }
+    }
+
+    /**
+     * Build 129: the local timetable follows the person's stations (saved, board, searched in the last
+     * 30 days). Only a different set of stations rebuilds it, a moment after the change settles.
+     */
+    private fun preparePersonalTimetable(saved: StoredState) {
+        val source = timetable ?: return
+        val places = personalTimetablePlaces(saved, System.currentTimeMillis())
+        if (places.toSet() == timetablePlaces) return
+        timetablePlaces = places.toSet()
+        timetableJob?.cancel()
+        timetableJob = viewModelScope.launch { delay(2_000); source.prepare(places) }
+    }
+
     fun setBoardVisible(key: String, visible: Boolean) {
         if (visible) visibleBoards += key else visibleBoards -= key
     }
@@ -1224,14 +1251,18 @@ class AppViewModel(
                 val current =
                     mutable.value.boards[key]?.takeIf { it.place == place }
                         ?: StationBoard(key, title, place)
+                // Build 129: one of the person's own stations shows its planned departures at once;
+                // the live answer then takes their place.
+                val instant = if (current.rows.value == null) plannedBoard(current.stop ?: place, demand) else emptyList()
                 mutable.update {
                     it.copy(
                         boards =
                             it.boards +
                                 (key to
                                     current.copy(
-                                        rows = current.rows.copy(loading = true, error = null),
+                                        rows = current.rows.copy(value = instant.ifEmpty { current.rows.value }, loading = true, error = null),
                                         requestedLimit = demand,
+                                        scheduled = instant.isNotEmpty() || current.scheduled,
                                     ))
                     )
                 }
@@ -1277,6 +1308,7 @@ class AppViewModel(
                                     (key to
                                         current.copy(
                                             stop = pair.first,
+                                            scheduled = false,
                                             requestedLimit = demand,
                                             canLoadMore = pair.third,
                                             rows =
@@ -1290,8 +1322,11 @@ class AppViewModel(
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
+                    // Build 129: what is known stays: the last live rows still ahead, then the own timetable.
+                    val planned = plannedBoard(mutable.value.boards[key]?.stop ?: current.stop ?: place, demand)
                     mutable.update { state ->
                         val board = state.boards[key] ?: current
+                        val live = board.rows.value.orEmpty().filterNot { it.id.startsWith("gtfs-") }
                         state.copy(
                             boards =
                                 state.boards +
@@ -1299,9 +1334,12 @@ class AppViewModel(
                                         board.copy(
                                             rows =
                                                 board.rows.copy(
+                                                    value = if (planned.isEmpty()) board.rows.value
+                                                        else mergeScheduledDepartures(live, planned, System.currentTimeMillis(), demand),
                                                     loading = false,
                                                     error = errorText(e),
-                                                )
+                                                ),
+                                            scheduled = planned.isNotEmpty() || board.scheduled,
                                         ))
                         )
                     }

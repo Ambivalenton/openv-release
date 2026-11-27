@@ -143,7 +143,7 @@ internal fun umlautAlternatives(term:String):String {
 /** Lazy, cancellable extraction on IO; verified by the generated manifest, then opened read-only. */
 internal class CatalogAsset(private val context:Context,
     private val manifest:String="stops/catalog.json", private val asset:String="stops/stops.catalog",
-    private val folder:String="stop-catalog") {
+    private val folder:String="stop-catalog", private val root:File=context.noBackupFilesDir) {
     private val lock=Mutex()
     private var installed:File?=null
     suspend fun file():File = lock.withLock {
@@ -151,7 +151,7 @@ internal class CatalogAsset(private val context:Context,
         val metadata=context.assets.open(manifest).bufferedReader().use { JSONObject(it.readText()) }
         val digest=metadata.getString("database_sha256")
         require(digest.matches(Regex("[0-9a-f]{64}")))
-        val directory=File(context.noBackupFilesDir,folder).apply { mkdirs() }
+        val directory=File(root,folder).apply { mkdirs() }
         val target=File(directory,"stops-${digest.take(20)}.sqlite")
         // The file is only named into place after a successful checksum; interrupted copies stay temporary.
         if(!target.isFile || target.length()!=metadata.getLong("database_bytes")) {
@@ -176,4 +176,8 @@ internal class CatalogAsset(private val context:Context,
         directory.listFiles()?.filter { it!=target && it.extension=="sqlite" }?.forEach { it.delete() }
         installed=target;target
     }
+    /** The checksum of the shipped table, read from the manifest without unpacking anything. */
+    fun digest():String=context.assets.open(manifest).bufferedReader().use { JSONObject(it.readText()) }.getString("database_sha256")
+    /** Build 129: removes the unpacked copy; a later [file] unpacks it again. */
+    suspend fun release()=lock.withLock { installed=null; File(root,folder).deleteRecursively(); Unit }
 }

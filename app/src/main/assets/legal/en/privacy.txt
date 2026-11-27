@@ -48,6 +48,7 @@ The active journey is stored privately with sections, times, confirmed progress,
 | --- | --- |
 | Connection views | Eight views, 30 minutes and 8 MiB in private cache; clearing search history removes these. |
 | Repeated direct-journey searches | Up to 64 local entries with a hashed search key, hashed timetable pattern, boarding-stop ID, count and last check. Inactive after 48 hours, pruned on the next write after 14 days, and removed when the connection cache is cleared. |
+| Personal timetable | Extract of the bundled VRR timetable for at most 24 own stops (favourites, departure list, chosen start, places searched in the last 30 days), at most 8 MiB. Holds only timetable data and the list of these stops, no location or live data. A stop that no longer belongs is removed with the next rebuild. |
 | HTTP responses | 20 MiB, following server caching rules. Android can remove the cache. |
 | Walking-map tiles | 32 MiB on disk and 16 MiB in RAM; server expiry, otherwise seven days. MapLibre has an additional map cache. |
 | Detailed walking routes | 32 entries for up to 24 hours in RAM; requests use HTTP no-store. |

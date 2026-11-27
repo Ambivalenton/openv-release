@@ -127,6 +127,8 @@ class DepartureBoardRepository(
     private val locations: LocationRepository,
     private val providerFor: (AppSettings) -> TransitRepository,
     private val paused: () -> Boolean,
+    /** Build 129: planned departures of the person's stations when no live answer comes. */
+    private val timetable: RegionalTimetable? = null,
 ) {
     constructor(locations: LocationRepository, providerFor: (AppSettings) -> TransitRepository) :
         this(locations, providerFor, { false })
@@ -147,6 +149,7 @@ class DepartureBoardRepository(
             val key = boardConfigurationKey(state)
             val previous = state.departureBoard
             val wanted=maxOf(limit,previous.requestedRows).coerceIn(8,30)
+            var chosen: Location? = null
             if (
                 !force &&
                     previous.configurationKey == key &&
@@ -193,6 +196,7 @@ class DepartureBoardRepository(
                         ?: throw TransitException(
                             tr("Keine der gespeicherten Haltestellen konnte aufgelöst werden.")
                         )
+                chosen = nearest
                 // Departures only: no connections, no favourite pairs and no network plan nodes.
                 val rows =
                     provider.departures(nearest,wanted)
@@ -219,8 +223,18 @@ class DepartureBoardRepository(
                     val retained =
                         if (previous.configurationKey == key) previous
                         else DepartureBoardState(configurationKey = key)
+                    // Build 129: the last live rows that are still ahead, then the local timetable.
+                    val stop = chosen ?: retained.stop ?: activeBoardSelection(state)
+                    val planned = stop?.let { place ->
+                        try { timetable?.departures(place, now - 60_000, wanted, state.settings.board.products) }
+                        catch (c: CancellationException) { throw c } catch (_: Exception) { null }
+                    }.orEmpty().filter { state.settings.includeLongDistance || !isLongDistance(it.lineType, it.lineName) }
+                    val live = retained.departures.takeIf { retained.stop?.let(::boardLocationKey) == stop?.let(::boardLocationKey) }.orEmpty()
                     locations.saveDepartureBoard(
                         retained.copy(
+                            stop = stop ?: retained.stop,
+                            departures = if (planned.isEmpty()) retained.departures else mergeScheduledDepartures(live, planned, now),
+                            scheduled = planned.isNotEmpty(),
                             error = e.message ?: tr("Abfahrten konnten nicht geladen werden."),
                             errorKind = transitFailure(e).kind.name,
                         )

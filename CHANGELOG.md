@@ -4,6 +4,12 @@ Alle nennenswerten Änderungen an Öpen-V. Versionen folgen [Semantic Versioning
 
 ## [Unveröffentlicht]
 
+## [1.2.0.9] (129) · 2026-11-27
+
+- Persönlicher Fahrplan: Für deine eigenen Haltestellen – Favoriten, Abfahrtsliste, gewählter Start und in den letzten 30 Tagen gesuchte Orte, höchstens 24 – hält die App einen Auszug des VRR-Sollfahrplans. Ihre Abfahrten erscheinen sofort beim Öffnen, noch bevor die Live-Antwort da ist, und bleiben auch ohne Internet sichtbar: zuerst die letzten Live-Zeilen, die noch bevorstehen, danach der Sollfahrplan, jede Zeile ohne Echtzeit als „Nur Fahrplan“ gekennzeichnet. Die Live-Abfrage läuft weiter wie bisher und ersetzt die geplanten Zeiten, sobald sie antwortet. Gilt auch für Abfahrtstafel und Widget („Offline · Sollfahrplan“).
+- Direktfahrten aus dem Sollfahrplan gibt es nur noch zwischen eigenen Haltestellen. Für andere Orte wäre die Liste unvollständig gewesen.
+- Speicher: Statt des ganzen VRR-Fahrplans (rund 29 MB entpackt) bleibt nur dieser Auszug auf dem Gerät (meist unter 4 MB, höchstens 8 MB). Der vollständige Index wird nur zum Aufbau kurz entpackt und gleich wieder gelöscht. Eine Haltestelle, die nicht mehr dazugehört, etwa ein seit 30 Tagen nicht mehr gesuchter Ort, fällt beim nächsten Aufbau heraus. Gebaut wird nur, wenn sich die Haltestellen ändern.
+
 ## [1.2.0.8] (128) · 2026-11-27
 
 - Nach dem Tauschen von Start und Ziel sucht „Verbindung suchen“ wieder vom angezeigten Start. Bisher verglich der Suchknopf das neue Ziel mit dem Start vor dem Tausch und meldete fälschlich „Start und Ziel sind gleich“; ein danach im Startfeld gewählter Ort wurde nicht verwendet. Ursache: Der Knopf hielt seine Aktion aus einer früheren Darstellung der Seite fest.
