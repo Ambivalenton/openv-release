@@ -16,7 +16,6 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
-import android.net.ConnectivityManager
 import android.os.Looper
 import java.time.Duration
 import dev.ambivalenton.openv.ui.AppViewModel
@@ -140,29 +139,36 @@ class Build129PersonalTimetableTest {
     }
 
     /** The Abfahrten page without a connection: the app builds the extract for the saved station
-     * itself, shows its planned departures at once and keeps them when the live request fails. */
+     * itself, shows its planned departures at once and keeps them when the live request fails. The
+     * timetable service is unreachable here on purpose (CI machines do have internet). */
     @Test fun theDeparturesPageShowsTheOwnTimetableOffline() {
-        shadowOf(app.getSystemService(ConnectivityManager::class.java)).setActiveNetworkInfo(null)
+        val offline = okhttp3.OkHttpClient.Builder().addInterceptor { throw java.net.UnknownHostException("offline") }.build()
         val locations = (app as OpenVApp).locations
         runBlocking { locations.addBoardStop(herne) }
-        val vm = (app as OpenVApp).koin.get<AppViewModel>()
-        val extract = File(app.noBackupFilesDir, "personal-timetable/timetable.sqlite")
-        val deadline = System.currentTimeMillis() + 20_000
-        while (!extract.isFile) {
-            shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(500))
-            assertTrue("the extract for the saved station", System.currentTimeMillis() < deadline)
-            Thread.sleep(20)
-        }
-        vm.loadBoard("herne", "Herne Bf", herne)
-        while (vm.state.value.boards["herne"]?.rows?.let { it.loading || it.value == null } != false) {
-            shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(100))
-            assertTrue("board answered", System.currentTimeMillis() < deadline)
-            Thread.sleep(20)
-        }
-        val board = vm.state.value.boards.getValue("herne")
-        assertNotNull(board.rows.error)
-        assertTrue(board.scheduled)
-        assertTrue(board.rows.value.orEmpty().size >= 8)
-        assertTrue(board.rows.value.orEmpty().all { it.id.startsWith("gtfs-") && it.delay.departureSeconds == null })
+        val holder = androidx.lifecycle.ViewModelStore()
+        val vm = AppViewModel(locations, (app as OpenVApp).deviceLocation, TransitProviderFactory(NetworkClient(offline) { false }),
+            (app as OpenVApp).koin.get(), (app as OpenVApp).koin.get(), dev.ambivalenton.openv.data.preferences.UserPreferencesRepository(locations),
+            timetable = RegionalTimetable(app))
+        holder.put("vm", vm)
+        try {
+            val extract = File(app.noBackupFilesDir, "personal-timetable/timetable.sqlite")
+            val deadline = System.currentTimeMillis() + 20_000
+            while (!extract.isFile) {
+                shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(500))
+                assertTrue("the extract for the saved station", System.currentTimeMillis() < deadline)
+                Thread.sleep(20)
+            }
+            vm.loadBoard("herne", "Herne Bf", herne)
+            while (vm.state.value.boards["herne"]?.rows?.let { it.loading || it.value == null } != false) {
+                shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(100))
+                assertTrue("board answered", System.currentTimeMillis() < deadline)
+                Thread.sleep(20)
+            }
+            val board = vm.state.value.boards.getValue("herne")
+            assertNotNull(board.rows.error)
+            assertTrue(board.scheduled)
+            assertTrue(board.rows.value.orEmpty().size >= 8)
+            assertTrue(board.rows.value.orEmpty().all { it.id.startsWith("gtfs-") && it.delay.departureSeconds == null })
+        } finally { holder.clear() }
     }
 }
