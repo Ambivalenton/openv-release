@@ -48,6 +48,7 @@ with tempfile.TemporaryDirectory() as directory:
         'executor_sql_p95_ms':round(samples[int(len(samples)*.95)-1],3),'executor_sql_max_ms':round(max(samples),3),
         'scope':'Linux executor SQLite; warm SQL, not Android UI or network; no old/new phone comparison',
         'queries':hits}
-    audit=ROOT/'audit/build51';audit.mkdir(exist_ok=True)
+    audit = ROOT / 'audit/build51'
+    audit.mkdir(parents=True, exist_ok=True)
     (audit/'catalog-verification.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
     print(json.dumps(result,ensure_ascii=False,indent=2))

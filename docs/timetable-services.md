@@ -1,43 +1,35 @@
 # Fahrplandienste
 
-Öpen-V spricht pro Build genau einen Fahrplandienst an. Name, Quellenangabe, Abdeckung und der Link zu den Nutzungsbedingungen kommen aus einer einzigen Beschreibung: `TimetableService` in [`data/model/TimetableService.kt`](../app/src/main/java/dev/ambivalenton/openv/data/model/TimetableService.kt). Gewählt wird er in [`gradle.properties`](../gradle.properties):
+Die öffentliche Vorschau fragt **VRR OpenService** direkt vom Gerät ab. Der EFA-Adapter verarbeitet Haltestellen, Umkreissuchen, Verbindungen und Abfahrten im JSON-Format. Das deutschlandweite [Zentrale Haltestellenverzeichnis](data-sources.md) wird als lokaler Suchkatalog ausgeliefert.
+
+## Konfiguration im aktuellen Build
+
+Ein Build verwendet genau einen Fahrplandienst. In [gradle.properties](../gradle.properties) stehen diese Werte:
 
 ```properties
-openv.timetable=vrr            # vrr oder delfi
-openv.timetable.protocol=efa   # efa oder trias
+openv.timetable=vrr
+openv.timetable.protocol=efa
 ```
 
-| Dienst | Abdeckung | Schnittstelle | Stand |
-| --- | --- | --- | --- |
-| VRR OpenService | Rhein-Ruhr | EFA (JSON) | in Betrieb |
-| DELFI-Navi | Deutschland | je nach Zugang EFA oder TRIAS | vorbereitet, nicht aktiv; braucht einen eigenen Zugang |
+[TimetableService](../app/src/main/java/dev/ambivalenton/openv/data/model/TimetableService.kt) beschreibt Endpunkt, Abdeckung und Quellenangabe. Die [TransitProviderFactory](../app/src/main/java/dev/ambivalenton/openv/data/repository/TransitProviderFactory.kt) erstellt heute einen EFA-Adapter. Für DELFI ist ein Konfigurationsprofil vorhanden. Ein TRIAS-Adapter fehlt, und [Gradle](../app/build.gradle.kts) lehnt diese Protokollwahl beim Build ab.
 
-```mermaid
-flowchart LR
-    Props["gradle.properties"] --> Active["TimetableServices.active"]
-    Secret["Secret OPENV_TIMETABLE_ENDPOINT"] --> Active
-    Active --> Texts["Name · Quellenangabe · Abdeckung · Link"]
-    Active --> Factory["TransitProviderFactory"]
-    Factory -->|efa| EFA["EfaTransitRepository"]
-    Factory -.->|trias| TRIAS["TriasTransitRepository (folgt bei Bedarf)"]
-```
+## Deutschlandweite Auskunft anbinden
 
-Alle Builds nutzen heute VRR OpenService.
+DELFI beschreibt den Zugang zu **DELFI-Navi** über die TRIAS-Schnittstelle eines Landesauskunftssystems. Welche Prognosen und Störungen eine Verbindung enthält, richtet sich nach den verfügbaren Daten der beteiligten Systeme. [Dienstbeschreibung von DELFI](https://www.delfi.de/de/leistungen-produkte/daten-dienste/)
 
-## Zwei mögliche Wege
+| Funktion in Öpen-V | Für die Anbindung zu klären |
+| --- | --- |
+| Ziel wählen | Orts- und Haltestellensuche, Suche per Koordinate, Zuordnung der lokalen DHID zur Haltestellenreferenz des Dienstes |
+| Verbindungen vergleichen | Fahrten ab Abfahrtszeit oder bis Ankunftszeit, frühere und spätere Verbindungen, Umstiege und Fußwege |
+| Abfahrtstafel und Widgets | Abfahrten an einer Haltestelle, Sollzeit, Prognose, Ausfall, Gleis oder Steig |
+| Angeheftete Fahrt begleiten | Stabile Fahrtreferenz, gezielte Aktualisierung einer gewählten Fahrt sowie verfügbare Störungsmeldungen und Gleiswechsel |
 
-Welche Schnittstelle ein weiterer Dienst bereitstellt, legt dessen Zugang fest. Öpen-V ist auf beide üblichen Fälle vorbereitet.
+Für die Umsetzung sind folgende Schritte vorgesehen:
 
-- **EFA:** Öpen-V nutzt den vorhandenen, getesteten EFA-Adapter (StopFinder, Trip, DM, AddInfo). Es ändert sich nur der Endpunkt.
-- **TRIAS (VDV 431):** Ein zweiter Adapter `TriasTransitRepository` setzt dieselbe Schnittstelle `TransitRepository` um. Bis er existiert, bricht ein Build mit `openv.timetable.protocol=trias` bewusst mit einem Hinweis ab.
+1. Mit dem Betreiber Test- und Produktivzugang, TRIAS-Version und unterstützte Dienste klären. Dazu gehören die erlaubte Anzeige in App, Widgets und Benachrichtigungen, Quellenangabe, Zwischenspeicherung, Abrufintervalle und Quoten pro Projekt oder Gerät.
+2. Das Zugangsverfahren festlegen. `OPENV_TIMETABLE_ENDPOINT` wird beim Bauen in die APK übernommen. Diese Variable eignet sich für einen freigegebenen HTTPS-Endpunkt. Ein vertraulicher Schlüssel braucht das vom Betreiber vorgesehene Zugangsmodell.
+3. Einen TRIAS-Adapter für [TransitRepository](../app/src/main/java/dev/ambivalenton/openv/data/repository/TransitRepository.kt) implementieren. Mit freigegebenen Beispielen oder synthetischen Antworten Haltestellensuche, Verbindungssuche, Abfahrtstafel und Fahrtaktualisierung testen. Wichtige Fälle sind fehlende Prognosen, Ausfälle, Gleiswechsel und Umstiege über Landesgrenzen. Falls der Betreiber einen kompatiblen EFA-Zugang anbietet, dieselben Fälle gegen den vorhandenen Adapter prüfen.
+4. Erst mit funktionierendem Adapter die Protokollauswahl in der Factory aktivieren, die Build-Prüfung anpassen und den freigegebenen Endpunkt konfigurieren. Das Anfragebudget und die Aktualisierungen gemäß den Betriebsvorgaben einstellen.
+5. Quellenangaben, Abdeckung, Datenschutz- und Hilfetexte sowie Store-Einträge anpassen. `python3 tools/sync_publication.py` und `python3 tools/check_release.py` ausführen. Die Vorschau mit echten Auskünften auf dem Gerät prüfen.
 
-## Checkliste für einen Wechsel
-
-1. **Endpunkt als Secret anlegen** (GitHub → Settings → Secrets and variables → Actions): `OPENV_TIMETABLE_ENDPOINT`, die https-Adresse aus dem Zugang. Zugangsdaten gehören nie ins Repository. Was in die APK kompiliert wird, lässt sich aus ihr auslesen; erlauben die Bedingungen das nicht, braucht es einen eigenen Vermittlungsserver.
-2. **Umschalten:** in `gradle.properties` `openv.timetable=delfi` und die Schnittstelle des Zugangs eintragen.
-3. **Nur bei TRIAS:** echte Antworten auf LocationInformationRequest, TripRequest, StopEventRequest und, falls angeboten, TripInfoRequest als Test-Fixtures unter `app/src/test/resources/trias/` ablegen; den Adapter gegen diese Antworten schreiben und testen; in `TransitProviderFactory` nach `TimetableServices.active.protocol` wählen; den Abbruch in `app/build.gradle.kts` entfernen. Fehlende Prognosen werden auch hier nie als pünktlich dargestellt.
-4. **Texte anpassen:** Datenschutzerklärung (`PRIVACY.md`, `PRIVACY_EN.md`), Abdeckung und Hilfe (`app/src/main/assets/legal/coverage.txt`, `help.txt` samt `en/`), Store-Texte unter `fastlane/` und [data-sources.md](data-sources.md). Danach `python3 tools/sync_publication.py` und `python3 tools/check_release.py`.
-5. **Anfrageverhalten abgleichen:** Die Regeln aus [data-sources.md](data-sources.md) gelten unverändert. Vorgaben des Anbieters zu Quoten und Intervallen kommen in `TimetableService.pagingRequests` und `NetworkClient`.
-6. **Prüfen:** CI laufen lassen, die Vorschau-App auf dem Gerät mit echten Suchen prüfen und erst dann ein Release taggen.
-
-Gespeicherte Einstellungen bleiben gültig: `AppPublication.settings` setzt beim Laden den Dienst des aktuellen Builds ein.
+Die aktuellen Intervalle und die Regeln für den Umgang mit Antworten sind unter [Datenquellen und Abrufverhalten](data-sources.md) dokumentiert.
