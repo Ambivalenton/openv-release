@@ -1,0 +1,3 @@
+• Date and time rollers: digits sit exactly in the middle in every typeface.
+• Every design family has its own roller: glass, light edge, soft UI, clay, neo-brutalism, Swiss, editorial, line, tiles, tonal, Japandi, organic, e-ink, chrome, paper, cloth, 8-bit.
+• Buttery: colour changes right at the lens edge, smooth glide without bounce, a tick per value.

@@ -4,6 +4,12 @@ Alle nennenswerten Änderungen an Öpen-V. Versionen folgen [Semantic Versioning
 
 ## [Unveröffentlicht]
 
+## [1.2.0.10] (130) · 2026-11-27
+
+- Datum- und Uhrzeitwalzen: Die Ziffern stehen genau in der Mitte der Linse, in jeder Schrift. Bisher wurden sie mit einem festen Anteil der Schriftgröße gesetzt, was bei Schriften mit großem Zeilenraum wie Fredoka oder Baloo („Weltraumgelee“) sichtbar zu tief saß. Jetzt wird die Mitte an den tatsächlich gezeichneten Ziffern gemessen.
+- Jede Design-Familie hat ihre eigene Walze: Material mit tonaler, flüssiger Linse; Glas mit Mattglasscheibe, Spiegelung und Leuchten dahinter; Lichtkante mit Verlaufsrand, der sich mit der Walze dreht; Soft UI als eingedrückte Mulde; Knete prall und federnd beim Einrasten; Neo-Brutalismus als Farbblock mit Tintenrand und hartem Schatten, der beim Einrasten stempelt; Swiss mit Akzentlinie, Editorial mit Doppellinie; Linien-UI mit Skala am Rand; Kacheln, Bento und Farbblöcke als klare Fläche; Tonal mit Tonstufen; Japandi mit einem Pinselstrich; Organisch als atmender Kiesel; E-Ink invertiert; Chrom poliert; Papier geschichtet; Stoff mit Naht; 8-Bit mit Pixelstufen in den eigenen Farben statt schwarzem Display.
+- Butterweicher: Ein Wert wechselt seine Farbe genau dort, wo er die Linse kreuzt, und wächst stufenlos zur Mitte hin. Schnelle Drehungen ziehen eine feine Spur. Ein Schwung rollt weich aus und kommt ohne Nachfedern zum Stehen. Jeder durchlaufene Wert tickt spürbar, die Überträge zwischen Minute, Stunde und Tag laufen ruhiger.
+
 ## [1.2.0.9] (129) · 2026-11-27
 
 - Persönlicher Fahrplan: Für deine eigenen Haltestellen – Favoriten, Abfahrtsliste, gewählter Start und in den letzten 30 Tagen gesuchte Orte, höchstens 24 – hält die App einen Auszug des VRR-Sollfahrplans. Ihre Abfahrten erscheinen sofort beim Öffnen, noch bevor die Live-Antwort da ist, und bleiben auch ohne Internet sichtbar: zuerst die letzten Live-Zeilen, die noch bevorstehen, danach der Sollfahrplan, jede Zeile ohne Echtzeit als „Nur Fahrplan“ gekennzeichnet. Die Live-Abfrage läuft weiter wie bisher und ersetzt die geplanten Zeiten, sobald sie antwortet. Gilt auch für Abfahrtstafel und Widget („Offline · Sollfahrplan“).

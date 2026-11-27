@@ -1,0 +1,3 @@
+• Datum/Uhrzeit-Walzen: Ziffern stehen in jeder Schrift genau in der Mitte.
+• Jede Design-Familie hat ihre eigene Walze: Glas, Lichtkante, Soft UI, Knete, Neo-Brutalismus, Swiss, Editorial, Linien, Kacheln, Tonal, Japandi, Organisch, E-Ink, Chrom, Papier, Stoff, 8-Bit.
+• Butterweich: Farbwechsel genau an der Linsenkante, weiches Ausrollen ohne Nachfedern, ein Tick pro Wert.
