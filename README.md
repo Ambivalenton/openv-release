@@ -1,79 +1,68 @@
 <p align="center">
-  <img src="fastlane/metadata/android/de-DE/images/icon.png" width="80" height="80" alt="">
+  <img src="fastlane/metadata/android/de-DE/images/icon.png" width="72" height="72" alt="">
 </p>
 
 <h1 align="center">Öpen-V</h1>
 
 <p align="center">
-  Freie Android-App für Bus und Bahn: deine Wege als Netzplan, Verbindungen im direkten Vergleich, Abfahrten als Anzeigetafel.<br>
-  Kostenlos, werbefrei, ohne Konto und ohne Tracking.
+  Dein eigener Netzplan für Bus und Bahn.<br>
+  Eine freie, werbefreie Android-App für die Wege, die du immer wieder fährst.
 </p>
 
 <p align="center">
-  <a href="https://github.com/Ambivalenton/openv-release/actions/workflows/ci.yml"><img src="https://github.com/Ambivalenton/openv-release/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/Lizenz-GPL--3.0--or--later-475569" alt="Lizenz: GPL-3.0-or-later"></a>
-  <img src="https://img.shields.io/badge/Android-8%2B-3ddc84" alt="Android 8 oder neuer">
+  <a href="https://github.com/Ambivalenton/openv-release/releases/tag/vorschau"><strong>Vorschau herunterladen</strong></a> ·
+  <a href="https://ambivalenton.github.io/openv-release/">Projektseite</a> ·
+  <a href="docs/data-sources.md">Datenquellen</a>
 </p>
 
 <p align="center">
-  <img src="docs/images/hero.webp" width="820" alt="Netzplan mit Favoriten neben einem Balkendiagramm mit fünf Verbindungen">
+  <img src="docs/images/hero.webp" width="820" alt="Links verbindet ein Netzplan sechs Lieblingsorte. Rechts stehen fünf Fahrten auf derselben Zeitachse.">
 </p>
 
-## Worum es geht
+## Unterwegs mit Öpen-V
 
-Öpen-V ist für Menschen gedacht, die regelmäßig dieselben Wege mit Bus und Bahn fahren. Statt jedes Mal Start und Ziel einzutippen, legt man seine Orte einmal an. Danach sieht man auf einen Blick, wann es losgeht, wo man umsteigt und ob sich das Warten auf die nächste Fahrt lohnt.
+**Wann muss ich los?** Lege Zuhause, Arbeit oder deinen Treffpunkt als Favoriten an. Ein Tipp auf die Strecke im Netzplan zeigt dir die nächsten Verbindungen. Wenn du lieber liest, fasst die Übersicht Abfahrt, Umstieg und Ankunft in einem kurzen Text zusammen.
 
-Die App ist quelloffen und kommt ohne Werbung, Konto, Analyse-Dienste und Google Play Services aus. Favoriten und Einstellungen bleiben auf dem Gerät.
+**Lohnt sich der spätere Zug?** Im Balkendiagramm hat jede Verbindung eine eigene Spalte. Auf derselben Zeitachse siehst du, welche Fahrt früher ankommt, wie lang der Fußweg ist und wie viel Zeit dir zum Umsteigen bleibt.
 
-## Stand
+**Wo steige ich um?** Hefte deine Fahrt an. Die Reisebegleitung hält den nächsten Umstieg und verfügbare Gleisangaben griffbereit. Für den täglichen Blick vor dem Losgehen gibt es die Abfahrtstafel auch als Widget auf dem Startbildschirm.
 
-Version 1.0 ist fertig und im Alltag in Gebrauch. Die Veröffentlichung bei Google Play wird vorbereitet.
+## Vorschau installieren
 
-- **Verbindungen und Abfahrten** mit Echtzeit, Störungsmeldungen und Gleisangaben
-- **Netzplan** der eigenen Lieblingsorte: ein Tipp auf eine Strecke sucht die nächsten Fahrten
-- **Balkendiagramm**, das kommende und gerade verpasste Verbindungen nebeneinanderstellt
-- **Anzeigetafel** und Widgets für den Startbildschirm
-- **Reisebegleitung** für eine laufende Fahrt mit Hinweisen zu Umstiegen und Alternativen
-- Deutsch und Englisch, helles und dunkles Design, große Schrift, TalkBack
+1. Öffne das [Vorschau-Release](https://github.com/Ambivalenton/openv-release/releases/tag/vorschau). Dort stehen die aktuelle Version und die Änderungen.
+2. Lade unter **Assets** die Datei mit der Endung `.apk` herunter und öffne sie auf deinem Android-Gerät. Die Vorschau benötigt **Android 8 oder neuer und einen ARM64-Prozessor**.
+3. Starte **Öpen-V · Vorschau**. Du kannst zum Einstieg zwei Orte als Favoriten anlegen oder gleich eine Verbindung suchen. Für einen manuellen Start brauchst du keine Standortfreigabe.
 
-Die Fahrplandaten kommen von **VRR OpenService**, die Auskunft deckt damit Rhein-Ruhr ab. Ein Haltestellenverzeichnis für ganz Deutschland ist offline in der App enthalten. Rund 600 automatisierte Tests laufen bei jeder Änderung.
+## Abdeckung und Datenschutz
 
-<p align="center">
-  <img src="docs/images/uebersicht.jpg" width="200" alt="Textübersicht mit Abfahrt, Ankunft und Gleis">
-  <img src="docs/images/balkendiagramm.jpg" width="200" alt="Balkendiagramm mit Uhrzeiten und Fahrtdauer">
-  <img src="docs/images/abfahrten.jpg" width="200" alt="Anzeigetafel mit Linien und Abfahrtszeiten">
+| Was du suchst | Was Öpen-V liefert |
+| --- | --- |
+| Verbindungen, Abfahrten und Umstiege | Online-Auskunft über VRR OpenService mit Schwerpunkt Rhein-Ruhr. Prognosen, Ausfälle und Gleisänderungen erscheinen, soweit der Anbieter sie liefert. |
+| Eine Haltestelle in Deutschland | Der mitgelieferte Katalog aus dem Zentralen Haltestellenverzeichnis (ZHV) von DELFI lässt sich offline durchsuchen. Für Fahrzeiten und Routen braucht die App eine Online-Auskunft. |
+| Deine gespeicherten Orte | Favoriten und Einstellungen bleiben auf deinem Gerät. Die App kommt ohne Konto, Werbung, Tracking und Google Play Services aus. Für Online-Auskünfte kommuniziert sie direkt mit den jeweiligen Diensten. |
+
+[Alle Datenquellen und Abrufregeln](docs/data-sources.md) · [Datenschutzerklärung](https://ambivalenton.github.io/openv-release/privacy/)
+
+## Screenshots
+
+<p>
+  <a href="docs/images/uebersicht.jpg"><img src="docs/images/uebersicht.jpg" width="180" alt="Textübersicht mit der nächsten Abfahrt und dem Umstieg"></a>
+  <a href="docs/images/balkendiagramm.jpg"><img src="docs/images/balkendiagramm.jpg" width="180" alt="Fünf Verbindungen im Vergleich auf einer Zeitachse"></a>
+  <a href="docs/images/abfahrten.jpg"><img src="docs/images/abfahrten.jpg" width="180" alt="Abfahrtstafel mit Linie, Richtung und Abfahrtszeit"></a>
 </p>
 
-## Ausblick
+[Netzplan ansehen](docs/images/favoriten-netzplan.jpg) · [Verbindungssuche ansehen](docs/images/suche.jpg) · [Drei Designs vergleichen](docs/images/designvergleich.webp)
 
-Öpen-V soll in ganz Deutschland funktionieren, nicht nur im Rhein-Ruhr-Gebiet. Die App ist darauf vorbereitet: Der Fahrplandienst ist austauschbar, ohne dass sich an Oberfläche und Funktionen etwas ändert ([Fahrplandienste](docs/timetable-services.md)).
+## Entwicklung und Kontakt
 
-## Umgang mit Fahrplandaten
+Mit JDK 17 und Android SDK 36 baust du die Vorschau unter Linux oder macOS mit `./gradlew :app:assemblePreview`, unter Windows mit `.\gradlew.bat :app:assemblePreview`. Voraussetzungen, Tests und Ausgabevarianten stehen in der [Entwicklungsanleitung](docs/development.md).
 
-- Abfragen nur auf Anfrage oder solange eine Ansicht sichtbar ist; Widgets nur bei eingeschaltetem Bildschirm
-- höchstens drei Anfragen gleichzeitig, gleiche Anfragen werden gebündelt, `Retry-After` wird beachtet
-- kein Massenabruf, keine Weitergabe der Daten als Bild oder Text
-- sichtbare Quellenangabe in App, Benachrichtigungen und Widgets
-- Softwarelizenz (GPL) und Datennutzung sind getrennt; es gelten die Bedingungen des Anbieters
+[Architektur](docs/architecture.md) · [Fahrplandienste](docs/timetable-services.md) · [Änderungsprotokoll](CHANGELOG.md) · [CI auf main](https://github.com/Ambivalenton/openv-release/actions/workflows/ci.yml?query=branch%3Amain)
 
-Details: [Datenquellen und Nutzungsbedingungen](docs/data-sources.md)
+Öpen-V ist ein unabhängiges Projekt von Erik Tomczyk (Ambivalenton). Fragen zu Fahrplandaten und Kooperationen erreichen ihn unter [oepenvapp@gmail.com](mailto:oepenvapp@gmail.com). Für Fehlerberichte und Vorschläge gibt es die [GitHub-Issues](https://github.com/Ambivalenton/openv-release/issues) und den [Leitfaden zum Mitmachen](CONTRIBUTING.md).
 
-## Ausprobieren
+Der Quellcode steht unter der [GPL-3.0-or-later](LICENSE). Für Fahrplandaten, Karten und weitere eingebundene Inhalte gelten die jeweiligen [Quellen- und Lizenzhinweise](THIRD_PARTY_NOTICES.md).
 
-- **App:** Test-App „Öpen-V · Vorschau“ unter [Releases](https://github.com/Ambivalenton/openv-release/releases), ab Android 8
-- **Selbst bauen:** JDK 17 und Android SDK 36, dann `./gradlew :app:assemblePreview` ([Entwicklung](docs/development.md))
-- **Aufbau der App:** [Architektur](docs/architecture.md)
+### English
 
-## Datenschutz und Lizenz
-
-[Datenschutzerklärung](https://ambivalenton.github.io/openv-release/privacy/) · [Lizenz (GPL-3.0-or-later)](LICENSE) · [Drittanbieter-Lizenzen](THIRD_PARTY_NOTICES.md)
-
-Öpen-V ist ein unabhängiges Projekt und keine offizielle App eines Verkehrsverbunds oder Verkehrsunternehmens.
-
-## Kontakt
-
-Erik Tomczyk (Ambivalenton) · [oepenvapp@gmail.com](mailto:oepenvapp@gmail.com) · [Issues](https://github.com/Ambivalenton/openv-release/issues) · [Mitmachen](CONTRIBUTING.md)
-
----
-
-**English:** Öpen-V is a free, ad-free Android app for public transport (GPL-3.0). Version 1.0 uses VRR OpenService for the Rhine-Ruhr region and ships an offline stop directory for all of Germany. The timetable service is replaceable, so the app is ready for Germany-wide journey planning.
+Öpen-V is a free, ad-free Android app for everyday trips by public transport. Connect your favourite places on a personal network map, compare journeys on a shared timeline and pin a trip to follow your transfers. Live journey planning uses VRR OpenService with a Rhine-Ruhr focus. The nationwide DELFI stop directory is searchable offline. [Download the ARM64 preview](https://github.com/Ambivalenton/openv-release/releases/tag/vorschau) · [Privacy policy in English](PRIVACY_EN.md)
