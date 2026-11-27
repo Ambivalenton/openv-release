@@ -3,6 +3,7 @@ package dev.ambivalenton.openv
 
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Surface
@@ -88,10 +89,15 @@ class Build118SwitchTest {
         lateinit var pager: PagerState
         compose.setContent { OpenVTheme(AppSettings(quietMode = true)) { Surface(Modifier.fillMaxSize()) {
             pager = rememberPagerState { 3 }
-            Box(Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.BottomCenter) {
-                Box(Modifier.testTag("pill-host")) {
+            Box(Modifier.fillMaxSize()) {
+                HorizontalPager(pager, Modifier.fillMaxSize()) { Box(Modifier.fillMaxSize()) }
+                Box(Modifier.align(androidx.compose.ui.Alignment.BottomCenter).testTag("pill-host")) {
                     ExpressivePillNavigationTo(pager, listOf(PillDestination("Übersicht", R.drawable.ic_overview),
-                        PillDestination("Suchen", R.drawable.ic_search), PillDestination("Abfahrten", R.drawable.ic_train)), null, null) { chosen += it }
+                        PillDestination("Suchen", R.drawable.ic_search), PillDestination("Abfahrten", R.drawable.ic_train)), null, null) { page ->
+                        chosen += page
+                        // The navigation owner applies the selection, as in the app.
+                        pager.requestScrollToPage(page)
+                    }
                 }
             }
         } } }
@@ -99,8 +105,10 @@ class Build118SwitchTest {
         compose.onNodeWithTag("pill-host").performTouchInput { swipeRight(startX = width * .15f, endX = width * .85f, durationMillis = 500) }
         compose.waitForIdle()
         assertEquals("clicks into Suchen, then Abfahrten", listOf(1, 2), chosen)
+        assertEquals(2, pager.settledPage)
         compose.onNodeWithTag("pill-host").performTouchInput { swipeLeft(startX = width * .85f, endX = width * .5f, durationMillis = 400) }
         compose.waitForIdle()
         assertEquals(listOf(1, 2, 1), chosen)
+        assertEquals(1, pager.settledPage)
     }
 }
