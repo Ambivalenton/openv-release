@@ -273,6 +273,22 @@ fun SearchScreen(
     }
     val latestPresence by rememberUpdatedState(ui.store.presence)
     val startMissing = effectiveStart == null && (settings.originMode == OriginMode.MANUAL || !locationPermissionGranted(context))
+    // Build 128: the handlers below are kept by Compose (the search button holds "::startSearch" from an
+    // earlier composition). They read the start through these states, so a tap always uses the start on
+    // screen – before, a swap compared the new destination with the old start ("Start und Ziel sind gleich")
+    // and a start chosen afterwards was not used.
+    val currentStart by rememberUpdatedState(effectiveStart)
+    val currentStartMissing by rememberUpdatedState(startMissing)
+    val currentStartLabel by rememberUpdatedState(start)
+    val currentGpsOn by rememberUpdatedState(gpsOn)
+    val currentOverride by rememberUpdatedState(overrideNode)
+    val currentPlanner by rememberUpdatedState(planner)
+    val currentMotionOff by rememberUpdatedState(motionOff)
+    val currentFavorites by rememberUpdatedState(ui.store.favorites)
+    val currentNetwork by rememberUpdatedState(ui.store.network)
+    val currentOnSearch by rememberUpdatedState(onSearch)
+    val currentOnSearchFrom by rememberUpdatedState(onSearchFrom)
+    val currentOnFavoriteFrom by rememberUpdatedState(onFavoriteFrom)
     // Build 118: each request is carried out once. The page is rebuilt whenever the pager returns to it;
     // a request repeated then took the focus again and could pull the pages along.
     var handledDestinationFocus by rememberSaveable { mutableIntStateOf(0) }
@@ -303,21 +319,21 @@ fun SearchScreen(
     fun focusDestinationField() { swapScope.launch { kotlinx.coroutines.delay(60); runCatching { destinationFocus.requestFocus() } } }
     fun askStart(text: String) { originOpen = true; startHint = text; startFocus++ }
     /** 2.3: both changes at once; the next search uses them, "Verbindung suchen" starts it. */
-    fun performSwap(target: Location, from: Location? = effectiveStart) {
+    fun performSwap(target: Location, from: Location? = currentStart) {
         when (val plan = swapPlan(target, from, System.currentTimeMillis())) {
             SwapPlan.NeedsStart -> askStart(tr("Wähle zuerst einen Startort."))
             SwapPlan.NeedsDestination -> { destinationHint = tr("Wähle zuerst einen Ort aus den Vorschlägen."); focusDestinationField() }
             is SwapPlan.Swap -> {
-                val ghosts = originBounds?.let { o -> destinationBounds?.let { d -> SwapGhosts(d, o, target.name, start, originGps = gpsOn) } }
+                val ghosts = originBounds?.let { o -> destinationBounds?.let { d -> SwapGhosts(d, o, target.name, currentStartLabel, originGps = currentGpsOn) } }
                 startHint = null; destinationHint = null; sameHint = false
                 destination = plan.newDestination; destinationText = plan.newDestination.name
                 mapAnchor = plan.newDestination
                 swapPendingStart = plan.newStart
                 vm.cancelPrefetch()
                 // A start held on the plan would win over the new manual start.
-                overrideNode?.let { vm.toggleLocationOverride(it.id) }
+                currentOverride?.let { vm.toggleLocationOverride(it.id) }
                 vm.settings { it.copy(originMode = OriginMode.MANUAL, manualOrigin = plan.newStart) }
-                if (ghosts != null && !motionOff) {
+                if (ghosts != null && !currentMotionOff) {
                     swapProgress = 0f
                     swapGhosts = ghosts
                     swapScope.launch {
@@ -336,7 +352,7 @@ fun SearchScreen(
         if (swapPendingStart != null || swapGhosts != null || swapResolving) return
         val chosen = destination?.takeIf { it.routable }
         // Build 121: the location is in use but no fresh fix is there yet: measure it first, then swap.
-        if (chosen != null && gpsOn && effectiveStart == null && overrideNode == null) {
+        if (chosen != null && currentGpsOn && currentStart == null && currentOverride == null) {
             swapResolving = true
             vm.acquirePosition()
             swapScope.launch {
@@ -377,37 +393,37 @@ fun SearchScreen(
     }
     /** Planermodus: a favourite or a line, searched from the typed start. */
     fun plannerFavorite(id: String, time: Long, mode: TimeMode) {
-        val line = ui.store.network.edges.any { it.id == id }
+        val line = currentNetwork.edges.any { it.id == id }
         val origin = plannerStart?.takeIf { it.routable }
         if (origin == null && !line) { startHint = tr("Wähle einen Start für diese Fahrt."); focusPlannerStart(); return }
-        onFavoriteFrom(id, time, mode, origin)
+        currentOnFavoriteFrom(id, time, mode, origin)
     }
     val favoriteSearch: (String, Long, TimeMode) -> Unit = if (planner) ::plannerFavorite else onFavorite
     /** Planermodus: holding a favourite on the plan enters it as the start in the field above. */
     fun plannerStartFrom(id: String) {
-        val favorite = ui.store.favorites.firstOrNull { it.id == id } ?: return
+        val favorite = currentFavorites.firstOrNull { it.id == id } ?: return
         plannerStart = favorite.location; startHint = null; sameHint = false
         plannerStartPicked++
     }
     fun startSearch() {
         val target = destination?.takeIf { it.routable }
-        if (planner) {
+        if (currentPlanner) {
             val origin = plannerStart?.takeIf { it.routable }
             when {
                 target == null -> { destinationHint = tr("Wähle einen Ort aus den Vorschlägen."); focusDestinationField() }
                 origin == null -> { startHint = tr("Wähle einen Start für diese Fahrt."); focusPlannerStart() }
                 routingSameLocation(origin, target, null) -> { sameHint = true; focusDestinationField() }
-                else -> onSearchFrom(origin, target, selectedTime ?: System.currentTimeMillis(), mode, null)
+                else -> currentOnSearchFrom(origin, target, selectedTime ?: System.currentTimeMillis(), mode, null)
             }
             return
         }
         when {
             target == null -> { destinationHint = tr("Wähle einen Ort aus den Vorschlägen."); focusDestinationField() }
             // H02: no start: the start field opens with its own hint instead of an error page.
-            startMissing -> askStart(tr("Wähle einen Start für diese Fahrt."))
+            currentStartMissing -> askStart(tr("Wähle einen Start für diese Fahrt."))
             // N01: no timetable request for the same place; the destination field is the place to fix it.
-            effectiveStart?.let { routingSameLocation(it, target, ui.store.presence) } == true -> { sameHint = true; focusDestinationField() }
-            else -> onSearch(target, selectedTime ?: System.currentTimeMillis(), mode)
+            currentStart?.let { routingSameLocation(it, target, latestPresence) } == true -> { sameHint = true; focusDestinationField() }
+            else -> currentOnSearch(target, selectedTime ?: System.currentTimeMillis(), mode)
         }
     }
     BoxWithConstraints(Modifier.fillMaxSize()

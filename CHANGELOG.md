@@ -4,6 +4,9 @@ Alle nennenswerten Änderungen an Öpen-V. Versionen folgen [Semantic Versioning
 
 ## [Unveröffentlicht]
 
+## [1.2.0.8] (128) · 2026-11-27
+
+- Nach dem Tauschen von Start und Ziel sucht „Verbindung suchen“ wieder vom angezeigten Start. Bisher verglich der Suchknopf das neue Ziel mit dem Start vor dem Tausch und meldete fälschlich „Start und Ziel sind gleich“; ein danach im Startfeld gewählter Ort wurde nicht verwendet. Ursache: Der Knopf hielt seine Aktion aus einer früheren Darstellung der Seite fest.
 - Nach dem Schließen eines Zeitstrahls wechseln „Übersicht“, „Suchen“ und „Abfahrten“ wieder per Tipp.
 - Der Wellenbalken markiert Fortschritt und verbleibende Strecke durchgehend, auch beim Umstieg.
 - Wiederholte Suchen verwenden gespeicherte Fahrten. Bekannte Direktfahrten können aus dem lokalen VRR-Sollfahrplan kommen. Der Abfahrtsmonitor ergänzt verfügbare Echtzeitdaten.

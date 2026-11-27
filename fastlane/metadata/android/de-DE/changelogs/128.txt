@@ -1,0 +1,4 @@
+• Start und Ziel tauschen: Die Suche startet wieder vom angezeigten Start, kein falsches „Start und Ziel sind gleich“ mehr. Ein danach gewählter Start wird verwendet.
+• Wiederholte Suchen nutzen gespeicherte Fahrten; bekannte Direktfahrten erscheinen sofort aus dem VRR-Sollfahrplan.
+• Nach dem Schließen eines Zeitstrahls wechseln die Seiten wieder per Tipp.
+• Der Wellenbalken zeigt den Fortschritt durchgehend, auch beim Umstieg.

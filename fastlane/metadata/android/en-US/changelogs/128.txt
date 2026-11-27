@@ -1,0 +1,4 @@
+• Swapping start and destination: the search starts from the start shown again, no false "Start and destination are the same". A start chosen afterwards is used.
+• Repeated searches reuse saved journeys; known direct trips appear at once from the VRR timetable.
+• After closing a timeline the pages switch by tap again.
+• The wave bar shows progress throughout, also when changing.
